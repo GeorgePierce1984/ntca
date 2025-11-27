@@ -1,0 +1,244 @@
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import {
+  Search,
+  Filter,
+  MapPin,
+  GraduationCap,
+  Star,
+  CheckCircle,
+  Globe,
+  ChevronRight,
+} from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { motion } from "framer-motion";
+
+interface Teacher {
+  id: string;
+  firstName: string;
+  lastName: string;
+  city: string;
+  country: string;
+  qualification: string;
+  experienceYears: number;
+  verified: boolean;
+  rating?: number;
+  photoUrl?: string;
+  subjects: string[];
+  languages?: string[];
+  availability?: string;
+}
+
+export const BrowseTeachersPage: React.FC = () => {
+  const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth();
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filters, setFilters] = useState({
+    qualification: "",
+    experience: "",
+    location: "",
+  });
+
+  useEffect(() => {
+    // Check if user is authenticated and is a school
+    if (!isAuthenticated) {
+      navigate("/login", { state: { from: "/schools/browse-teachers" } });
+      return;
+    }
+
+    if (user?.userType !== "SCHOOL") {
+      navigate("/schools/dashboard");
+      return;
+    }
+
+    fetchTeachers();
+  }, [isAuthenticated, user, navigate]);
+
+  const fetchTeachers = async () => {
+    try {
+      setLoading(true);
+      // In a real app, this would be an API call
+      // For now, show mock data
+      setTeachers([
+        {
+          id: "1",
+          firstName: "Sarah",
+          lastName: "Johnson",
+          city: "London",
+          country: "UK",
+          qualification: "CELTA, MA Applied Linguistics",
+          experienceYears: 5,
+          verified: true,
+          rating: 4.8,
+          subjects: ["English", "IELTS Preparation"],
+          languages: ["English", "Spanish"],
+          availability: "Immediate",
+        },
+        {
+          id: "2",
+          firstName: "Michael",
+          lastName: "Chen",
+          city: "Singapore",
+          country: "Singapore",
+          qualification: "DELTA, BA English Literature",
+          experienceYears: 8,
+          verified: true,
+          rating: 4.9,
+          subjects: ["Business English", "Academic Writing"],
+          languages: ["English", "Mandarin"],
+          availability: "1 month notice",
+        },
+      ]);
+    } catch (error) {
+      console.error("Error fetching teachers:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredTeachers = teachers.filter((teacher) => {
+    const fullName = `${teacher.firstName} ${teacher.lastName}`.toLowerCase();
+    return fullName.includes(searchTerm.toLowerCase());
+  });
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen pt-20 bg-neutral-50 dark:bg-neutral-900">
+      <div className="section">
+        <div className="container-custom">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center mb-12"
+          >
+            <h1 className="heading-1 mb-4">Browse Qualified Teachers</h1>
+            <p className="text-xl text-neutral-600 dark:text-neutral-400 max-w-3xl mx-auto">
+              Find the perfect teacher for your school from our verified pool of
+              professionals
+            </p>
+          </motion.div>
+
+          {/* Search and Filters */}
+          <div className="max-w-4xl mx-auto mb-8">
+            <div className="flex gap-4">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 w-5 h-5" />
+                <input
+                  type="text"
+                  placeholder="Search teachers by name..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="input pl-10"
+                />
+              </div>
+              <Button
+                variant="secondary"
+                leftIcon={<Filter className="w-4 h-4" />}
+              >
+                Filters
+              </Button>
+            </div>
+          </div>
+
+          {/* Teachers Grid */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredTeachers.map((teacher) => (
+              <motion.div
+                key={teacher.id}
+                whileHover={{ y: -4 }}
+                className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm hover:shadow-lg transition-all duration-200 cursor-pointer"
+                onClick={() => navigate(`/teachers/${teacher.id}`)}
+              >
+                <div className="p-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-4">
+                      {teacher.photoUrl ? (
+                        <img
+                          src={teacher.photoUrl}
+                          alt={`${teacher.firstName} ${teacher.lastName}`}
+                          className="w-16 h-16 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-16 h-16 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
+                          <span className="text-xl font-semibold text-primary-600 dark:text-primary-400">
+                            {teacher.firstName[0]}
+                            {teacher.lastName[0]}
+                          </span>
+                        </div>
+                      )}
+                      <div>
+                        <h3 className="font-semibold text-lg flex items-center gap-2">
+                          {teacher.firstName} {teacher.lastName}
+                          {teacher.verified && (
+                            <CheckCircle className="w-5 h-5 text-green-500" />
+                          )}
+                        </h3>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                          {teacher.qualification}
+                        </p>
+                      </div>
+                    </div>
+                    {teacher.rating && (
+                      <div className="flex items-center gap-1">
+                        <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                        <span className="text-sm font-medium">
+                          {teacher.rating}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-2 text-sm text-neutral-600 dark:text-neutral-400">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="w-4 h-4" />
+                      <span>
+                        {teacher.city}, {teacher.country}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <GraduationCap className="w-4 h-4" />
+                      <span>{teacher.experienceYears} years experience</span>
+                    </div>
+                    {teacher.languages && (
+                      <div className="flex items-center gap-2">
+                        <Globe className="w-4 h-4" />
+                        <span>{teacher.languages.join(", ")}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mt-4 pt-4 border-t border-neutral-200 dark:border-neutral-700">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-neutral-500">
+                        Available: {teacher.availability}
+                      </span>
+                      <ChevronRight className="w-5 h-5 text-neutral-400" />
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          {filteredTeachers.length === 0 && (
+            <div className="text-center py-12">
+              <p className="text-neutral-600 dark:text-neutral-400">
+                No teachers found matching your search criteria.
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
