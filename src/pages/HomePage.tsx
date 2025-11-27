@@ -181,7 +181,8 @@ export const HomePage: React.FC = () => {
               Why Choose <span className="gradient-text">NTCA</span>?
             </h2>
             <p className="text-lg text-neutral-600 dark:text-neutral-400 max-w-3xl mx-auto">
-              We're revolutionizing how certified English language teachers discover opportunities in Central Asia
+              We're revolutionizing how certified English language teachers discover opportunities in{" "}
+              <span className="whitespace-nowrap">Central Asia</span>
             </p>
           </motion.div>
 
