@@ -34,7 +34,8 @@ interface Job {
   id: string;
   title: string;
   description: string;
-  location: string;
+  city: string;
+  country: string;
   salary: string;
   type: "FULL_TIME" | "PART_TIME" | "CONTRACT";
   status: "ACTIVE" | "PAUSED" | "CLOSED";
@@ -89,7 +90,8 @@ interface Application {
 interface JobFormData {
   title: string;
   description: string;
-  location: string;
+  city: string;
+  country: string;
   salary: string;
   type: string;
   deadline: string;
@@ -110,7 +112,8 @@ interface JobFormData {
 const initialJobForm: JobFormData = {
   title: "",
   description: "",
-  location: "",
+  city: "",
+  country: "",
   salary: "",
   type: "FULL_TIME",
   deadline: "",
@@ -169,6 +172,26 @@ const SchoolDashboard: React.FC = () => {
   useEffect(() => {
     // Hide floating button when on post-job tab
     setShowFloatingButton(activeTab !== "post-job");
+    
+    // Scroll to form when post-job tab becomes active
+    if (activeTab === "post-job" && postJobFormRef.current) {
+      // Use double requestAnimationFrame to ensure DOM has updated
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          window.scrollTo({
+            top: postJobFormRef.current?.offsetTop
+              ? postJobFormRef.current.offsetTop - 100
+              : 0,
+            behavior: "smooth",
+          });
+          // Focus first input after a brief delay to ensure it's rendered
+          setTimeout(() => {
+            const firstInput = postJobFormRef.current?.querySelector("input");
+            firstInput?.focus();
+          }, 100);
+        });
+      });
+    }
   }, [activeTab]);
 
   const fetchJobs = async () => {
@@ -341,7 +364,8 @@ const SchoolDashboard: React.FC = () => {
       setJobForm({
         title: job.title,
         description: job.description,
-        location: job.location,
+        city: job.city,
+        country: job.country,
         salary: job.salary,
         type: job.type,
         deadline: job.deadline.split("T")[0],
@@ -409,7 +433,8 @@ const SchoolDashboard: React.FC = () => {
   const filteredJobs = jobs.filter((job) => {
     const matchesSearch =
       job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      job.location.toLowerCase().includes(searchTerm.toLowerCase());
+      job.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      job.country.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus =
       filterStatus === "all" ||
       job.status.toLowerCase() === filterStatus.toLowerCase();
@@ -646,7 +671,7 @@ const SchoolDashboard: React.FC = () => {
                       <div>
                         <h4 className="font-medium">{job.title}</h4>
                         <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                          {job.location}
+                          {job.city}, {job.country}
                         </p>
                       </div>
                       <div className="text-right">
@@ -746,17 +771,7 @@ const SchoolDashboard: React.FC = () => {
                       icon: "📝",
                       duration: 2000,
                     });
-                    setTimeout(() => {
-                      window.scrollTo({
-                        top: postJobFormRef.current?.offsetTop
-                          ? postJobFormRef.current.offsetTop - 100
-                          : 0,
-                        behavior: "smooth",
-                      });
-                      const firstInput =
-                        postJobFormRef.current?.querySelector("input");
-                      firstInput?.focus();
-                    }, 150);
+                    // Scroll is handled by useEffect when activeTab changes
                   }}
                   variant="gradient"
                   leftIcon={<Plus className="w-5 h-5" />}
@@ -782,7 +797,7 @@ const SchoolDashboard: React.FC = () => {
                         <div className="grid md:grid-cols-4 gap-4 text-sm text-neutral-600 dark:text-neutral-400 mb-4">
                           <div className="flex items-center gap-2">
                             <MapPin className="w-4 h-4" />
-                            {job.location}
+                            {job.city}, {job.country}
                           </div>
                           <div className="flex items-center gap-2">
                             <DollarSign className="w-4 h-4" />
@@ -1020,19 +1035,37 @@ const SchoolDashboard: React.FC = () => {
                           placeholder="e.g. Senior English Teacher - CELTA Required"
                         />
                       </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium mb-2">
-                          Location *
+                          City/Town *
                         </label>
                         <input
                           type="text"
                           required
-                          value={jobForm.location}
+                          value={jobForm.city}
                           onChange={(e) =>
-                            setJobForm({ ...jobForm, location: e.target.value })
+                            setJobForm({ ...jobForm, city: e.target.value })
                           }
                           className="input"
-                          placeholder="e.g. Almaty, Kazakhstan"
+                          placeholder="e.g. Almaty"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">
+                          Country *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={jobForm.country}
+                          onChange={(e) =>
+                            setJobForm({ ...jobForm, country: e.target.value })
+                          }
+                          className="input"
+                          placeholder="e.g. Kazakhstan"
                         />
                       </div>
                     </div>
@@ -1215,7 +1248,7 @@ const SchoolDashboard: React.FC = () => {
                                 }
                                 className="mr-2"
                               />
-                              Kazakh language knowledge
+                              Local language knowledge
                             </label>
                             <label className="flex items-center">
                               <input
@@ -1427,14 +1460,29 @@ const SchoolDashboard: React.FC = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-2">
-                      Location *
+                      City/Town *
                     </label>
                     <input
                       type="text"
                       required
-                      value={jobForm.location}
+                      value={jobForm.city}
                       onChange={(e) =>
-                        setJobForm({ ...jobForm, location: e.target.value })
+                        setJobForm({ ...jobForm, city: e.target.value })
+                      }
+                      className="input"
+                      placeholder="e.g. Almaty"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Country *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={jobForm.country}
+                      onChange={(e) =>
+                        setJobForm({ ...jobForm, country: e.target.value })
                       }
                       className="input"
                     />

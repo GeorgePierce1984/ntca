@@ -11,22 +11,26 @@ interface User {
   id: string;
   email: string;
   userType: "SCHOOL" | "TEACHER";
+  stripeCustomerId?: string;
   school?: {
     id: string;
     name: string;
     contactName: string;
     verified: boolean;
+    logoUrl?: string;
   };
   teacher?: {
     id: string;
     firstName: string;
     lastName: string;
     verified: boolean;
+    photoUrl?: string;
   };
 }
 
 interface AuthContextType {
   user: User | null;
+  token: string | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
@@ -52,6 +56,7 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [timeUntilExpiry, setTimeUntilExpiry] = useState<number | null>(null);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -60,6 +65,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logout = useCallback(() => {
     localStorage.removeItem("authToken");
     setUser(null);
+    setToken(null);
     setTimeUntilExpiry(null);
     setShowLogoutModal(false);
     navigate("/");
@@ -173,10 +179,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Check for existing auth token on mount
   useEffect(() => {
-    const token = localStorage.getItem("authToken");
-    if (token) {
-      validateToken(token);
-      const cleanup = setupTokenExpiry(token);
+    const storedToken = localStorage.getItem("authToken");
+    if (storedToken) {
+      setToken(storedToken);
+      validateToken(storedToken);
+      const cleanup = setupTokenExpiry(storedToken);
       return cleanup;
     } else {
       setLoading(false);
@@ -197,6 +204,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       if (response.ok) {
         localStorage.setItem("authToken", data.token);
+        setToken(data.token);
         setUser(data.user);
 
         // Setup auto-logout for new token
@@ -216,6 +224,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const value: AuthContextType = {
     user,
+    token,
     loading,
     login,
     logout,

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -17,6 +17,8 @@ import {
   LogOut,
   User,
   Settings,
+  CreditCard,
+  Shield,
 } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
 import { Button } from "@/components/ui/Button";
@@ -81,6 +83,20 @@ export const Header: React.FC = () => {
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const location = useLocation();
   const { user, isAuthenticated, logout } = useAuth();
+  const navDropdownRef = useRef<HTMLDivElement>(null);
+  const userDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Get display name: school name for schools, first name for teachers
+  const getDisplayName = () => {
+    if (user?.userType === "SCHOOL" && user?.school?.name) {
+      return user.school.name;
+    }
+    if (user?.userType === "TEACHER" && user?.teacher?.firstName) {
+      return user.teacher.firstName;
+    }
+    // Fallback to email if name not available
+    return user?.email || "Account";
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -97,8 +113,51 @@ export const Header: React.FC = () => {
     setUserDropdownOpen(false);
   }, [location]);
 
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      
+      // Check if click is outside navigation dropdown area
+      const isOutsideNav = navDropdownRef.current && !navDropdownRef.current.contains(target);
+      
+      // Check if click is outside user dropdown area
+      const isOutsideUser = userDropdownRef.current && !userDropdownRef.current.contains(target);
+      
+      // If click is outside both, close all dropdowns
+      if (isOutsideNav && isOutsideUser) {
+        setActiveDropdown(null);
+        setUserDropdownOpen(false);
+      } else if (isOutsideNav && activeDropdown !== null) {
+        // Click is outside nav but might be in user dropdown - only close nav
+        setActiveDropdown(null);
+      } else if (isOutsideUser && userDropdownOpen) {
+        // Click is outside user but might be in nav dropdown - only close user
+        setUserDropdownOpen(false);
+      }
+    };
+
+    // Only add listener if any dropdown is open
+    if (activeDropdown !== null || userDropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+  }, [activeDropdown, userDropdownOpen]);
+
   const handleDropdownToggle = (label: string) => {
+    // Close user dropdown when opening nav dropdown
+    if (activeDropdown !== label) {
+      setUserDropdownOpen(false);
+    }
     setActiveDropdown(activeDropdown === label ? null : label);
+  };
+
+  const handleUserDropdownToggle = () => {
+    // Close nav dropdowns when opening user dropdown
+    setActiveDropdown(null);
+    setUserDropdownOpen(!userDropdownOpen);
   };
 
   return (
@@ -121,7 +180,7 @@ export const Header: React.FC = () => {
 
             {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center gap-8">
-              <ul className="flex items-center gap-1">
+              <ul className="flex items-center gap-1" ref={navDropdownRef}>
                 {navigation.map((item) => (
                   <li key={item.label} className="relative">
                     {item.children ? (
@@ -152,13 +211,14 @@ export const Header: React.FC = () => {
                               animate={{ opacity: 1, y: 0 }}
                               exit={{ opacity: 0, y: 10 }}
                               transition={{ duration: 0.2 }}
-                              className="absolute top-full left-0 mt-2 w-64 glass rounded-xl shadow-xl overflow-hidden"
+                              className="absolute top-full left-0 mt-2 w-64 glass rounded-xl shadow-xl overflow-hidden z-50"
                             >
                               <ul className="py-2">
                                 {item.children.map((child) => (
                                   <li key={child.label}>
                                     <Link
                                       to={child.href!}
+                                      onClick={() => setActiveDropdown(null)}
                                       className="flex items-center gap-3 px-4 py-3 hover:bg-white/10 transition-colors duration-200"
                                     >
                                       {child.icon}
@@ -189,15 +249,29 @@ export const Header: React.FC = () => {
               {/* Authentication Section */}
               <div className="flex items-center gap-3 ml-8">
                 {isAuthenticated ? (
-                  <div className="relative">
+                  <div className="relative" ref={userDropdownRef}>
                     <button
-                      onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                      onClick={handleUserDropdownToggle}
                       className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 hover:bg-white/10 hover:backdrop-blur-sm"
                     >
-                      <div className="w-8 h-8 bg-primary-100 dark:bg-primary-900/30 rounded-full flex items-center justify-center">
-                        <User className="w-4 h-4 text-primary-600 dark:text-primary-400" />
+                      <div className="w-8 h-8 bg-primary-100 dark:bg-primary-900/30 rounded-full flex items-center justify-center overflow-hidden">
+                        {user?.userType === "SCHOOL" && user?.school?.logoUrl ? (
+                          <img 
+                            src={user.school.logoUrl} 
+                            alt="School logo"
+                            className="w-full h-full object-cover"
+                          />
+                        ) : user?.userType === "TEACHER" && user?.teacher?.photoUrl ? (
+                          <img 
+                            src={user.teacher.photoUrl} 
+                            alt={`${user.teacher.firstName} ${user.teacher.lastName}`}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <User className="w-4 h-4 text-primary-600 dark:text-primary-400" />
+                        )}
                       </div>
-                      <span className="hidden sm:inline">{user?.email}</span>
+                      <span className="hidden sm:inline">{getDisplayName()}</span>
                       <ChevronDown
                         className={cn(
                           "w-4 h-4 transition-transform duration-200",
@@ -213,10 +287,10 @@ export const Header: React.FC = () => {
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: 10 }}
                           transition={{ duration: 0.2 }}
-                          className="absolute top-full right-0 mt-2 w-64 glass rounded-xl shadow-xl overflow-hidden"
+                          className="absolute top-full right-0 mt-2 w-64 glass rounded-xl shadow-xl overflow-hidden z-50"
                         >
                           <div className="p-4 border-b border-white/10">
-                            <p className="font-medium text-sm">{user?.email}</p>
+                            <p className="font-medium text-sm">{getDisplayName()}</p>
                             <p className="text-xs text-neutral-600 dark:text-neutral-400 capitalize">
                               {user?.userType.toLowerCase()} Account
                             </p>
@@ -229,6 +303,7 @@ export const Header: React.FC = () => {
                                     ? "/schools/dashboard"
                                     : "/teachers/dashboard"
                                 }
+                                onClick={() => setUserDropdownOpen(false)}
                                 className="flex items-center gap-3 px-4 py-3 hover:bg-white/10 transition-colors duration-200"
                               >
                                 <Settings className="w-4 h-4" />
@@ -242,15 +317,43 @@ export const Header: React.FC = () => {
                                     ? "/schools/profile"
                                     : "/teachers/profile"
                                 }
+                                onClick={() => setUserDropdownOpen(false)}
                                 className="flex items-center gap-3 px-4 py-3 hover:bg-white/10 transition-colors duration-200"
                               >
                                 <User className="w-4 h-4" />
                                 <span className="font-medium">Profile & Settings</span>
                               </Link>
                             </li>
+                            {user?.userType === "TEACHER" && (
+                              <li>
+                                <Link
+                                  to="/teachers/privacy"
+                                  onClick={() => setUserDropdownOpen(false)}
+                                  className="flex items-center gap-3 px-4 py-3 hover:bg-white/10 transition-colors duration-200"
+                                >
+                                  <Shield className="w-4 h-4" />
+                                  <span className="font-medium">Privacy & Control</span>
+                                </Link>
+                              </li>
+                            )}
+                            {user?.userType === "SCHOOL" && (
+                              <li>
+                                <Link
+                                  to="/schools/subscription"
+                                  onClick={() => setUserDropdownOpen(false)}
+                                  className="flex items-center gap-3 px-4 py-3 hover:bg-white/10 transition-colors duration-200"
+                                >
+                                  <CreditCard className="w-4 h-4" />
+                                  <span className="font-medium">Subscription</span>
+                                </Link>
+                              </li>
+                            )}
                             <li>
                               <button
-                                onClick={logout}
+                                onClick={() => {
+                                  setUserDropdownOpen(false);
+                                  logout();
+                                }}
                                 className="flex items-center gap-3 w-full px-4 py-3 hover:bg-white/10 transition-colors duration-200 text-red-600 dark:text-red-400"
                               >
                                 <LogOut className="w-4 h-4" />
@@ -409,7 +512,7 @@ export const Header: React.FC = () => {
                   {isAuthenticated ? (
                     <>
                       <div className="p-4 rounded-lg bg-neutral-100 dark:bg-neutral-800">
-                        <p className="font-medium text-sm">{user?.email}</p>
+                        <p className="font-medium text-sm">{getDisplayName()}</p>
                         <p className="text-xs text-neutral-600 dark:text-neutral-400 capitalize">
                           {user?.userType.toLowerCase()} Account
                         </p>

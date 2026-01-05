@@ -29,6 +29,7 @@ import SchoolDashboard from "@/pages/schools/SchoolDashboard";
 // Teacher pages
 import { TeacherJobsPage } from "@/pages/teachers/JobsPage";
 import { TeacherProfilePage } from "@/pages/teachers/ProfilePage";
+import { TeacherPrivacyPage } from "@/pages/teachers/PrivacyPage";
 import TeacherDashboard from "@/pages/teachers/DashboardPage";
 import { ResourcesPage } from "@/pages/teachers/ResourcesPage";
 import { CareerGuidancePage } from "@/pages/teachers/CareerGuidancePage";
@@ -39,6 +40,7 @@ import { BrowseTeachersPage } from "@/pages/schools/BrowseTeachersPage";
 import { PremiumListingsPage } from "@/pages/schools/PremiumListingsPage";
 import { AiMatchingPage } from "@/pages/schools/AiMatchingPage";
 import { SchoolProfilePage } from "@/pages/schools/ProfilePage";
+import { SubscriptionPage } from "@/pages/schools/SubscriptionPage";
 
 // AI Services
 import { AiServicesPage } from "@/pages/AiServicesPage";
@@ -55,6 +57,9 @@ import { ForgotPasswordPage } from "@/pages/auth/ForgotPasswordPage";
 
 // Error pages
 import { NotFoundPage } from "@/pages/NotFoundPage";
+
+// Messaging
+import { MessagesPage } from "@/pages/MessagesPage";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -90,7 +95,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="flex-1 pt-20">
+      <main className="flex-1">
         <AnimatePresence mode="wait">
           <motion.div
             key={location.pathname}
@@ -198,6 +203,22 @@ function AppContent() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/schools/subscription"
+            element={
+              <ProtectedRoute allowedUserTypes={["SCHOOL"]}>
+                <SubscriptionPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/schools/messages"
+            element={
+              <ProtectedRoute allowedUserTypes={["SCHOOL"]}>
+                <MessagesPage />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Protected Teacher routes */}
           <Route
@@ -225,6 +246,14 @@ function AppContent() {
             }
           />
           <Route
+            path="/teachers/privacy"
+            element={
+              <ProtectedRoute allowedUserTypes={["TEACHER"]}>
+                <TeacherPrivacyPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/teachers/dashboard"
             element={
               <ProtectedRoute allowedUserTypes={["TEACHER"]}>
@@ -245,6 +274,24 @@ function AppContent() {
             element={
               <ProtectedRoute allowedUserTypes={["TEACHER"]}>
                 <CareerGuidancePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/teachers/messages"
+            element={
+              <ProtectedRoute allowedUserTypes={["TEACHER"]}>
+                <MessagesPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Messages route - redirects based on user type */}
+          <Route
+            path="/messages"
+            element={
+              <ProtectedRoute allowedUserTypes={["SCHOOL", "TEACHER"]}>
+                <MessagesPage />
               </ProtectedRoute>
             }
           />

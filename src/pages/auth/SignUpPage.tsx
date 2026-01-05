@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { motion } from "framer-motion";
 import {
   Building2,
@@ -97,6 +98,7 @@ interface TeacherPlan {
 
 export const SignUpPage: React.FC = () => {
   const navigate = useNavigate();
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
   const [isInitialized, setIsInitialized] = useState(false);
 
   // Check URL params for return from payment
@@ -115,12 +117,12 @@ export const SignUpPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState<Country | undefined>(
-    getCountryByCode("US"), // Default to US
+    undefined, // No default - user must select
   );
   const [selectedPhoneCountry, setSelectedPhoneCountry] = useState<
     Country | undefined
   >(
-    getCountryByCode("US"), // Default to US
+    undefined, // No default - user must select
   );
 
   const [schoolForm, setSchoolForm] = useState<SchoolForm>({
@@ -130,13 +132,13 @@ export const SignUpPage: React.FC = () => {
     password: "",
     confirmPassword: "",
     telephone: "",
-    phoneCountryCode: "+1",
+    phoneCountryCode: "",
     streetAddress: "",
     city: "",
     state: "",
     postalCode: "",
-    country: "kazakhstan",
-    schoolType: "international",
+    country: "",
+    schoolType: "",
     estimateJobs: "",
     website: "",
     description: "",
@@ -150,12 +152,12 @@ export const SignUpPage: React.FC = () => {
     email: "",
     password: "",
     phone: "",
-    phoneCountryCode: "+1",
+    phoneCountryCode: "",
     streetAddress: "",
     city: "",
     state: "",
     postalCode: "",
-    country: "United States",
+    country: "",
     qualification: "",
     experience: "",
     bio: "",
@@ -163,45 +165,91 @@ export const SignUpPage: React.FC = () => {
     nationality: "",
   });
 
-  // Initialize component
-  // Initialize form data from sessionStorage when component mounts
-  React.useEffect(() => {
+  // Initialize component immediately - set initialized to true first
+  useEffect(() => {
+    // Set initialized immediately so the component can render
     setIsInitialized(true);
+  }, []);
 
-    // Load saved form data from sessionStorage
-    const savedSchoolForm = sessionStorage.getItem("signupSchoolForm");
-    const savedTeacherForm = sessionStorage.getItem("signupTeacherForm");
-    const savedUserType = sessionStorage.getItem("signupUserType");
-    const savedStep = sessionStorage.getItem("signupStep");
-    const savedSelectedPlan = sessionStorage.getItem("signupSelectedPlan");
-    const savedBillingType = sessionStorage.getItem("signupBillingType");
+  // Redirect if already authenticated (separate effect)
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      const redirectPath =
+        user.userType === "SCHOOL"
+          ? "/schools/dashboard"
+          : "/teachers/dashboard";
+      navigate(redirectPath, { replace: true });
+    }
+  }, [isAuthenticated, user, navigate]);
 
-    if (savedSchoolForm) {
-      setSchoolForm(JSON.parse(savedSchoolForm));
-    }
-    if (savedTeacherForm) {
-      setTeacherForm(JSON.parse(savedTeacherForm));
-    }
-    if (savedUserType) {
-      setUserType(savedUserType as UserType);
-    }
-    if (savedSelectedPlan) {
-      setSelectedPlan(JSON.parse(savedSelectedPlan));
-    }
-    if (savedBillingType) {
-      setBillingType(savedBillingType as "monthly" | "annual");
-    }
+  // Initialize form data from sessionStorage when component mounts
+  useEffect(() => {
+    // Only restore data if returning from payment
+    if (isReturningFromPayment) {
+      // Load saved form data from sessionStorage when returning from payment
+      const savedSchoolForm = sessionStorage.getItem("signupSchoolForm");
+      const savedTeacherForm = sessionStorage.getItem("signupTeacherForm");
+      const savedUserType = sessionStorage.getItem("signupUserType");
+      const savedStep = sessionStorage.getItem("signupStep");
+      const savedSelectedPlan = sessionStorage.getItem("signupSelectedPlan");
+      const savedBillingType = sessionStorage.getItem("signupBillingType");
 
-    // If returning from payment, restore to step 3 (plan selection)
-    if (isReturningFromPayment && savedUserType === "school") {
-      setCurrentStep(3);
-    } else if (savedStep) {
-      setCurrentStep(parseInt(savedStep, 10));
+      if (savedSchoolForm) {
+        try {
+          setSchoolForm(JSON.parse(savedSchoolForm));
+        } catch (e) {
+          console.error("Error parsing saved school form:", e);
+        }
+      }
+      if (savedTeacherForm) {
+        try {
+          setTeacherForm(JSON.parse(savedTeacherForm));
+        } catch (e) {
+          console.error("Error parsing saved teacher form:", e);
+        }
+      }
+      if (savedUserType) {
+        setUserType(savedUserType as UserType);
+      }
+      if (savedSelectedPlan) {
+        try {
+          setSelectedPlan(JSON.parse(savedSelectedPlan));
+        } catch (e) {
+          console.error("Error parsing saved plan:", e);
+        }
+      }
+      if (savedBillingType) {
+        setBillingType(savedBillingType as "monthly" | "annual");
+      }
+
+      // If returning from payment, restore to step 3 (plan selection)
+      if (savedUserType === "school") {
+        setCurrentStep(3);
+      } else if (savedStep) {
+        const step = parseInt(savedStep, 10);
+        if (!isNaN(step) && step >= 1 && step <= 3) {
+          setCurrentStep(step);
+        }
+      }
+    } else {
+      // Clear old sessionStorage data when starting fresh
+      sessionStorage.removeItem("signupSchoolForm");
+      sessionStorage.removeItem("signupTeacherForm");
+      sessionStorage.removeItem("signupUserType");
+      sessionStorage.removeItem("signupStep");
+      sessionStorage.removeItem("signupSelectedPlan");
+      sessionStorage.removeItem("signupBillingType");
+      
+      // Reset to initial state
+      setCurrentStep(1);
+      setUserType(null);
+      setSelectedPlan(null);
+      setBillingType("monthly");
     }
   }, [isReturningFromPayment]);
 
   // Save form data to sessionStorage whenever it changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (userType) {
       sessionStorage.setItem("signupUserType", userType);
     }
@@ -564,6 +612,11 @@ export const SignUpPage: React.FC = () => {
   const passwordValidation = validatePassword(currentForm.password);
   const strengthInfo = getPasswordStrengthLabel(passwordValidation.score);
 
+  // Don't render if redirecting authenticated users (but wait for auth to load)
+  if (!authLoading && isAuthenticated && user) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen pt-20">
       <section className="section">
@@ -609,12 +662,13 @@ export const SignUpPage: React.FC = () => {
           </div>
 
           <div className="card p-8">
-            {/* Loading state */}
-            {!isInitialized && (
+            {/* Loading state - show only briefly */}
+            {!isInitialized ? (
               <div className="flex justify-center items-center py-12">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
               </div>
-            )}
+            ) : (
+              <>
 
             {/* Step 1: User Type Selection */}
             {isInitialized && currentStep === 1 && (
@@ -698,7 +752,7 @@ export const SignUpPage: React.FC = () => {
             )}
 
             {/* Step 2: User Information */}
-            {currentStep === 2 && (
+            {isInitialized && currentStep === 2 && (
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -756,7 +810,7 @@ export const SignUpPage: React.FC = () => {
                             className="w-full p-3 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-800"
                             required
                           >
-                            <option value="">Select school type</option>
+                            <option value="">Select...</option>
                             {SCHOOL_TYPES.map((type) => (
                               <option key={type.value} value={type.value}>
                                 {type.label}
@@ -927,7 +981,7 @@ export const SignUpPage: React.FC = () => {
                             selectedCountry={selectedPhoneCountry}
                             onSelect={handlePhoneCountrySelect}
                             showPhoneCode={true}
-                            placeholder="Select phone country"
+                            placeholder="Search countries..."
                           />
                         </div>
 
@@ -1300,7 +1354,7 @@ export const SignUpPage: React.FC = () => {
                             selectedCountry={selectedPhoneCountry}
                             onSelect={handlePhoneCountrySelect}
                             showPhoneCode={true}
-                            placeholder="Select phone country"
+                            placeholder="Search countries..."
                           />
                         </div>
 
@@ -1423,7 +1477,7 @@ export const SignUpPage: React.FC = () => {
                         <CountrySelector
                           selectedCountry={selectedCountry}
                           onSelect={handleCountrySelect}
-                          placeholder="Select country"
+                          placeholder="Search countries..."
                           className={errors.country ? "border-red-500" : ""}
                         />
                         {errors.country && (
@@ -1567,7 +1621,7 @@ export const SignUpPage: React.FC = () => {
             )}
 
             {/* Step 3: School Plan Selection */}
-            {currentStep === 3 && userType === "school" && (
+            {isInitialized && currentStep === 3 && userType === "school" && (
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -1716,6 +1770,8 @@ export const SignUpPage: React.FC = () => {
                   </Button>
                 </div>
               </motion.div>
+            )}
+              </>
             )}
           </div>
         </div>

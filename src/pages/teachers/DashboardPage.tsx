@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/Button";
 import FileUpload from "@/components/ui/FileUpload";
@@ -39,8 +40,11 @@ import {
   SortDesc,
   ArrowRight,
   Loader,
+  MessageSquare,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { MessagesModal } from "@/components/messages/MessagesModal";
+import { getCountryByName } from "@/data/countries";
 
 interface Teacher {
   id: string;
@@ -75,6 +79,7 @@ interface Teacher {
   availability?: string;
   startDate?: string;
   education: any[];
+  teachingExperience?: any;
   specializations: string[];
   previousSchools: string[];
   achievements: string[];
@@ -95,7 +100,8 @@ interface Job {
   id: string;
   title: string;
   description: string;
-  location: string;
+  city: string;
+  country: string;
   salary: string;
   type: "FULL_TIME" | "PART_TIME" | "CONTRACT";
   status: string;
@@ -160,6 +166,7 @@ const TeacherDashboard: React.FC = () => {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [savedJobs, setSavedJobs] = useState<SavedJob[]>([]);
   const [loading, setLoading] = useState(true);
+  const [profileFetchAttempted, setProfileFetchAttempted] = useState(false);
   const [jobsLoading, setJobsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<
     "overview" | "profile" | "jobs" | "applications" | "saved"
@@ -190,11 +197,58 @@ const TeacherDashboard: React.FC = () => {
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [showMessagesModal, setShowMessagesModal] = useState(false);
+  const [unreadMessageCount, setUnreadMessageCount] = useState(0);
+
+  // Fetch unread message count
+  const fetchUnreadMessageCount = async () => {
+    try {
+      const token = localStorage.getItem("authToken");
+      if (!token) return;
+
+      const response = await fetch("/api/messages/conversations", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const totalUnread = (data.conversations || []).reduce(
+          (sum: number, conv: any) => sum + (conv.unreadCount || 0),
+          0
+        );
+        setUnreadMessageCount(totalUnread);
+      }
+    } catch (error) {
+      console.error("Error fetching unread message count:", error);
+    }
+  };
 
   useEffect(() => {
+    // Initial data fetch on page load
     fetchTeacherProfile();
     fetchJobs();
     fetchSavedJobs();
+    fetchUnreadMessageCount();
+    
+    // Only fetch when user switches back to the tab (not on intervals)
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        // User switched back to the tab - refresh data
+        fetchUnreadMessageCount();
+        // Optionally refresh other data too
+        fetchJobs();
+        fetchSavedJobs();
+      }
+    };
+    
+    // Listen for tab visibility changes
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []);
 
   useEffect(() => {
@@ -204,6 +258,8 @@ const TeacherDashboard: React.FC = () => {
   }, [searchTerm, locationFilter, typeFilter, sortBy, currentPage]);
 
   const fetchTeacherProfile = async () => {
+    setProfileFetchAttempted(true);
+    
     try {
       const response = await fetch("/api/teachers/profile", {
         headers: {
@@ -213,13 +269,64 @@ const TeacherDashboard: React.FC = () => {
 
       if (response.ok) {
         const data = await response.json();
-        setTeacher(data.teacher);
-        setProfileForm(data.teacher);
+        if (data.teacher) {
+          setTeacher(data.teacher);
+          setProfileForm(data.teacher);
+        }
+        // Only set loading to false after successful fetch
+        setLoading(false);
+      } else if (response.status === 404) {
+        // Profile doesn't exist - this is expected for new users
+        console.log("Teacher profile not found - may need to complete registration");
+        setLoading(false);
+      } else {
+        // Other errors - retry once after a delay
+        console.error("Error fetching teacher profile:", response.status, response.statusText);
+        // Retry once after a short delay for connection issues
+        setTimeout(async () => {
+          try {
+            const retryResponse = await fetch("/api/teachers/profile", {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+              },
+            });
+            if (retryResponse.ok) {
+              const retryData = await retryResponse.json();
+              if (retryData.teacher) {
+                setTeacher(retryData.teacher);
+                setProfileForm(retryData.teacher);
+              }
+            }
+            setLoading(false);
+          } catch (retryError) {
+            console.error("Retry failed:", retryError);
+            setLoading(false);
+          }
+        }, 2000);
       }
     } catch (error) {
       console.error("Error fetching teacher profile:", error);
-    } finally {
-      setLoading(false);
+      // Retry once for network errors
+      setTimeout(async () => {
+        try {
+          const retryResponse = await fetch("/api/teachers/profile", {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+            },
+          });
+          if (retryResponse.ok) {
+            const retryData = await retryResponse.json();
+            if (retryData.teacher) {
+              setTeacher(retryData.teacher);
+              setProfileForm(retryData.teacher);
+            }
+          }
+          setLoading(false);
+        } catch (retryError) {
+          console.error("Retry failed:", retryError);
+          setLoading(false);
+        }
+      }, 2000);
     }
   };
 
@@ -421,26 +528,210 @@ const TeacherDashboard: React.FC = () => {
     );
   }
 
-  if (!teacher) {
+  // Only show "Profile Not Found" if we've attempted to fetch and confirmed it doesn't exist
+  // Don't show it while loading or if we haven't tried fetching yet
+  if (!teacher && !loading && profileFetchAttempted) {
+    // Only show error if we've actually tried to fetch and got a 404 or no data
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-4">Profile Not Found</h2>
-          <p className="text-neutral-600 dark:text-neutral-400">
+          <p className="text-neutral-600 dark:text-neutral-400 mb-4">
             Please complete your teacher registration.
           </p>
+          <Button onClick={() => window.location.reload()}>
+            Refresh Page
+          </Button>
         </div>
       </div>
     );
   }
 
+  const calculateProfileCompleteness = () => {
+    if (!teacher) return 0;
+
+    const requiredFields = [
+      "firstName",
+      "lastName",
+      "phone",
+      "city",
+      "country",
+      "nationality",
+      "qualification",
+      "experienceYears",
+      "experience",
+    ];
+
+    const optionalFields = [
+      "resumeUrl",
+      "photoUrl",
+      "certifications",
+      "subjects",
+      "languageSkills",
+      "education",
+    ];
+
+    const requiredComplete = requiredFields.filter(
+      (field) => teacher[field as keyof Teacher],
+    ).length;
+
+    const optionalComplete = optionalFields.filter((field) => {
+      const value = teacher[field as keyof Teacher];
+      return value && (Array.isArray(value) ? value.length > 0 : true);
+    }).length;
+
+    const totalFields = requiredFields.length + optionalFields.length;
+    const completedFields = requiredComplete + optionalComplete;
+
+    return Math.round((completedFields / totalFields) * 100);
+  };
+
   const stats = {
-    totalApplications: teacher.applications?.length || 0,
+    totalApplications: teacher?.applications?.length || 0,
     pendingApplications:
-      teacher.applications?.filter((app) => app.status === "APPLIED").length ||
+      teacher?.applications?.filter((app) => app.status === "APPLIED").length ||
       0,
     savedJobsCount: savedJobs.length,
-    profileViews: teacher.profileViews || 0,
+    profileViews: teacher?.profileViews || 0,
+  };
+
+  const profileCompletion = calculateProfileCompleteness();
+
+  // Calculate age range from preferred age groups
+  const calculatePreferredAgeRange = () => {
+    if (!teacher?.ageGroups || teacher.ageGroups.length === 0) {
+      return "N/A";
+    }
+
+    const allAges: number[] = [];
+    teacher.ageGroups.forEach((ageGroup) => {
+      if (ageGroup === "Kids (5-12)") {
+        allAges.push(5, 6, 7, 8, 9, 10, 11, 12);
+      } else if (ageGroup === "Teens (13-17)") {
+        allAges.push(13, 14, 15, 16, 17);
+      } else if (ageGroup === "Adults (18+)") {
+        allAges.push(18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31);
+      }
+    });
+
+    if (allAges.length === 0) return "N/A";
+
+    const minAge = Math.min(...allAges);
+    const maxAge = Math.max(...allAges);
+    // If max age is 30 or higher, show as 30+
+    if (maxAge >= 30) {
+      return `${minAge}-30+`;
+    }
+    return `${minAge}-${maxAge}`;
+  };
+
+  // Calculate teaching ages from teaching experience (Years by Age Group)
+  const calculateTeachingAges = () => {
+    if (!teacher?.teachingExperience) {
+      // Try to parse if it's a string
+      if (typeof teacher?.teachingExperience === 'string') {
+        try {
+          const parsed = JSON.parse(teacher.teachingExperience);
+          if (!parsed || !Array.isArray(parsed) || parsed.length === 0) {
+            return null;
+          }
+          return calculateAgesFromExperience(parsed);
+        } catch {
+          return null;
+        }
+      }
+      return null;
+    }
+
+    if (Array.isArray(teacher.teachingExperience) && teacher.teachingExperience.length === 0) {
+      return null;
+    }
+
+    return calculateAgesFromExperience(teacher.teachingExperience);
+  };
+
+  const calculateAgesFromExperience = (experienceArray: any[]) => {
+    const allAges: number[] = [];
+    
+    experienceArray.forEach((exp) => {
+      if (exp.studentAgeGroups && Array.isArray(exp.studentAgeGroups)) {
+        exp.studentAgeGroups.forEach((ageGroup: string) => {
+          if (ageGroup === "Kids (5-12)") {
+            allAges.push(5, 6, 7, 8, 9, 10, 11, 12);
+          } else if (ageGroup === "Teens (13-17)") {
+            allAges.push(13, 14, 15, 16, 17);
+          } else if (ageGroup === "Adults (18+)") {
+            allAges.push(18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31);
+          }
+        });
+      }
+    });
+
+    if (allAges.length === 0) return null;
+
+    const minAge = Math.min(...allAges);
+    const maxAge = Math.max(...allAges);
+    // If max age is 30 or higher, show as 30+
+    if (maxAge >= 30) {
+      return `${minAge}-30+`;
+    }
+    return `${minAge}-${maxAge}`;
+  };
+
+  // Get nationality flag
+  const getNationalityFlag = () => {
+    if (!teacher?.nationality) return null;
+    const country = getCountryByName(teacher.nationality);
+    return country?.flag || null;
+  };
+
+  // Check if teacher has specific certification from education array
+  const hasCertification = (certName: string) => {
+    if (!teacher?.education || teacher.education.length === 0) return false;
+    // Check all education entries for the certification
+    return teacher.education.some(edu => {
+      if (!edu?.degree) return false;
+      const degree = edu.degree.toLowerCase();
+      return degree.includes(certName.toLowerCase());
+    });
+  };
+
+  // Check if teacher has a degree from education (check all entries)
+  const hasDegree = () => {
+    if (!teacher?.education || teacher.education.length === 0) return false;
+    // Check all education entries for degree
+    return teacher.education.some(edu => {
+      if (!edu?.degree) return false;
+      const degree = edu.degree.toLowerCase();
+      return degree.includes("bachelor") || degree.includes("master") || degree.includes("phd") || degree.includes("degree");
+    });
+  };
+
+  // Get qualification from education (prioritize degree, then certifications)
+  const getQualification = () => {
+    if (!teacher?.education || teacher.education.length === 0) return null;
+    // First try to find a degree
+    const degree = teacher.education.find(edu => {
+      if (!edu?.degree) return false;
+      const deg = edu.degree.toLowerCase();
+      return deg.includes("bachelor") || deg.includes("master") || deg.includes("phd") || deg.includes("degree");
+    });
+    if (degree?.degree) return degree.degree;
+    // If no degree, return first education entry
+    return teacher.education[0]?.degree || null;
+  };
+
+  // Check if teacher is Native/Near Native English
+  const isNativeEnglish = () => {
+    if (!teacher) return false;
+    // Check nativeLanguage
+    if (teacher.nativeLanguage?.toLowerCase().includes('english')) return true;
+    // Check languageSkills for English
+    if (teacher.languageSkills && typeof teacher.languageSkills === 'object') {
+      const englishLevel = (teacher.languageSkills as Record<string, string>)['English']?.toLowerCase();
+      return englishLevel === 'native' || englishLevel === 'near-native' || englishLevel === 'near native';
+    }
+    return false;
   };
 
   return (
@@ -450,13 +741,17 @@ const TeacherDashboard: React.FC = () => {
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="heading-1 mb-2">Teacher Dashboard</h1>
-              <p className="text-lg text-neutral-600 dark:text-neutral-400">
-                Welcome back, {teacher.firstName}!
+              <h1 className="heading-3 mb-2">
+                Welcome back,
+                <br />
+                {teacher?.firstName || user?.teacher?.firstName || "Teacher"}
+              </h1>
+              <p className="text-xl text-neutral-500">
+                Manage your profile and applications
               </p>
             </div>
             <div className="flex items-center gap-4">
-              {!teacher.profileComplete && (
+              {teacher && !teacher.profileComplete && (
                 <div className="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 px-4 py-2 rounded-lg flex items-center gap-2">
                   <AlertCircle className="w-4 h-4" />
                   <span className="text-sm">
@@ -464,6 +759,16 @@ const TeacherDashboard: React.FC = () => {
                   </span>
                 </div>
               )}
+              <Link to="/teachers/profile">
+                <Button
+                  variant="gradient"
+                  leftIcon={<User className="w-4 h-4" />}
+                  className="w-32"
+                  glow
+                >
+                  Profile
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
@@ -528,25 +833,52 @@ const TeacherDashboard: React.FC = () => {
           <nav className="-mb-px flex space-x-8">
             {[
               { key: "overview", label: "Overview", icon: Eye },
-              { key: "profile", label: "Profile", icon: User },
+              { key: "profile", label: "Profile", icon: User, isProfileLink: true },
               { key: "jobs", label: "Browse Jobs", icon: Search },
               { key: "applications", label: "My Applications", icon: Send },
               { key: "saved", label: "Saved Jobs", icon: Heart },
-            ].map(({ key, label, icon: Icon }) => (
-              <button
-                key={key}
-                onClick={() => setActiveTab(key as any)}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === key
-                    ? "border-primary-500 text-primary-600 dark:text-primary-400"
-                    : "border-transparent text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <Icon className="w-4 h-4" />
+              { key: "messages", label: "Message Center", icon: MessageSquare, isLink: true },
+            ].map(({ key, label, icon: Icon, isLink, isProfileLink }) => (
+              isProfileLink ? (
+                <Link
+                  key={key}
+                  to="/teachers/profile"
+                  className="py-4 px-1 border-b-2 border-transparent font-medium text-sm text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <Icon className="w-4 h-4" />
+                    {label}
+                  </div>
+                </Link>
+              ) : (
+                <button
+                  key={key}
+                  onClick={() => {
+                    if (isLink) {
+                      setShowMessagesModal(true);
+                    } else {
+                      setActiveTab(key as any);
+                    }
+                  }}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === key
+                      ? "border-primary-500 text-primary-600 dark:text-primary-400"
+                      : "border-transparent text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="relative">
+                      <Icon className="w-4 h-4" />
+                      {key === "messages" && unreadMessageCount > 0 && (
+                      <span className="absolute -top-2 -right-2 min-w-[18px] h-[18px] px-1 flex items-center justify-center text-[10px] font-bold text-white bg-gradient-to-r from-blue-500 to-purple-600 rounded-full">
+                        {unreadMessageCount > 99 ? "99+" : unreadMessageCount}
+                      </span>
+                    )}
+                  </div>
                   {label}
                 </div>
               </button>
+              )
             ))}
           </nav>
         </div>
@@ -561,18 +893,19 @@ const TeacherDashboard: React.FC = () => {
               exit={{ opacity: 0, y: -20 }}
               className="grid lg:grid-cols-2 gap-8"
             >
-              {/* Profile Summary */}
+              {/* Profile Snapshot */}
               <div className="card p-6">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="heading-3">Profile Summary</h3>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setActiveTab("profile")}
-                  >
-                    <Edit3 className="w-4 h-4 mr-2" />
-                    Edit
-                  </Button>
+                  <h3 className="heading-3">Profile Snapshot</h3>
+                  <Link to="/teachers/profile">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                    >
+                      <Edit3 className="w-4 h-4 mr-2" />
+                      Edit
+                    </Button>
+                  </Link>
                 </div>
                 <div className="space-y-4">
                   <div className="flex items-center gap-4">
@@ -587,60 +920,99 @@ const TeacherDashboard: React.FC = () => {
                         <User className="w-8 h-8 text-primary-600 dark:text-primary-400" />
                       )}
                     </div>
-                    <div>
-                      <h4 className="font-semibold">
-                        {teacher.firstName} {teacher.lastName}
-                      </h4>
-                      <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                        {teacher.qualification}
-                      </p>
-                      <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        {getNationalityFlag() && (
+                          <span className="text-xl">{getNationalityFlag()}</span>
+                        )}
+                        <h4 className="font-semibold">
+                          {teacher.firstName} {teacher.lastName}
+                        </h4>
+                      </div>
+                      <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
                         {teacher.city}, {teacher.country}
                       </p>
+                      {teacher.experienceYears !== undefined && teacher.experienceYears !== null && (
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
+                          {teacher.experienceYears} {teacher.experienceYears === 1 ? 'Year' : 'Years'} Experience
+                        </p>
+                      )}
+                      {calculateTeachingAges() && (
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
+                          Ages {calculateTeachingAges()}
+                        </p>
+                      )}
+                      {teacher.ageGroups && teacher.ageGroups.length > 0 && (
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
+                          Preferred ages: {calculatePreferredAgeRange()}
+                        </p>
+                      )}
                     </div>
+                  </div>
+
+                  {/* Certification Icons */}
+                  <div className="flex items-center gap-4 pt-2 border-t border-neutral-200 dark:border-neutral-700 flex-wrap">
+                    {hasCertification('TEFL') && (
+                      <div className="flex items-center gap-2" title="TEFL Certified">
+                        <Award className="w-5 h-5 text-primary-600" />
+                        <span className="text-sm text-neutral-600 dark:text-neutral-400">TEFL</span>
+                      </div>
+                    )}
+                    {hasCertification('CELTA') && (
+                      <div className="flex items-center gap-2" title="CELTA Certified">
+                        <Award className="w-5 h-5 text-primary-600" />
+                        <span className="text-sm text-neutral-600 dark:text-neutral-400">CELTA</span>
+                      </div>
+                    )}
+                    {hasCertification('TESOL') && (
+                      <div className="flex items-center gap-2" title="TESOL Certified">
+                        <Award className="w-5 h-5 text-primary-600" />
+                        <span className="text-sm text-neutral-600 dark:text-neutral-400">TESOL</span>
+                      </div>
+                    )}
+                    {hasCertification('DELTA') && (
+                      <div className="flex items-center gap-2" title="DELTA Certified">
+                        <Award className="w-5 h-5 text-primary-600" />
+                        <span className="text-sm text-neutral-600 dark:text-neutral-400">DELTA</span>
+                      </div>
+                    )}
+                    {hasDegree() && (
+                      <div className="flex items-center gap-2" title="Has Degree">
+                        <GraduationCap className="w-5 h-5 text-primary-600" />
+                        <span className="text-sm text-neutral-600 dark:text-neutral-400">
+                          {getQualification() || 'Degree'}
+                        </span>
+                      </div>
+                    )}
+                    {isNativeEnglish() && (
+                      <div className="flex items-center gap-2" title="Native/Near Native English">
+                        <Languages className="w-5 h-5 text-primary-600" />
+                        <span className="text-sm text-neutral-600 dark:text-neutral-400">Native English</span>
+                      </div>
+                    )}
                   </div>
 
                   <div className="space-y-2">
                     <div className="flex justify-between">
-                      <span className="text-sm font-medium">
-                        Profile Completeness
+                      <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                        Profile Completion
                       </span>
-                      <span className="text-sm text-neutral-600 dark:text-neutral-400">
-                        {teacher.profileComplete ? "100%" : "70%"}
+                      <span className="text-sm font-bold text-primary-600">
+                        {profileCompletion}%
                       </span>
                     </div>
                     <div className="w-full bg-neutral-200 dark:bg-neutral-700 rounded-full h-2">
                       <div
-                        className="bg-primary-600 h-2 rounded-full transition-all duration-300"
-                        style={{
-                          width: teacher.profileComplete ? "100%" : "70%",
-                        }}
+                        className="bg-gradient-to-r from-primary-500 to-secondary-500 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${profileCompletion}%` }}
                       ></div>
                     </div>
+                    {profileCompletion < 100 && (
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-2">
+                        Complete your profile to increase visibility to schools
+                      </p>
+                    )}
                   </div>
-
-                  {teacher.certifications.length > 0 && (
-                    <div>
-                      <h5 className="font-medium mb-2">Certifications</h5>
-                      <div className="flex flex-wrap gap-2">
-                        {teacher.certifications
-                          .slice(0, 3)
-                          .map((cert, index) => (
-                            <span
-                              key={index}
-                              className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400 rounded-full text-xs"
-                            >
-                              {cert}
-                            </span>
-                          ))}
-                        {teacher.certifications.length > 3 && (
-                          <span className="px-2 py-1 bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 rounded-full text-xs">
-                            +{teacher.certifications.length - 3} more
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  )}
                 </div>
               </div>
 
@@ -668,7 +1040,7 @@ const TeacherDashboard: React.FC = () => {
                           {app.job.school.name}
                         </p>
                         <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                          {app.job.location}
+                          {app.job.city}, {app.job.country}
                         </p>
                       </div>
                       <div className="text-right">
@@ -1363,7 +1735,7 @@ const TeacherDashboard: React.FC = () => {
                           <div className="flex items-center gap-2 mb-2">
                             <MapPin className="w-4 h-4 text-neutral-400" />
                             <span className="text-sm text-neutral-600 dark:text-neutral-400">
-                              {job.location}
+                              {job.city}, {job.country}
                             </span>
                           </div>
                         </div>
@@ -1503,7 +1875,7 @@ const TeacherDashboard: React.FC = () => {
                           <div className="flex items-center gap-2 mb-2">
                             <MapPin className="w-4 h-4 text-neutral-400" />
                             <span className="text-sm text-neutral-600 dark:text-neutral-400">
-                              {app.job.location}
+                              {app.job.city}, {app.job.country}
                             </span>
                           </div>
                           <div className="flex items-center gap-2">
@@ -1589,7 +1961,7 @@ const TeacherDashboard: React.FC = () => {
                             <div className="flex items-center gap-2 mb-2">
                               <MapPin className="w-4 h-4 text-neutral-400" />
                               <span className="text-sm text-neutral-600 dark:text-neutral-400">
-                                {savedJob.job.location}
+                                {savedJob.job.city}, {savedJob.job.country}
                               </span>
                             </div>
                           </div>
@@ -1693,7 +2065,7 @@ const TeacherDashboard: React.FC = () => {
                   {selectedJob.school.name}
                 </p>
                 <p className="text-neutral-600 dark:text-neutral-400">
-                  {selectedJob.location}
+                  {selectedJob.city}, {selectedJob.country}
                 </p>
                 <p className="text-neutral-600 dark:text-neutral-400">
                   {selectedJob.salary}
@@ -1789,6 +2161,13 @@ const TeacherDashboard: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Messages Modal */}
+      <MessagesModal
+        isOpen={showMessagesModal}
+        onClose={() => setShowMessagesModal(false)}
+        onUnreadCountChange={setUnreadMessageCount}
+      />
     </div>
   );
 };

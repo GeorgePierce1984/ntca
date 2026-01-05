@@ -21,6 +21,18 @@ import {
   Bookmark,
   BookmarkCheck,
   X,
+  MessageSquare,
+  GraduationCap,
+  Monitor,
+  School,
+  Map,
+  Home,
+  Plane,
+  Shield,
+  Heart,
+  BookOpen,
+  TrendingUp,
+  RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -32,7 +44,8 @@ interface Job {
   schoolId: string;
   title: string;
   description: string;
-  location: string;
+  city: string;
+  country: string;
   salary: string;
   type: string;
   status: string;
@@ -58,23 +71,33 @@ interface Job {
     description?: string;
     website?: string;
     studentCount?: number;
+    benefits?: string;
   };
   _count: {
     applications: number;
   };
   useSchoolProfile?: boolean;
   schoolDescription?: string;
+  useSchoolBenefits?: boolean;
+  studentAgeGroupMin?: number | null;
+  studentAgeGroupMax?: number | null;
+  contractLength?: string | null;
+  teachingHoursPerWeek?: number | null;
+  subjectsTaught?: string | null;
 }
 
 const JobDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
   const [isSaved, setIsSaved] = useState(false);
   const [showApplicationForm, setShowApplicationForm] = useState(false);
   const [applying, setApplying] = useState(false);
+  const [showMessageModal, setShowMessageModal] = useState(false);
+  const [messageContent, setMessageContent] = useState("");
+  const [sendingMessage, setSendingMessage] = useState(false);
   const [guestForm, setGuestForm] = useState({
     firstName: "",
     lastName: "",
@@ -173,6 +196,64 @@ const JobDetail: React.FC = () => {
 
     // Navigate to the school dashboard with the applications tab selected
     navigate(`/schools/dashboard?tab=applications&job=${id}`);
+  };
+
+  const handleStartConversation = async () => {
+    if (!user || !token) {
+      toast.error("Please log in to send a message");
+      return;
+    }
+
+    if (!messageContent.trim()) {
+      toast.error("Please enter a message");
+      return;
+    }
+
+    if (!job) {
+      toast.error("Job information not available");
+      return;
+    }
+
+    setSendingMessage(true);
+    try {
+      // Create conversation and send initial message
+      const response = await fetch("/api/messages/conversations", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          schoolId: job.schoolId,
+          content: messageContent.trim(),
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to send message");
+      }
+
+      const data = await response.json();
+      toast.success("Message sent successfully!");
+      setShowMessageModal(false);
+      setMessageContent("");
+      
+      // Small delay to ensure database transaction is committed
+      setTimeout(() => {
+        // Navigate to messages page with conversation ID to auto-select it
+        if (data.conversationId) {
+          navigate(`/messages?conversation=${data.conversationId}`);
+        } else {
+          navigate("/messages");
+        }
+      }, 300);
+    } catch (error: any) {
+      console.error("Error starting conversation:", error);
+      toast.error(error.message || "Failed to send message");
+    } finally {
+      setSendingMessage(false);
+    }
   };
 
   const handleCVUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -275,7 +356,13 @@ const JobDetail: React.FC = () => {
   }
 
   const isOwner = user?.userType === "SCHOOL" && job.school.id === user.id;
-  const canApply = job.status === "ACTIVE" && new Date() < new Date(job.deadline); // Anyone can apply if job is active and not expired
+  
+  // Check if deadline has passed (compare with start of today to include today's deadline)
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  const jobDeadline = new Date(job.deadline);
+  jobDeadline.setHours(0, 0, 0, 0);
+  const canApply = job.status === "ACTIVE" && jobDeadline >= startOfToday; // Anyone can apply if job is active and deadline is today or in the future
 
   return (
     <div className="min-h-screen bg-neutral-50 dark:bg-neutral-900 pt-20">
@@ -322,11 +409,7 @@ const JobDetail: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <MapPin className="w-4 h-4" />
-                  <span>{job.location}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <DollarSign className="w-4 h-4" />
-                  <span>{job.salary}</span>
+                  <span>{job.city}, {job.country}</span>
                 </div>
               </div>
 
@@ -383,19 +466,29 @@ const JobDetail: React.FC = () => {
               </Button>
             )}
             {user?.userType === "TEACHER" && (
-              <Button
-                onClick={handleSaveToggle}
-                variant="secondary"
-                leftIcon={
-                  isSaved ? (
-                    <BookmarkCheck className="w-5 h-5" />
-                  ) : (
-                    <Bookmark className="w-5 h-5" />
-                  )
-                }
-              >
-                {isSaved ? "Saved" : "Save Job"}
-              </Button>
+              <>
+                <Button
+                  onClick={handleSaveToggle}
+                  variant="secondary"
+                  leftIcon={
+                    isSaved ? (
+                      <BookmarkCheck className="w-5 h-5" />
+                    ) : (
+                      <Bookmark className="w-5 h-5" />
+                    )
+                  }
+                >
+                  {isSaved ? "Saved" : "Save Job"}
+                </Button>
+                <Button
+                  onClick={() => setShowMessageModal(true)}
+                  variant="secondary"
+                  size="lg"
+                  leftIcon={<MessageSquare className="w-5 h-5" />}
+                >
+                  Message School
+                </Button>
+              </>
             )}
             {isOwner && (
               <>
@@ -429,6 +522,111 @@ const JobDetail: React.FC = () => {
           </div>
         </motion.div>
 
+        {/* Role Information */}
+        {((job.studentAgeGroupMin !== null && job.studentAgeGroupMin !== undefined) ||
+        (job.studentAgeGroupMax !== null && job.studentAgeGroupMax !== undefined) ||
+        job.contractLength ||
+        job.type ||
+        job.salary ||
+        job.subjectsTaught ||
+        (job.teachingHoursPerWeek !== null && job.teachingHoursPerWeek !== undefined)) ? (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm p-6 mb-6"
+          >
+            <h3 className="text-lg font-semibold mb-4">Role Information</h3>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Salary - First line */}
+              {job.salary && (
+                <div>
+                  <p className="text-sm text-neutral-500 mb-1">
+                    Salary
+                  </p>
+                  <p className="text-sm font-medium">
+                    ${job.salary}
+                  </p>
+                </div>
+              )}
+
+              {/* Employment Type */}
+              {job.type && (
+                <div>
+                  <p className="text-sm text-neutral-500 mb-1">
+                    Employment Type
+                  </p>
+                  <p className="text-sm font-medium">
+                    {job.type
+                      .split("_")
+                      .map(
+                        (word) =>
+                          word.charAt(0).toUpperCase() +
+                          word.slice(1).toLowerCase()
+                      )
+                      .join(" ")}
+                  </p>
+                </div>
+              )}
+
+              {/* Contract Length */}
+              {job.contractLength && (
+                <div>
+                  <p className="text-sm text-neutral-500 mb-1">
+                    Contract Length
+                  </p>
+                  <p className="text-sm font-medium">
+                    {job.contractLength}
+                  </p>
+                </div>
+              )}
+
+              {/* Subjects Taught */}
+              {job.subjectsTaught && (
+                <div>
+                  <p className="text-sm text-neutral-500 mb-1">
+                    Subjects Taught
+                  </p>
+                  <p className="text-sm font-medium">
+                    {job.subjectsTaught}
+                  </p>
+                </div>
+              )}
+
+              {/* Student Age Range */}
+              {((job.studentAgeGroupMin !== null && job.studentAgeGroupMin !== undefined) ||
+                (job.studentAgeGroupMax !== null && job.studentAgeGroupMax !== undefined)) && (
+                <div>
+                  <p className="text-sm text-neutral-500 mb-1">
+                    Student Age Range
+                  </p>
+                  <p className="text-sm font-medium">
+                    {job.studentAgeGroupMin !== null && job.studentAgeGroupMin !== undefined
+                      ? job.studentAgeGroupMax !== null && job.studentAgeGroupMax !== undefined
+                        ? `${job.studentAgeGroupMin}-${job.studentAgeGroupMax === 30 ? '30+' : job.studentAgeGroupMax}`
+                        : `${job.studentAgeGroupMin}+`
+                      : job.studentAgeGroupMax !== null && job.studentAgeGroupMax !== undefined
+                      ? `Up to ${job.studentAgeGroupMax === 30 ? '30+' : job.studentAgeGroupMax}`
+                      : ''}
+                  </p>
+                </div>
+              )}
+
+              {/* Teaching Hours Per Week */}
+              {job.teachingHoursPerWeek !== null && job.teachingHoursPerWeek !== undefined && (
+                <div>
+                  <p className="text-sm text-neutral-500 mb-1">
+                    Teaching Hours Per Week
+                  </p>
+                  <p className="text-sm font-medium">
+                    {job.teachingHoursPerWeek}
+                  </p>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        ) : null}
+
         {/* Job Details */}
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Main Content */}
@@ -447,76 +645,406 @@ const JobDetail: React.FC = () => {
             </motion.div>
 
             {/* Requirements */}
-            {job.requirements && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm p-6"
-              >
-                <h2 className="text-xl font-semibold mb-4">Requirements</h2>
-                <div className="prose prose-neutral dark:prose-invert max-w-none">
-                  <p className="whitespace-pre-wrap">{job.requirements}</p>
-                </div>
-              </motion.div>
-            )}
+            {(() => {
+              let requirementsData = null;
+              let isPlainText = false;
+              
+              if (!job.requirements || job.requirements.trim() === '') {
+                return null;
+              }
+
+              try {
+                // Try to parse as JSON
+                const parsed = JSON.parse(job.requirements);
+                if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
+                  requirementsData = parsed;
+                } else {
+                  isPlainText = true;
+                }
+              } catch (e) {
+                // If parsing fails, treat as plain text
+                isPlainText = true;
+              }
+
+              // Check if we have any structured data to display
+              const hasMinimumExperience = requirementsData?.minimumTeachingExperience && requirementsData.minimumTeachingExperience.trim() !== '';
+              const hasExamExperience = requirementsData?.ieltsExperience || requirementsData?.cambridgeExperience || requirementsData?.satExperience;
+              const hasEligibleNationalities = requirementsData?.eligibleNationalities;
+              const hasBackgroundCheck = requirementsData?.backgroundCheckRequired;
+
+              // If no structured data and it's plain text, show as before
+              if (isPlainText && !hasMinimumExperience && !hasExamExperience && !hasEligibleNationalities && !hasBackgroundCheck) {
+                return (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm p-6"
+                  >
+                    <h2 className="text-xl font-semibold mb-4">Requirements</h2>
+                    <div className="prose prose-neutral dark:prose-invert max-w-none">
+                      <p className="whitespace-pre-wrap break-words overflow-wrap-anywhere">{job.requirements}</p>
+                    </div>
+                  </motion.div>
+                );
+              }
+
+              // If we have structured data, show structured display
+              if (hasMinimumExperience || hasExamExperience || hasEligibleNationalities || hasBackgroundCheck) {
+                return (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm p-6"
+                  >
+                    <h2 className="text-xl font-semibold mb-4">Requirements</h2>
+                    <div className="space-y-4">
+                      {/* Minimum Teaching Experience */}
+                      {hasMinimumExperience && (
+                        <div>
+                          <p className="text-sm text-neutral-500 mb-1">
+                            Minimum Teaching Experience
+                          </p>
+                          <p className="text-sm font-medium">
+                            {requirementsData.minimumTeachingExperience === '30+' 
+                              ? '30+ years' 
+                              : `${requirementsData.minimumTeachingExperience} ${requirementsData.minimumTeachingExperience === '1' ? 'year' : 'years'}`}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Specific Exam Experience */}
+                      {hasExamExperience && (
+                        <div>
+                          <p className="text-sm text-neutral-500 mb-2">
+                            Specific Exam Experience
+                          </p>
+                          <div className="flex flex-wrap gap-3">
+                            {requirementsData?.ieltsExperience && (
+                              <div className="flex items-center gap-1.5">
+                                <Award className="w-4 h-4 text-primary-600" />
+                                <span className="text-sm font-medium">IELTS</span>
+                              </div>
+                            )}
+                            {requirementsData?.cambridgeExperience && (
+                              <div className="flex items-center gap-1.5">
+                                <Award className="w-4 h-4 text-primary-600" />
+                                <span className="text-sm font-medium">Cambridge</span>
+                              </div>
+                            )}
+                            {requirementsData?.satExperience && (
+                              <div className="flex items-center gap-1.5">
+                                <Award className="w-4 h-4 text-primary-600" />
+                                <span className="text-sm font-medium">SAT</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Eligible for Work Visa */}
+                      {hasEligibleNationalities && (
+                        <div>
+                          <p className="text-sm text-neutral-500 mb-1">
+                            Eligible for Work Visa
+                          </p>
+                          <div className="flex items-center gap-2">
+                            <CheckCircle className="w-4 h-4 text-green-600" />
+                            <p className="text-sm font-medium">Nationalities Eligible for Work Visa</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Background Check Required */}
+                      {hasBackgroundCheck && (
+                        <div>
+                          <p className="text-sm text-neutral-500 mb-1">
+                            Background Check will be Required
+                          </p>
+                          <div className="flex items-center gap-2">
+                            <Shield className="w-4 h-4 text-primary-600" />
+                            <p className="text-sm font-medium">Background Check Requirement</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                );
+              }
+
+              return null;
+            })()}
 
             {/* Benefits */}
-            {job.benefits && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm p-6"
-              >
-                <h2 className="text-xl font-semibold mb-4">Benefits</h2>
-                <div className="prose prose-neutral dark:prose-invert max-w-none">
-                  <p className="whitespace-pre-wrap">{job.benefits}</p>
-                </div>
-              </motion.div>
-            )}
+            {(() => {
+              let benefitsData = null;
+              let isPlainText = false;
+              
+              // Determine which benefits to use
+              let benefitsToUse = job.benefits;
+              
+              // If useSchoolBenefits is true and job benefits are empty, use school benefits
+              if (job.useSchoolBenefits && (!job.benefits || job.benefits.trim() === '' || job.benefits === '{}' || job.benefits === 'null')) {
+                benefitsToUse = job.school?.benefits;
+              }
+              
+              if (!benefitsToUse || benefitsToUse.trim() === '' || benefitsToUse === '{}' || benefitsToUse === 'null') {
+                return null;
+              }
 
-            {/* About the School */}
-            {(job.school.description || job.school.studentCount || job.school.city || job.school.country) && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-                className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm p-6"
-              >
-                <h2 className="text-xl font-semibold mb-4">About the School</h2>
-                <div className="space-y-4">
-                  {/* Location and Size */}
-                  <div className="flex flex-wrap gap-6 text-neutral-600 dark:text-neutral-400">
-                    {(job.school.city || job.school.country) && (
-                      <div className="flex items-center gap-2">
-                        <MapPin className="w-4 h-4 text-neutral-500" />
-                        <span>
-                          {job.school.city && job.school.country
-                            ? `${job.school.city}, ${job.school.country}`
-                            : job.school.city || job.school.country}
-                        </span>
+              try {
+                // Try to parse as JSON
+                const parsed = JSON.parse(benefitsToUse);
+                // Check if it's a valid object with at least one property
+                if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
+                  const keys = Object.keys(parsed);
+                  // Check if there are any true values (selected benefits)
+                  const hasSelectedBenefits = keys.some(key => parsed[key] === true);
+                  if (hasSelectedBenefits) {
+                    benefitsData = parsed;
+                  } else {
+                    // All benefits are false or empty object
+                    return null;
+                  }
+                } else {
+                  // Not a valid object structure
+                  isPlainText = true;
+                }
+              } catch (e) {
+                // If parsing fails, treat as plain text
+                isPlainText = true;
+              }
+
+              // If it's plain text, display it as before
+              if (isPlainText) {
+                return (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm p-6"
+                  >
+                    <h2 className="text-xl font-semibold mb-4">Benefits</h2>
+                    <div className="prose prose-neutral dark:prose-invert max-w-none">
+                      <p className="whitespace-pre-wrap break-words overflow-wrap-anywhere">
+                        {job.benefits}
+                      </p>
+                    </div>
+                  </motion.div>
+                );
+              }
+
+              // Check if any benefits are selected
+              const hasFinancialBenefits =
+                benefitsData?.housingProvided ||
+                benefitsData?.flightReimbursement ||
+                benefitsData?.visaWorkPermitSupport ||
+                benefitsData?.contractCompletionBonus ||
+                benefitsData?.paidHolidays ||
+                benefitsData?.overtimePay;
+
+              const hasLifestyleBenefits =
+                benefitsData?.paidAnnualLeave ||
+                benefitsData?.nationalHolidays ||
+                benefitsData?.sickLeave ||
+                benefitsData?.healthInsurance ||
+                benefitsData?.relocationSupport;
+
+              const hasProfessionalBenefits =
+                benefitsData?.teachingMaterialsProvided ||
+                benefitsData?.curriculumGuidance ||
+                benefitsData?.teacherTraining ||
+                benefitsData?.promotionOpportunities ||
+                benefitsData?.contractRenewalOptions;
+
+              if (
+                !hasFinancialBenefits &&
+                !hasLifestyleBenefits &&
+                !hasProfessionalBenefits
+              ) {
+                return null;
+              }
+
+              return (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm p-6"
+                >
+                  <h2 className="text-xl font-semibold mb-4">
+                    Benefits & Support
+                  </h2>
+                  <div className="space-y-6">
+                    {/* Financial Subsection */}
+                    {hasFinancialBenefits && (
+                      <div>
+                        <h3 className="text-sm font-semibold text-blue-500 dark:text-blue-400 mb-3 flex items-center gap-2">
+                          <DollarSign className="w-4 h-4" />
+                          Financial
+                        </h3>
+                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+                          {benefitsData?.housingProvided && (
+                            <div className="flex items-center gap-2">
+                              <Home className="w-4 h-4 text-primary-600" />
+                              <span className="text-sm break-words overflow-wrap-anywhere">
+                                Housing Assistance
+                              </span>
+                            </div>
+                          )}
+                          {benefitsData?.flightReimbursement && (
+                            <div className="flex items-center gap-2">
+                              <Plane className="w-4 h-4 text-primary-600" />
+                              <span className="text-sm break-words overflow-wrap-anywhere">
+                                Flight Reimbursement Allowance
+                              </span>
+                            </div>
+                          )}
+                          {benefitsData?.visaWorkPermitSupport && (
+                            <div className="flex items-center gap-2">
+                              <Shield className="w-4 h-4 text-primary-600" />
+                              <span className="text-sm break-words overflow-wrap-anywhere">
+                                Visa & Work Permit Support
+                              </span>
+                            </div>
+                          )}
+                          {benefitsData?.contractCompletionBonus && (
+                            <div className="flex items-center gap-2">
+                              <Award className="w-4 h-4 text-primary-600" />
+                              <span className="text-sm break-words overflow-wrap-anywhere">
+                                Contract Completion Bonus
+                              </span>
+                            </div>
+                          )}
+                          {benefitsData?.paidHolidays && (
+                            <div className="flex items-center gap-2">
+                              <Calendar className="w-4 h-4 text-primary-600" />
+                              <span className="text-sm break-words overflow-wrap-anywhere">
+                                Paid Holidays
+                              </span>
+                            </div>
+                          )}
+                          {benefitsData?.overtimePay && (
+                            <div className="flex items-center gap-2">
+                              <DollarSign className="w-4 h-4 text-primary-600" />
+                              <span className="text-sm break-words overflow-wrap-anywhere">
+                                Overtime Pay
+                              </span>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     )}
-                    {job.school.studentCount && (
-                      <div className="flex items-center gap-2">
-                        <Users className="w-4 h-4 text-neutral-500" />
-                        <span>{job.school.studentCount.toLocaleString()} students</span>
+
+                    {/* Lifestyle & Wellbeing Subsection */}
+                    {hasLifestyleBenefits && (
+                      <div>
+                        <h3 className="text-sm font-semibold text-blue-500 dark:text-blue-400 mb-3 flex items-center gap-2">
+                          <Heart className="w-4 h-4" />
+                          Lifestyle & Wellbeing
+                        </h3>
+                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+                          {benefitsData?.paidAnnualLeave && (
+                            <div className="flex items-center gap-2">
+                              <Calendar className="w-4 h-4 text-primary-600" />
+                              <span className="text-sm break-words overflow-wrap-anywhere">
+                                Paid Annual Leave
+                              </span>
+                            </div>
+                          )}
+                          {benefitsData?.nationalHolidays && (
+                            <div className="flex items-center gap-2">
+                              <Calendar className="w-4 h-4 text-primary-600" />
+                              <span className="text-sm break-words overflow-wrap-anywhere">
+                                National Holidays
+                              </span>
+                            </div>
+                          )}
+                          {benefitsData?.sickLeave && (
+                            <div className="flex items-center gap-2">
+                              <Heart className="w-4 h-4 text-primary-600" />
+                              <span className="text-sm break-words overflow-wrap-anywhere">
+                                Sick Leave
+                              </span>
+                            </div>
+                          )}
+                          {benefitsData?.healthInsurance && (
+                            <div className="flex items-center gap-2">
+                              <Shield className="w-4 h-4 text-primary-600" />
+                              <span className="text-sm break-words overflow-wrap-anywhere">
+                                Health Insurance
+                              </span>
+                            </div>
+                          )}
+                          {benefitsData?.relocationSupport && (
+                            <div className="flex items-center gap-2">
+                              <MapPin className="w-4 h-4 text-primary-600" />
+                              <span className="text-sm break-words overflow-wrap-anywhere">
+                                Relocation Support
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Professional Support Subsection */}
+                    {hasProfessionalBenefits && (
+                      <div>
+                        <h3 className="text-sm font-semibold text-blue-500 dark:text-blue-400 mb-3 flex items-center gap-2">
+                          <Briefcase className="w-4 h-4" />
+                          Professional Support
+                        </h3>
+                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+                          {benefitsData?.teachingMaterialsProvided && (
+                            <div className="flex items-center gap-2">
+                              <BookOpen className="w-4 h-4 text-primary-600" />
+                              <span className="text-sm break-words overflow-wrap-anywhere">
+                                Teaching Materials Provided
+                              </span>
+                            </div>
+                          )}
+                          {benefitsData?.curriculumGuidance && (
+                            <div className="flex items-center gap-2">
+                              <BookOpen className="w-4 h-4 text-primary-600" />
+                              <span className="text-sm break-words overflow-wrap-anywhere">
+                                Curriculum Guidance
+                              </span>
+                            </div>
+                          )}
+                          {benefitsData?.teacherTraining && (
+                            <div className="flex items-center gap-2">
+                              <GraduationCap className="w-4 h-4 text-primary-600" />
+                              <span className="text-sm break-words overflow-wrap-anywhere">
+                                Teacher Training
+                              </span>
+                            </div>
+                          )}
+                          {benefitsData?.promotionOpportunities && (
+                            <div className="flex items-center gap-2">
+                              <TrendingUp className="w-4 h-4 text-primary-600" />
+                              <span className="text-sm break-words overflow-wrap-anywhere">
+                                Promotion Opportunities
+                              </span>
+                            </div>
+                          )}
+                          {benefitsData?.contractRenewalOptions && (
+                            <div className="flex items-center gap-2">
+                              <RefreshCw className="w-4 h-4 text-primary-600" />
+                              <span className="text-sm break-words overflow-wrap-anywhere">
+                                Contract Renewal Options
+                              </span>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>
-                  
-                  {/* School Description */}
-                  {job.school.description && (
-                    <div className="prose prose-neutral dark:prose-invert max-w-none">
-                      <p className="whitespace-pre-wrap text-neutral-700 dark:text-neutral-300">
-                        {job.school.description}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </motion.div>
-            )}
+                </motion.div>
+              );
+            })()}
+
           </div>
 
           {/* Sidebar */}
@@ -530,24 +1058,147 @@ const JobDetail: React.FC = () => {
             >
               <h3 className="text-lg font-semibold mb-4">Key Information</h3>
               <div className="space-y-4">
-                <div>
-                  <p className="text-sm text-neutral-500 mb-1">
-                    Employment Type
-                  </p>
-                  <p className="font-medium">{job.type.replace("_", " ")}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-neutral-500 mb-1">Qualification</p>
-                  <p className="font-medium">{job.qualification}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-neutral-500 mb-1">Experience</p>
-                  <p className="font-medium">{job.experience}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-neutral-500 mb-1">Language</p>
-                  <p className="font-medium">{job.language}</p>
-                </div>
+
+                {/* Experience Type */}
+                {(() => {
+                  let requirementsData = null;
+                  try {
+                    if (job.requirements) {
+                      requirementsData = JSON.parse(job.requirements);
+                    }
+                  } catch (e) {
+                    // If parsing fails, requirementsData remains null
+                  }
+
+                  const experienceTypes = [];
+                  if (requirementsData?.classroomExperience) {
+                    experienceTypes.push({
+                      name: "Classroom Experience",
+                      icon: School,
+                    });
+                  }
+                  if (requirementsData?.onlineExperience) {
+                    experienceTypes.push({
+                      name: "Online Experience",
+                      icon: Monitor,
+                    });
+                  }
+                  if (requirementsData?.centralAsiaExperience) {
+                    experienceTypes.push({
+                      name: "Central Asia or Similar Region",
+                      icon: Map,
+                    });
+                  }
+
+                  if (experienceTypes.length > 0) {
+                    return (
+                      <div>
+                        <p className="text-sm text-neutral-500 mb-1">
+                          Experience
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {experienceTypes.map((type, idx) => {
+                            const IconComponent = type.icon;
+                            return (
+                              <div
+                                key={idx}
+                                className="flex items-center gap-1 text-sm font-medium"
+                              >
+                                <IconComponent className="w-4 h-4 text-primary-600" />
+                                <span>{type.name}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
+
+                {/* Language - Only show if nativeEnglishLevel is selected */}
+                {(() => {
+                  let requirementsData = null;
+                  try {
+                    if (job.requirements) {
+                      requirementsData = JSON.parse(job.requirements);
+                    }
+                  } catch (e) {
+                    // If parsing fails, requirementsData remains null
+                  }
+
+                  if (requirementsData?.nativeEnglishLevel) {
+                    return (
+                      <div>
+                        <p className="text-sm text-neutral-500 mb-1">
+                          Language
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <Languages className="w-4 h-4 text-primary-600" />
+                          <p className="text-sm font-medium">Native or Near-Native English</p>
+                        </div>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
+
+                {/* Qualifications */}
+                {(() => {
+                  let requirementsData = null;
+                  try {
+                    if (job.requirements) {
+                      requirementsData = JSON.parse(job.requirements);
+                    }
+                  } catch (e) {
+                    // If parsing fails, requirementsData remains null
+                  }
+
+                  const qualifications = [];
+                  if (requirementsData?.tefl) {
+                    qualifications.push({ name: "TEFL", icon: Award });
+                  }
+                  if (requirementsData?.celta) {
+                    qualifications.push({ name: "CELTA", icon: Award });
+                  }
+                  if (requirementsData?.tesol) {
+                    qualifications.push({ name: "TESOL", icon: Award });
+                  }
+                  if (requirementsData?.bachelorsDegree) {
+                    qualifications.push({
+                      name: "Degree",
+                      icon: GraduationCap,
+                    });
+                  }
+
+                  if (qualifications.length > 0) {
+                    return (
+                      <div>
+                        <p className="text-sm text-neutral-500 mb-1">
+                          Qualifications
+                        </p>
+                        <div className="flex flex-wrap gap-3">
+                          {qualifications.map((qual, idx) => {
+                            const IconComponent = qual.icon;
+                            return (
+                              <div
+                                key={idx}
+                                className="flex items-center gap-1.5"
+                              >
+                                <IconComponent className="w-4 h-4 text-primary-600" />
+                                <span className="text-sm font-medium">
+                                  {qual.name}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
+
                 {job.visaRequired && (
                   <div className="flex items-center gap-2 text-primary-600 dark:text-primary-400">
                     <CheckCircle className="w-4 h-4" />
@@ -559,7 +1210,7 @@ const JobDetail: React.FC = () => {
               </div>
             </motion.div>
 
-            {/* Kazakhstan Requirements */}
+            {/* Teaching Requirements */}
             {(job.teachingLicenseRequired ||
               job.kazakhLanguageRequired ||
               job.localCertificationRequired) && (
@@ -572,7 +1223,7 @@ const JobDetail: React.FC = () => {
                 <div className="flex items-center gap-2 mb-4">
                   <Globe className="w-5 h-5 text-amber-600 dark:text-amber-400" />
                   <h3 className="text-lg font-semibold text-amber-900 dark:text-amber-300">
-                    Kazakhstan Teaching Requirements
+                    Teaching Requirements
                   </h3>
                 </div>
                 <div className="space-y-3">
@@ -605,7 +1256,7 @@ const JobDetail: React.FC = () => {
                           : "text-neutral-500"
                       }
                     >
-                      Kazakh Language
+                      Local Language
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -885,6 +1536,67 @@ const JobDetail: React.FC = () => {
                 </Button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Message Modal */}
+      {showMessageModal && job && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-neutral-800 rounded-xl p-6 max-w-lg w-full">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-semibold">
+                Message {job.school.name}
+              </h2>
+              <button
+                onClick={() => {
+                  setShowMessageModal(false);
+                  setMessageContent("");
+                }}
+                className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Message
+                </label>
+                <textarea
+                  value={messageContent}
+                  onChange={(e) => setMessageContent(e.target.value)}
+                  className="input"
+                  rows={6}
+                  placeholder="Type your message to the school..."
+                  disabled={sendingMessage}
+                />
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <Button
+                  type="button"
+                  onClick={() => {
+                    setShowMessageModal(false);
+                    setMessageContent("");
+                  }}
+                  variant="secondary"
+                  disabled={sendingMessage}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleStartConversation}
+                  variant="gradient"
+                  disabled={!messageContent.trim() || sendingMessage}
+                  className="flex-1"
+                >
+                  {sendingMessage ? "Sending..." : "Send Message"}
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       )}

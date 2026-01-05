@@ -19,11 +19,15 @@ import {
   Info,
   ExternalLink,
   Camera,
+  Award,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/Button";
-import { countries } from "@/data/countries";
+import { InfoIcon } from "@/components/ui/Tooltip";
+import { CountrySelector } from "@/components/forms/CountrySelector";
+import { countries, type Country, getCountryByCode } from "@/data/countries";
+import { SCHOOL_TYPES, CURRICULUM_OPTIONS, CENTRAL_ASIA_COUNTRIES } from "@/constants/options";
 import toast from "react-hot-toast";
 
 interface School {
@@ -40,12 +44,19 @@ interface School {
   postalCode: string;
   country: string;
   schoolType: string;
+  curriculum?: string;
   estimateJobs: string;
   website?: string;
   description?: string;
+  teachingPhilosophy?: string;
   logoUrl?: string;
+  coverPhotoUrl?: string;
   established?: string;
   studentCount?: number;
+  studentAgeRangeMin?: number;
+  studentAgeRangeMax?: number;
+  averageClassSize?: number;
+  benefits?: string; // JSON string of benefits
   verified: boolean;
   createdAt: string;
   updatedAt: string;
@@ -59,16 +70,9 @@ interface School {
   completionPercentage: number;
 }
 
-const schoolTypeOptions = [
-  "Private International School",
-  "Public School",
-  "Language Institute",
-  "University",
-  "Community College",
-  "Training Center",
-  "Online Education Platform",
-  "Other",
-];
+// Use the same constants as signup form for consistency
+const schoolTypeOptions = SCHOOL_TYPES;
+const curriculumOptions = CURRICULUM_OPTIONS;
 
 const estimateJobsOptions = [
   "1-2 jobs per year",
@@ -87,6 +91,9 @@ export const SchoolProfilePage: React.FC = () => {
   const [editMode, setEditMode] = useState(false);
   const [formData, setFormData] = useState<Partial<School>>({});
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingCoverPhoto, setUploadingCoverPhoto] = useState(false);
+  const [selectedCountry, setSelectedCountry] = useState<Country | undefined>(undefined);
+  const [selectedPhoneCountry, setSelectedPhoneCountry] = useState<Country | undefined>(undefined);
 
   useEffect(() => {
     if (!user || user.userType !== "SCHOOL") {
@@ -97,22 +104,110 @@ export const SchoolProfilePage: React.FC = () => {
   }, [user, navigate]);
 
   const fetchProfile = async () => {
+    setLoading(true); // Ensure loading is true at start
     try {
+      const token = localStorage.getItem("authToken");
+      if (!token || token === "null" || token === "undefined") {
+        console.error("No valid auth token found");
+        navigate("/signin");
+        return;
+      }
+
       const response = await fetch("/api/schools/profile", {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
-      if (!response.ok) throw new Error("Failed to fetch profile");
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: "Unknown error" }));
+        console.error("Profile API error:", response.status, errorData);
+        
+        if (response.status === 404) {
+          // Don't show error toast immediately - let the auto-create logic handle it
+          // The API will auto-create the profile, so we'll get a response
+          setLoading(false);
+          return;
+        }
+        
+        throw new Error(errorData.error || "Failed to fetch profile");
+      }
 
       const data = await response.json();
+      
+      if (!data.school) {
+        console.error("Profile data missing school object:", data);
+        // Don't show error toast - just keep loading state
+        setLoading(false);
+        return;
+      }
+      
+      // If profile was just created, show a message
+      if (data._created) {
+        toast.success("Profile created! Please complete your school information.", {
+          duration: 5000,
+        });
+        setEditMode(true); // Automatically open edit mode for new profiles
+      }
+      
+      // Set school data before setting loading to false
       setSchool(data.school);
-      setFormData(data.school);
+      
+      // Parse benefits if they exist
+      let parsedBenefits = {};
+      if (data.school.benefits) {
+        try {
+          parsedBenefits = JSON.parse(data.school.benefits);
+        } catch (e) {
+          // If not JSON, keep as empty object
+        }
+      }
+      
+      // Initialize formData with parsed benefits
+      setFormData({
+        ...data.school,
+        // Financial benefits
+        housingProvided: parsedBenefits.housingProvided || false,
+        flightReimbursement: parsedBenefits.flightReimbursement || false,
+        visaWorkPermitSupport: parsedBenefits.visaWorkPermitSupport || false,
+        contractCompletionBonus: parsedBenefits.contractCompletionBonus || false,
+        paidHolidays: parsedBenefits.paidHolidays || false,
+        overtimePay: parsedBenefits.overtimePay || false,
+        // Lifestyle & Wellbeing
+        paidAnnualLeave: parsedBenefits.paidAnnualLeave || false,
+        nationalHolidays: parsedBenefits.nationalHolidays || false,
+        sickLeave: parsedBenefits.sickLeave || false,
+        healthInsurance: parsedBenefits.healthInsurance || false,
+        relocationSupport: parsedBenefits.relocationSupport || false,
+        // Professional Support
+        teachingMaterialsProvided: parsedBenefits.teachingMaterialsProvided || false,
+        curriculumGuidance: parsedBenefits.curriculumGuidance || false,
+        teacherTraining: parsedBenefits.teacherTraining || false,
+        promotionOpportunities: parsedBenefits.promotionOpportunities || false,
+        contractRenewalOptions: parsedBenefits.contractRenewalOptions || false,
+      });
+      
+      // Set selected countries based on form data
+      if (data.school.country) {
+        const country = countries.find(c => c.name === data.school.country);
+        if (country) {
+          setSelectedCountry(country);
+        }
+      }
+      if (data.school.phoneCountryCode) {
+        const phoneCountry = countries.find(c => c.phoneCode === data.school.phoneCountryCode);
+        if (phoneCountry) {
+          setSelectedPhoneCountry(phoneCountry);
+        }
+      }
+      
+      setLoading(false); // Only set loading to false after data is set
     } catch (error) {
       console.error("Error fetching profile:", error);
-      toast.error("Failed to load profile");
-    } finally {
+      // Only show error toast for actual errors, not for 404s that will be auto-created
+      if (!(error instanceof Error && error.message.includes("404"))) {
+        toast.error(error instanceof Error ? error.message : "Failed to load profile");
+      }
       setLoading(false);
     }
   };
@@ -120,13 +215,53 @@ export const SchoolProfilePage: React.FC = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
+      const token = localStorage.getItem("authToken");
+      if (!token || token === "null" || token === "undefined") {
+        toast.error("Authentication required. Please log in again.");
+        navigate("/signin");
+        return;
+      }
+
+      // Stringify benefits before sending
+      const benefitsData = {
+        // Financial
+        housingProvided: formData.housingProvided || false,
+        flightReimbursement: formData.flightReimbursement || false,
+        visaWorkPermitSupport: formData.visaWorkPermitSupport || false,
+        contractCompletionBonus: formData.contractCompletionBonus || false,
+        paidHolidays: formData.paidHolidays || false,
+        overtimePay: formData.overtimePay || false,
+        // Lifestyle & Wellbeing
+        paidAnnualLeave: formData.paidAnnualLeave || false,
+        nationalHolidays: formData.nationalHolidays || false,
+        sickLeave: formData.sickLeave || false,
+        healthInsurance: formData.healthInsurance || false,
+        relocationSupport: formData.relocationSupport || false,
+        // Professional Support
+        teachingMaterialsProvided: formData.teachingMaterialsProvided || false,
+        curriculumGuidance: formData.curriculumGuidance || false,
+        teacherTraining: formData.teacherTraining || false,
+        promotionOpportunities: formData.promotionOpportunities || false,
+        contractRenewalOptions: formData.contractRenewalOptions || false,
+      };
+
+      const { 
+        housingProvided, flightReimbursement, visaWorkPermitSupport, contractCompletionBonus, 
+        paidHolidays, overtimePay, paidAnnualLeave, nationalHolidays, sickLeave, 
+        healthInsurance, relocationSupport, teachingMaterialsProvided, curriculumGuidance, 
+        teacherTraining, promotionOpportunities, contractRenewalOptions, ...restFormData 
+      } = formData;
+
       const response = await fetch("/api/schools/profile", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...restFormData,
+          benefits: JSON.stringify(benefitsData),
+        }),
       });
 
       if (!response.ok) {
@@ -155,6 +290,13 @@ export const SchoolProfilePage: React.FC = () => {
       return;
     }
 
+    const token = localStorage.getItem("authToken");
+    if (!token || token === "null" || token === "undefined") {
+      toast.error("Authentication required. Please log in again.");
+      navigate("/signin");
+      return;
+    }
+
     setUploadingLogo(true);
     const uploadFormData = new FormData();
     uploadFormData.append("file", file);
@@ -164,7 +306,7 @@ export const SchoolProfilePage: React.FC = () => {
       const response = await fetch("/api/upload", {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          Authorization: `Bearer ${token}`,
         },
         body: uploadFormData,
       });
@@ -182,42 +324,108 @@ export const SchoolProfilePage: React.FC = () => {
     }
   };
 
+  const handleCoverPhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Cover photo must be less than 10MB");
+      return;
+    }
+
+    const token = localStorage.getItem("authToken");
+    if (!token || token === "null" || token === "undefined") {
+      toast.error("Authentication required. Please log in again.");
+      navigate("/signin");
+      return;
+    }
+
+    setUploadingCoverPhoto(true);
+    const uploadFormData = new FormData();
+    uploadFormData.append("file", file);
+    uploadFormData.append("type", "coverPhoto"); // Required parameter for upload API
+
+    try {
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: uploadFormData,
+      });
+
+      if (!response.ok) throw new Error("Failed to upload cover photo");
+
+      const data = await response.json();
+      setFormData({ ...formData, coverPhotoUrl: data.fileUrl });
+      toast.success("Cover photo uploaded successfully");
+    } catch (error) {
+      console.error("Error uploading cover photo:", error);
+      toast.error("Failed to upload cover photo");
+    } finally {
+      setUploadingCoverPhoto(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-600"></div>
       </div>
     );
   }
 
+  // Only show "not found" if we're not loading and school is still null after a reasonable time
+  // This prevents the flash of "not found" during the API call
+  if (!school && !loading) {
+    // Give it a moment - the API might be auto-creating the profile
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-600 mx-auto mb-4"></div>
+          <h2 className="text-2xl font-semibold mb-2">Setting up your profile...</h2>
+          <p className="text-neutral-600 dark:text-neutral-400 mb-4">
+            Please wait while we prepare your profile.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // If school is still null after loading, show error
   if (!school) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-semibold mb-2">Profile Not Found</h2>
           <p className="text-neutral-600 dark:text-neutral-400 mb-4">
-            Unable to load your school profile.
+            Unable to load your school profile. Please try refreshing the page.
           </p>
-          <Button onClick={() => navigate("/schools/dashboard")}>
-            Back to Dashboard
-          </Button>
+          <div className="flex gap-4 justify-center">
+            <Button onClick={() => window.location.reload()}>
+              Refresh Page
+            </Button>
+            <Button variant="secondary" onClick={() => navigate("/schools/dashboard")}>
+              Back to Dashboard
+            </Button>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-neutral-50 dark:bg-neutral-900 pt-20">
-      <div className="container-custom max-w-4xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="heading-1">School Profile</h1>
-            <p className="text-neutral-600 dark:text-neutral-400">
-              Manage your school information and settings
-            </p>
-          </div>
-          <div className="flex items-center gap-4">
+    <div className="min-h-screen bg-neutral-50 dark:bg-neutral-900 pt-[90px]">
+      <div className="pb-4">
+        <div className="container-custom max-w-4xl mx-auto px-4 pb-8">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center mt-[10px]">
+              <p className="text-neutral-600 dark:text-neutral-400">
+                Manage your School profile here
+              </p>
+            </div>
+          <div className="flex items-center gap-4 mt-[15px]">
             {editMode ? (
               <>
                 <Button
@@ -247,7 +455,7 @@ export const SchoolProfilePage: React.FC = () => {
             ) : (
               <Button
                 onClick={() => setEditMode(true)}
-                variant="primary"
+                variant="gradient"
                 leftIcon={<Edit2 className="w-4 h-4" />}
               >
                 Edit Profile
@@ -290,30 +498,60 @@ export const SchoolProfilePage: React.FC = () => {
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Profile Form */}
           <div className="lg:col-span-2 space-y-8">
-            {/* School Basic Information */}
-            <div className="card p-6">
-              <h2 className="heading-2 mb-6 flex items-center gap-2">
-                <Building className="w-5 h-5" />
-                School Information
-              </h2>
-
-              <div className="space-y-6">
-                {/* Logo Upload */}
-                <div className="flex items-center gap-6">
-                  <div className="relative">
-                    <div className="w-20 h-20 rounded-lg bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center overflow-hidden">
-                      {formData.logoUrl ? (
-                        <img 
-                          src={formData.logoUrl} 
-                          alt="School logo"
-                          className="w-full h-full object-cover"
-                        />
+            {/* Cover Photo and Logo Section */}
+            <div className="card p-0 overflow-hidden">
+              {/* Cover Photo */}
+              <div className="relative h-48 bg-gradient-to-br from-primary-100 to-secondary-100 dark:from-primary-900/30 dark:to-secondary-900/30">
+                {(formData.coverPhotoUrl || school.coverPhotoUrl) ? (
+                  <img 
+                    src={formData.coverPhotoUrl || school.coverPhotoUrl} 
+                    alt="School cover"
+                    className="w-full h-full object-cover"
+                  />
+                ) : null}
+                {editMode && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/40 hover:bg-black/50 transition-colors">
+                    <label className="cursor-pointer px-4 py-2 bg-white/90 dark:bg-neutral-800/90 rounded-lg hover:bg-white dark:hover:bg-neutral-800 transition-colors">
+                      {uploadingCoverPhoto ? (
+                        <div className="flex items-center gap-2">
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span className="text-sm font-medium">Uploading...</span>
+                        </div>
                       ) : (
-                        <Building className="w-8 h-8 text-neutral-400" />
+                        <div className="flex items-center gap-2">
+                          <Camera className="w-4 h-4" />
+                          <span className="text-sm font-medium">
+                            {formData.coverPhotoUrl || school.coverPhotoUrl ? "Change Cover Photo" : "Upload Cover Photo"}
+                          </span>
+                        </div>
                       )}
-                    </div>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleCoverPhotoUpload}
+                        className="hidden"
+                        disabled={uploadingCoverPhoto}
+                      />
+                    </label>
+                  </div>
+                )}
+              </div>
+              
+              {/* Logo positioned on top of cover photo */}
+              <div className="relative px-6 pb-6">
+                <div className="relative -mt-16 mb-6">
+                  <div className="relative w-32 h-32 rounded-xl bg-white dark:bg-neutral-800 shadow-lg border-4 border-white dark:border-neutral-800 flex items-center justify-center overflow-hidden">
+                    {(formData.logoUrl || school.logoUrl) ? (
+                      <img 
+                        src={formData.logoUrl || school.logoUrl} 
+                        alt="School logo"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <Building className="w-12 h-12 text-neutral-400" />
+                    )}
                     {editMode && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-lg opacity-0 hover:opacity-100 transition-opacity">
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-xl opacity-0 hover:opacity-100 transition-opacity">
                         <label className="cursor-pointer">
                           <Camera className="w-5 h-5 text-white" />
                           <input
@@ -327,39 +565,54 @@ export const SchoolProfilePage: React.FC = () => {
                       </div>
                     )}
                   </div>
-                  <div>
-                    <h3 className="font-medium">School Logo</h3>
-                    <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                      Upload a logo for your school (max 5MB)
-                    </p>
-                    {editMode && (
-                      <div className="mt-2">
-                        <label className="cursor-pointer">
-                          <span className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md border border-neutral-300 dark:border-neutral-600 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors">
-                            {uploadingLogo ? (
-                              <>
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                                Uploading...
-                              </>
-                            ) : (
-                              <>
-                                <Upload className="w-4 h-4" />
-                                Upload Logo
-                              </>
-                            )}
-                          </span>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={handleLogoUpload}
-                            className="hidden"
-                            disabled={uploadingLogo}
-                          />
-                        </label>
-                      </div>
-                    )}
-                  </div>
                 </div>
+                
+                {editMode && (
+                  <div className="mb-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <h3 className="font-medium text-sm">School Logo</h3>
+                      <InfoIcon content="Upload a logo for your school. Maximum file size is 5MB. Supported formats: JPG, PNG, WebP." />
+                    </div>
+                    <label className="cursor-pointer inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md border border-neutral-300 dark:border-neutral-600 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors">
+                      {uploadingLogo ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Uploading...
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="w-4 h-4" />
+                          Upload Logo
+                        </>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleLogoUpload}
+                        className="hidden"
+                        disabled={uploadingLogo}
+                      />
+                    </label>
+                  </div>
+                )}
+                
+                {/* School Name */}
+                <div className="mt-4">
+                  <h1 className="text-2xl md:text-3xl font-bold text-neutral-900 dark:text-white">
+                    {formData.name || school.name}
+                  </h1>
+                </div>
+              </div>
+            </div>
+
+            {/* School Basic Information */}
+            <div className="card p-6">
+              <h2 className="heading-2 mb-6 flex items-center gap-2">
+                <Building className="w-5 h-5" />
+                School Information
+              </h2>
+
+              <div className="space-y-6">
 
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
@@ -391,23 +644,52 @@ export const SchoolProfilePage: React.FC = () => {
                         className="input"
                         required
                       >
-                        <option value="">Select school type</option>
+                        <option value="">Select...</option>
                         {schoolTypeOptions.map((type) => (
-                          <option key={type} value={type}>
-                            {type}
+                          <option key={type.value} value={type.value}>
+                            {type.label}
                           </option>
                         ))}
                       </select>
                     ) : (
-                      <p className="text-neutral-900 dark:text-neutral-100">{school.schoolType}</p>
+                      <p className="text-neutral-900 dark:text-neutral-100">
+                        {schoolTypeOptions.find(type => type.value === school.schoolType)?.label || school.schoolType}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Curriculum/Focus
+                    </label>
+                    {editMode ? (
+                      <select
+                        value={formData.curriculum || ""}
+                        onChange={(e) => setFormData({ ...formData, curriculum: e.target.value })}
+                        className="input"
+                      >
+                        <option value="">Select...</option>
+                        {curriculumOptions.map((curriculum) => (
+                          <option key={curriculum.value} value={curriculum.value}>
+                            {curriculum.label}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <p className="text-neutral-900 dark:text-neutral-100">
+                        {curriculumOptions.find(c => c.value === school.curriculum)?.label || school.curriculum || "Not specified"}
+                      </p>
                     )}
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2">
-                    School Description *
-                  </label>
+                  <div className="flex items-center gap-2 mb-2">
+                    <label className="block text-sm font-medium">
+                      School Description
+                    </label>
+                    <InfoIcon content="This description will be shown to teachers on job postings. You can set it here or add it when creating your first job posting." />
+                  </div>
                   {editMode ? (
                     <textarea
                       value={formData.description || ""}
@@ -415,16 +697,34 @@ export const SchoolProfilePage: React.FC = () => {
                       className="input"
                       rows={4}
                       placeholder="Describe your school, its mission, values, and what makes it special..."
-                      required
                     />
                   ) : (
                     <p className="text-neutral-600 dark:text-neutral-400">
-                      {school.description || "No description provided"}
+                      {school.description || "No description provided. You can add one here or when creating a job posting."}
                     </p>
                   )}
-                  <p className="text-xs text-neutral-500 mt-1">
-                    This description will be shown to teachers on job postings
-                  </p>
+                </div>
+
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <label className="block text-sm font-medium">
+                      Teaching Philosophy & Values
+                    </label>
+                    <InfoIcon content="Share your school's teaching philosophy, educational values, and approach to teaching. This helps teachers understand your school's culture and teaching methods." />
+                  </div>
+                  {editMode ? (
+                    <textarea
+                      value={formData.teachingPhilosophy || ""}
+                      onChange={(e) => setFormData({ ...formData, teachingPhilosophy: e.target.value })}
+                      className="input"
+                      rows={4}
+                      placeholder="Describe your school's teaching philosophy, educational values, and approach to teaching..."
+                    />
+                  ) : (
+                    <p className="text-neutral-600 dark:text-neutral-400">
+                      {school.teachingPhilosophy || "No teaching philosophy provided."}
+                    </p>
+                  )}
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-6">
@@ -460,9 +760,12 @@ export const SchoolProfilePage: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">
-                      Estimated Jobs Per Year
-                    </label>
+                    <div className="flex items-center gap-2 mb-2">
+                      <label className="block text-sm font-medium">
+                        Estimated Jobs Per Year
+                      </label>
+                      <InfoIcon content="Help us understand your hiring needs. This helps us match you with the right subscription plan and provide better service." />
+                    </div>
                     {editMode ? (
                       <select
                         value={formData.estimateJobs || ""}
@@ -486,9 +789,12 @@ export const SchoolProfilePage: React.FC = () => {
 
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-medium mb-2">
-                      Established Year
-                    </label>
+                    <div className="flex items-center gap-2 mb-2">
+                      <label className="block text-sm font-medium">
+                        Established Year
+                      </label>
+                      <InfoIcon content="The year your school was founded. This helps teachers understand your school's history and experience." />
+                    </div>
                     {editMode ? (
                       <input
                         type="number"
@@ -513,9 +819,12 @@ export const SchoolProfilePage: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">
-                      Number of Students
-                    </label>
+                    <div className="flex items-center gap-2 mb-2">
+                      <label className="block text-sm font-medium">
+                        Number of Students
+                      </label>
+                      <InfoIcon content="The approximate number of students enrolled at your school. This helps teachers understand the size of your institution." />
+                    </div>
                     {editMode ? (
                       <input
                         type="number"
@@ -533,6 +842,273 @@ export const SchoolProfilePage: React.FC = () => {
                         {school.studentCount ? school.studentCount.toLocaleString() : "Not specified"}
                       </p>
                     )}
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <label className="block text-sm font-medium">
+                        Typical Student Age Range
+                      </label>
+                      <InfoIcon content="Select the age range of students typically enrolled at your school (including adults). This helps teachers understand the student demographics." />
+                    </div>
+                    {editMode ? (
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs text-neutral-500 mb-1">Min Age</label>
+                          <input
+                            type="number"
+                            value={formData.studentAgeRangeMin || ""}
+                            onChange={(e) => setFormData({ 
+                              ...formData, 
+                              studentAgeRangeMin: e.target.value ? parseInt(e.target.value) : undefined
+                            })}
+                            className="input"
+                            min="0"
+                            placeholder="3"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-neutral-500 mb-1">Max Age</label>
+                          <input
+                            type="number"
+                            value={formData.studentAgeRangeMax || ""}
+                            onChange={(e) => setFormData({ 
+                              ...formData, 
+                              studentAgeRangeMax: e.target.value ? parseInt(e.target.value) : undefined
+                            })}
+                            className="input"
+                            min="0"
+                            max="30"
+                            placeholder="30+"
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-neutral-900 dark:text-neutral-100">
+                        {school.studentAgeRangeMin !== undefined && school.studentAgeRangeMax !== undefined
+                          ? `${school.studentAgeRangeMin} - ${school.studentAgeRangeMax >= 30 ? '30+' : school.studentAgeRangeMax} years`
+                          : "Not specified"}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <label className="block text-sm font-medium">
+                        Average Class Size
+                      </label>
+                      <InfoIcon content="The typical number of students in a class at your school. This helps teachers understand class dynamics and teaching environment." />
+                    </div>
+                    {editMode ? (
+                      <input
+                        type="number"
+                        value={formData.averageClassSize || ""}
+                        onChange={(e) => setFormData({ 
+                          ...formData, 
+                          averageClassSize: e.target.value ? parseInt(e.target.value) : undefined
+                        })}
+                        className="input"
+                        min="1"
+                        placeholder="25"
+                      />
+                    ) : (
+                      <p className="text-neutral-900 dark:text-neutral-100">
+                        {school.averageClassSize ? `${school.averageClassSize} students` : "Not specified"}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Benefits & Support */}
+            <div className="card p-6">
+              <h2 className="heading-2 mb-6 flex items-center gap-2">
+                <Award className="w-5 h-5" />
+                Benefits & Support
+              </h2>
+              
+              <div className="space-y-6">
+                {/* Financial Subsection */}
+                <div>
+                  <h4 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100 mb-3">Financial</h4>
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <label className="flex items-center gap-2">
+                      <input 
+                        type="checkbox" 
+                        checked={formData.housingProvided || false}
+                        onChange={(e) => setFormData({ ...formData, housingProvided: e.target.checked })}
+                        disabled={!editMode}
+                        className="rounded" 
+                      />
+                      <span className="text-sm">Housing Assistance</span>
+                    </label>
+                    <label className="flex items-center gap-2">
+                      <input 
+                        type="checkbox" 
+                        checked={formData.flightReimbursement || false}
+                        onChange={(e) => setFormData({ ...formData, flightReimbursement: e.target.checked })}
+                        disabled={!editMode}
+                        className="rounded" 
+                      />
+                      <span className="text-sm">Flight Reimbursement Allowance</span>
+                    </label>
+                    <label className="flex items-center gap-2">
+                      <input 
+                        type="checkbox" 
+                        checked={formData.visaWorkPermitSupport || false}
+                        onChange={(e) => setFormData({ ...formData, visaWorkPermitSupport: e.target.checked })}
+                        disabled={!editMode}
+                        className="rounded" 
+                      />
+                      <span className="text-sm">Visa & Work Permit Support</span>
+                    </label>
+                    <label className="flex items-center gap-2">
+                      <input 
+                        type="checkbox" 
+                        checked={formData.contractCompletionBonus || false}
+                        onChange={(e) => setFormData({ ...formData, contractCompletionBonus: e.target.checked })}
+                        disabled={!editMode}
+                        className="rounded" 
+                      />
+                      <span className="text-sm">Contract Completion Bonus</span>
+                    </label>
+                    <label className="flex items-center gap-2">
+                      <input 
+                        type="checkbox" 
+                        checked={formData.paidHolidays || false}
+                        onChange={(e) => setFormData({ ...formData, paidHolidays: e.target.checked })}
+                        disabled={!editMode}
+                        className="rounded" 
+                      />
+                      <span className="text-sm">Paid Holidays</span>
+                    </label>
+                    <label className="flex items-center gap-2">
+                      <input 
+                        type="checkbox" 
+                        checked={formData.overtimePay || false}
+                        onChange={(e) => setFormData({ ...formData, overtimePay: e.target.checked })}
+                        disabled={!editMode}
+                        className="rounded" 
+                      />
+                      <span className="text-sm">Overtime Pay</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Lifestyle & Wellbeing Subsection */}
+                <div>
+                  <h4 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100 mb-3">Lifestyle & Wellbeing</h4>
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <label className="flex items-center gap-2">
+                      <input 
+                        type="checkbox" 
+                        checked={formData.paidAnnualLeave || false}
+                        onChange={(e) => setFormData({ ...formData, paidAnnualLeave: e.target.checked })}
+                        disabled={!editMode}
+                        className="rounded" 
+                      />
+                      <span className="text-sm">Paid Annual Leave</span>
+                    </label>
+                    <label className="flex items-center gap-2">
+                      <input 
+                        type="checkbox" 
+                        checked={formData.nationalHolidays || false}
+                        onChange={(e) => setFormData({ ...formData, nationalHolidays: e.target.checked })}
+                        disabled={!editMode}
+                        className="rounded" 
+                      />
+                      <span className="text-sm">National Holidays</span>
+                    </label>
+                    <label className="flex items-center gap-2">
+                      <input 
+                        type="checkbox" 
+                        checked={formData.sickLeave || false}
+                        onChange={(e) => setFormData({ ...formData, sickLeave: e.target.checked })}
+                        disabled={!editMode}
+                        className="rounded" 
+                      />
+                      <span className="text-sm">Sick Leave</span>
+                    </label>
+                    <label className="flex items-center gap-2">
+                      <input 
+                        type="checkbox" 
+                        checked={formData.healthInsurance || false}
+                        onChange={(e) => setFormData({ ...formData, healthInsurance: e.target.checked })}
+                        disabled={!editMode}
+                        className="rounded" 
+                      />
+                      <span className="text-sm">Health Insurance</span>
+                    </label>
+                    <label className="flex items-center gap-2">
+                      <input 
+                        type="checkbox" 
+                        checked={formData.relocationSupport || false}
+                        onChange={(e) => setFormData({ ...formData, relocationSupport: e.target.checked })}
+                        disabled={!editMode}
+                        className="rounded" 
+                      />
+                      <span className="text-sm">Relocation Support</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Professional Support Subsection */}
+                <div>
+                  <h4 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100 mb-3">Professional Support</h4>
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <label className="flex items-center gap-2">
+                      <input 
+                        type="checkbox" 
+                        checked={formData.teachingMaterialsProvided || false}
+                        onChange={(e) => setFormData({ ...formData, teachingMaterialsProvided: e.target.checked })}
+                        disabled={!editMode}
+                        className="rounded" 
+                      />
+                      <span className="text-sm">Teaching Materials Provided</span>
+                    </label>
+                    <label className="flex items-center gap-2">
+                      <input 
+                        type="checkbox" 
+                        checked={formData.curriculumGuidance || false}
+                        onChange={(e) => setFormData({ ...formData, curriculumGuidance: e.target.checked })}
+                        disabled={!editMode}
+                        className="rounded" 
+                      />
+                      <span className="text-sm">Curriculum Guidance</span>
+                    </label>
+                    <label className="flex items-center gap-2">
+                      <input 
+                        type="checkbox" 
+                        checked={formData.teacherTraining || false}
+                        onChange={(e) => setFormData({ ...formData, teacherTraining: e.target.checked })}
+                        disabled={!editMode}
+                        className="rounded" 
+                      />
+                      <span className="text-sm">Teacher Training</span>
+                    </label>
+                    <label className="flex items-center gap-2">
+                      <input 
+                        type="checkbox" 
+                        checked={formData.promotionOpportunities || false}
+                        onChange={(e) => setFormData({ ...formData, promotionOpportunities: e.target.checked })}
+                        disabled={!editMode}
+                        className="rounded" 
+                      />
+                      <span className="text-sm">Promotion Opportunities</span>
+                    </label>
+                    <label className="flex items-center gap-2">
+                      <input 
+                        type="checkbox" 
+                        checked={formData.contractRenewalOptions || false}
+                        onChange={(e) => setFormData({ ...formData, contractRenewalOptions: e.target.checked })}
+                        disabled={!editMode}
+                        className="rounded" 
+                      />
+                      <span className="text-sm">Contract Renewal Options</span>
+                    </label>
                   </div>
                 </div>
               </div>
@@ -566,9 +1142,12 @@ export const SchoolProfilePage: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">
-                      Contact Email
-                    </label>
+                    <div className="flex items-center gap-2 mb-2">
+                      <label className="block text-sm font-medium">
+                        Contact Email
+                      </label>
+                      <InfoIcon content="A specific contact email for job inquiries. If not provided, your account email will be used." />
+                    </div>
                     {editMode ? (
                       <input
                         type="email"
@@ -590,27 +1169,34 @@ export const SchoolProfilePage: React.FC = () => {
                     Phone Number *
                   </label>
                   {editMode ? (
-                    <div className="flex gap-2">
-                      <select
-                        value={formData.phoneCountryCode || "+1"}
-                        onChange={(e) => setFormData({ ...formData, phoneCountryCode: e.target.value })}
-                        className="input w-24"
-                      >
-                        <option value="+1">+1</option>
-                        <option value="+7">+7</option>
-                        <option value="+44">+44</option>
-                        <option value="+86">+86</option>
-                        <option value="+33">+33</option>
-                        <option value="+49">+49</option>
-                      </select>
-                      <input
-                        type="tel"
-                        value={formData.telephone || ""}
-                        onChange={(e) => setFormData({ ...formData, telephone: e.target.value })}
-                        className="input flex-1"
-                        placeholder="123-456-7890"
-                        required
-                      />
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-2">
+                          Phone Country
+                        </label>
+                        <CountrySelector
+                          selectedCountry={selectedPhoneCountry}
+                          onSelect={(country) => {
+                            setSelectedPhoneCountry(country);
+                            setFormData({ ...formData, phoneCountryCode: country.phoneCode });
+                          }}
+                          showPhoneCode={true}
+                          placeholder="Search countries..."
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">
+                          Phone Number
+                        </label>
+                        <input
+                          type="tel"
+                          value={formData.telephone || ""}
+                          onChange={(e) => setFormData({ ...formData, telephone: e.target.value })}
+                          className="input"
+                          placeholder="123-456-7890"
+                          required
+                        />
+                      </div>
                     </div>
                   ) : (
                     <p className="text-neutral-900 dark:text-neutral-100">
@@ -667,9 +1253,12 @@ export const SchoolProfilePage: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">
-                      State/Province
-                    </label>
+                    <div className="flex items-center gap-2 mb-2">
+                      <label className="block text-sm font-medium">
+                        State/Province
+                      </label>
+                      <InfoIcon content="Optional. The state or province where your school is located." />
+                    </div>
                     {editMode ? (
                       <input
                         type="text"
@@ -688,9 +1277,12 @@ export const SchoolProfilePage: React.FC = () => {
 
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-medium mb-2">
-                      Postal Code
-                    </label>
+                    <div className="flex items-center gap-2 mb-2">
+                      <label className="block text-sm font-medium">
+                        Postal Code
+                      </label>
+                      <InfoIcon content="Optional. The postal or ZIP code for your school's address." />
+                    </div>
                     {editMode ? (
                       <input
                         type="text"
@@ -711,19 +1303,14 @@ export const SchoolProfilePage: React.FC = () => {
                       Country *
                     </label>
                     {editMode ? (
-                      <select
-                        value={formData.country || ""}
-                        onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                        className="input"
-                        required
-                      >
-                        <option value="">Select country</option>
-                        {countries.map((country) => (
-                          <option key={country.code} value={country.name}>
-                            {country.name}
-                          </option>
-                        ))}
-                      </select>
+                      <CountrySelector
+                        selectedCountry={selectedCountry}
+                        onSelect={(country) => {
+                          setSelectedCountry(country);
+                          setFormData({ ...formData, country: country.name });
+                        }}
+                        placeholder="Search countries..."
+                      />
                     ) : (
                       <p className="text-neutral-900 dark:text-neutral-100">{school.country}</p>
                     )}
@@ -823,6 +1410,7 @@ export const SchoolProfilePage: React.FC = () => {
             </div>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

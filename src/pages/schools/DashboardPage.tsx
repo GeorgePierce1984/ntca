@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useSearchParams, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus,
@@ -25,25 +26,37 @@ import {
   BookOpen,
   Building,
   User,
+  AlertCircle,
+  MessageSquare,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { useAuth } from "@/contexts/AuthContext";
 
 import { ApplicantModal } from "@/components/schools/ApplicantModal";
 import {
   InterviewScheduleModal,
   InterviewData,
 } from "@/components/schools/InterviewScheduleModal";
+import { SubscriptionWarningBanner } from "@/components/schools/SubscriptionWarningBanner";
+import { MessagesModal } from "@/components/messages/MessagesModal";
 import toast from "react-hot-toast";
 
 // Types
 interface JobPosting {
   id: string;
   title: string;
-  location: string;
+  subjectsTaught?: string;
+  studentAgeGroupMin?: number;
+  studentAgeGroupMax?: number;
+  startDate?: string;
+  contractLength?: string;
+  city: string;
+  country: string;
   salary: string;
   type: "FULL_TIME" | "PART_TIME" | "CONTRACT";
   status: "ACTIVE" | "PAUSED" | "CLOSED";
   deadline: string;
+  teachingHoursPerWeek?: string;
   createdAt: string;
   updatedAt: string;
   description: string;
@@ -58,6 +71,7 @@ interface JobPosting {
   requirements?: string;
   useSchoolProfile: boolean;
   schoolDescription?: string;
+  useSchoolBenefits?: boolean;
   school: {
     id: string;
     name: string;
@@ -113,9 +127,22 @@ interface Application {
 }
 
 export const SchoolDashboardPage: React.FC = () => {
+  const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
+  
+  // Initialize activeTab from URL parameter if present
+  const getInitialTab = (): "overview" | "jobs" | "applicants" | "post-job" => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam === 'post-job') {
+      return 'post-job';
+    }
+    return 'overview';
+  };
+  
   const [activeTab, setActiveTab] = useState<
     "overview" | "jobs" | "applicants" | "post-job"
-  >("overview");
+  >(getInitialTab());
   const [selectedJob, setSelectedJob] = useState<string | null>(null);
   const [showJobForm, setShowJobForm] = useState(false);
   const [selectedApplicant, setSelectedApplicant] = useState<any | null>(
@@ -126,38 +153,184 @@ export const SchoolDashboardPage: React.FC = () => {
   const [selectedApplicantForInterview, setSelectedApplicantForInterview] =
     useState<Application | null>(null);
 
-  // Add ref for post job form
+  // Add refs for post job form and heading
   const postJobFormRef = useRef<HTMLDivElement>(null);
+  const postJobHeadingRef = useRef<HTMLHeadingElement>(null);
+  
+  // Handle URL parameter changes and tab switching
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam === 'post-job') {
+      if (activeTab !== 'post-job') {
+        setActiveTab('post-job');
+      }
+      // Clear the query parameter from URL after a brief delay to ensure tab is set
+      setTimeout(() => {
+        setSearchParams({}, { replace: true });
+      }, 100);
+    }
+  }, [searchParams, activeTab, setSearchParams]);
+  
+  // Scroll handler for when post-job tab becomes active
+  useEffect(() => {
+    if (activeTab === 'post-job') {
+      // Use multiple attempts to ensure scroll happens after content is rendered
+      const attemptScroll = (attempt: number = 0) => {
+        if (attempt > 20) {
+          console.warn('Scroll to post-job form failed after 20 attempts');
+          return; // Max 20 attempts (4 seconds total)
+        }
+        
+        const headingElement = postJobHeadingRef.current;
+        const formElement = postJobFormRef.current;
+        const targetElement = headingElement || formElement;
+        
+        if (targetElement) {
+          const rect = targetElement.getBoundingClientRect();
+          const height = rect.height;
+          
+          // Check if element is rendered and has height
+          if (height > 0) {
+            // Element is rendered, scroll to it
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            const offsetTop = rect.top + scrollTop - 100;
+            
+            window.scrollTo({
+              top: offsetTop,
+              behavior: 'smooth',
+            });
+            
+            // Focus on the first input after scroll
+            setTimeout(() => {
+              const firstInput = formElement?.querySelector("input");
+              firstInput?.focus();
+            }, 1000);
+            
+            return; // Success, stop retrying
+          }
+        }
+        
+        // Element not ready yet, try again
+        setTimeout(() => attemptScroll(attempt + 1), 200);
+      };
+      
+      // Start attempting after a short delay to allow animation to start
+      // Use requestAnimationFrame to ensure DOM is ready
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setTimeout(() => attemptScroll(), 300);
+        });
+      });
+    }
+  }, [activeTab]);
 
   // Add job form state
   const [jobForm, setJobForm] = useState({
     title: "",
-    location: "",
+    subjectsTaught: "",
+    studentAgeGroupMin: undefined as number | undefined,
+    studentAgeGroupMax: undefined as number | undefined,
+    startDate: "",
+    contractLength: "",
+    city: "",
+    country: "",
     employmentType: "",
     salary: "",
     deadline: "",
+    teachingHoursPerWeek: "",
     description: "",
     qualifications: "",
     benefits: "",
     useSchoolProfile: true,
     schoolDescription: "",
+    useSchoolBenefits: true,
     teachingLicenseRequired: false,
     kazakhLanguageRequired: false,
     localCertificationRequired: false,
+    // Financial benefits
+    housingProvided: false,
+    flightReimbursement: false,
+    visaWorkPermitSupport: false,
+    contractCompletionBonus: false,
+    paidHolidays: false,
+    overtimePay: false,
+    // Lifestyle & Wellbeing
+    paidAnnualLeave: false,
+    nationalHolidays: false,
+    sickLeave: false,
+    healthInsurance: false,
+    relocationSupport: false,
+    // Professional Support
+    teachingMaterialsProvided: false,
+    curriculumGuidance: false,
+    teacherTraining: false,
+    promotionOpportunities: false,
+    contractRenewalOptions: false,
+    // Requirements - Essential
+    nativeEnglishLevel: false,
+    bachelorsDegree: false,
+    bachelorsDegreeSubject: "",
+    tefl: false,
+    celta: false,
+    tesol: false,
+    minimumTeachingExperience: "",
+    // Requirements - Preferred
+    ieltsExperience: false,
+    cambridgeExperience: false,
+    satExperience: false,
+    classroomExperience: false,
+    onlineExperience: false,
+    centralAsiaExperience: false,
+    // Requirements - Legal
+    eligibleNationalities: false,
+    backgroundCheckRequired: false,
   });
 
   // Real data state
   const [jobs, setJobs] = useState<JobPosting[]>([]);
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
+  const [subscriptionEndDate, setSubscriptionEndDate] = useState<string | null>(null);
+  const [bannerDismissed, setBannerDismissed] = useState(false);
+  const [schoolProfile, setSchoolProfile] = useState<{ 
+    description?: string;
+    studentAgeRangeMin?: number;
+    studentAgeRangeMax?: number;
+    benefits?: string;
+    coverPhotoUrl?: string;
+    logoUrl?: string;
+  } | null>(null);
 
   // Add job modal state
   const [showJobModal, setShowJobModal] = useState(false);
   const [selectedJobForEdit, setSelectedJobForEdit] = useState<JobPosting | null>(null);
+  const [showMessagesModal, setShowMessagesModal] = useState(false);
+  const [unreadMessageCount, setUnreadMessageCount] = useState(0);
 
   // Calculate stats from real data
   const totalJobs = jobs.length;
-  const activeJobs = jobs.filter((job) => job.status === "ACTIVE").length;
+  // Helper function to check if a job deadline has passed
+  const isDeadlinePassed = (deadline: string): boolean => {
+    const deadlineDate = new Date(deadline);
+    deadlineDate.setHours(23, 59, 59, 999); // End of deadline day
+    const now = new Date();
+    return now > deadlineDate;
+  };
+
+  // Helper function to get effective job status (considers deadline)
+  const getEffectiveStatus = (job: JobPosting): "ACTIVE" | "PAUSED" | "CLOSED" => {
+    if (job.status === "CLOSED" || job.status === "PAUSED") {
+      return job.status;
+    }
+    // If status is ACTIVE but deadline has passed, treat as CLOSED
+    if (isDeadlinePassed(job.deadline)) {
+      return "CLOSED";
+    }
+    return job.status;
+  };
+
+  const activeJobs = jobs.filter((job) => getEffectiveStatus(job) === "ACTIVE").length;
   const totalApplicants = applications.length;
   const pendingApplications = applications.filter(
     (app) => app.status === "APPLIED" || app.status === "REVIEWING",
@@ -169,6 +342,7 @@ export const SchoolDashboardPage: React.FC = () => {
     { key: "jobs", label: "Job Postings", icon: Briefcase },
     { key: "applicants", label: "Applicants", icon: Users },
     { key: "post-job", label: "Post Job", icon: Plus, badge: "New" },
+    { key: "messages", label: "Message Center", icon: MessageSquare },
     { key: "profile", label: "Profile", icon: User },
   ];
 
@@ -211,28 +385,230 @@ export const SchoolDashboardPage: React.FC = () => {
     }
   };
 
+  // Fetch subscription status
+  const fetchSubscriptionStatus = async () => {
+    try {
+      const response = await fetch("/api/subscription-details", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setSubscriptionStatus(data.subscriptionStatus);
+        setSubscriptionEndDate(data.subscriptionEndDate);
+      }
+    } catch (error) {
+      console.error("Error fetching subscription status:", error);
+    }
+  };
+
+  // Fetch school profile to check if description exists
+  const fetchSchoolProfile = async () => {
+    try {
+      const response = await fetch("/api/schools/profile", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setSchoolProfile(data.school);
+      }
+    } catch (error) {
+      console.error("Error fetching school profile:", error);
+    }
+  };
+
+  // Fetch unread message count
+  const fetchUnreadMessageCount = async () => {
+    try {
+      const token = localStorage.getItem("authToken");
+      if (!token) return;
+
+      const response = await fetch("/api/messages/conversations", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const totalUnread = (data.conversations || []).reduce(
+          (sum: number, conv: any) => sum + (conv.unreadCount || 0),
+          0
+        );
+        setUnreadMessageCount(totalUnread);
+      }
+    } catch (error) {
+      console.error("Error fetching unread message count:", error);
+    }
+  };
+
+  // Check for URL query parameters on mount
   useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const tabParam = urlParams.get('tab');
+    if (tabParam === 'post-job') {
+      setActiveTab('post-job');
+      // Clear the query parameter from URL
+      window.history.replaceState({}, '', '/schools/dashboard');
+    }
+  }, []);
+
+  useEffect(() => {
+    // Fetch school profile first (critical for header layout)
+    fetchSchoolProfile();
+    // Then fetch other data in parallel
     fetchJobs();
     fetchApplications();
+    fetchSubscriptionStatus();
+    fetchUnreadMessageCount();
+    
+    // Only fetch when user switches back to the tab (not on intervals)
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        // User switched back to the tab - refresh data
+        fetchUnreadMessageCount();
+        // Optionally refresh other data too
+        fetchJobs();
+        fetchApplications();
+      }
+    };
+    
+    // Listen for tab visibility changes
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []);
+
+  // Pre-populate student age group and benefits from school profile when opening post-job tab
+  useEffect(() => {
+    if (activeTab === "post-job" && schoolProfile && !selectedJobForEdit && !showJobModal) {
+      // Only pre-populate if form is empty (new job, not editing)
+      if (!jobForm.studentAgeGroupMin && !jobForm.studentAgeGroupMax && schoolProfile.studentAgeRangeMin && schoolProfile.studentAgeRangeMax) {
+        setJobForm(prev => ({
+          ...prev,
+          studentAgeGroupMin: schoolProfile.studentAgeRangeMin,
+          studentAgeGroupMax: schoolProfile.studentAgeRangeMax,
+        }));
+      }
+      
+      // Pre-populate benefits from school profile when form opens and useSchoolBenefits is false
+      // This allows schools to see their defaults even when not using school profile benefits
+      if (schoolProfile?.benefits && !jobForm.useSchoolBenefits) {
+        try {
+          const parsedBenefits = JSON.parse(schoolProfile.benefits);
+          setJobForm(prev => ({
+            ...prev,
+            housingProvided: parsedBenefits.housingProvided || false,
+            flightReimbursement: parsedBenefits.flightReimbursement || false,
+            visaWorkPermitSupport: parsedBenefits.visaWorkPermitSupport || false,
+            contractCompletionBonus: parsedBenefits.contractCompletionBonus || false,
+            paidHolidays: parsedBenefits.paidHolidays || false,
+            overtimePay: parsedBenefits.overtimePay || false,
+            paidAnnualLeave: parsedBenefits.paidAnnualLeave || false,
+            nationalHolidays: parsedBenefits.nationalHolidays || false,
+            sickLeave: parsedBenefits.sickLeave || false,
+            healthInsurance: parsedBenefits.healthInsurance || false,
+            relocationSupport: parsedBenefits.relocationSupport || false,
+            teachingMaterialsProvided: parsedBenefits.teachingMaterialsProvided || false,
+            curriculumGuidance: parsedBenefits.curriculumGuidance || false,
+            teacherTraining: parsedBenefits.teacherTraining || false,
+            promotionOpportunities: parsedBenefits.promotionOpportunities || false,
+            contractRenewalOptions: parsedBenefits.contractRenewalOptions || false,
+          }));
+        } catch (e) {
+          // If parsing fails, keep existing values
+        }
+      }
+    }
+  }, [activeTab, schoolProfile, selectedJobForEdit, showJobModal, jobForm.useSchoolBenefits]);
 
   // Job editing functions
   const openEditModal = (job: JobPosting) => {
     setSelectedJobForEdit(job);
+    // Parse benefits JSON if it exists
+    let parsedBenefits = {};
+    if (job.benefits) {
+      try {
+        parsedBenefits = JSON.parse(job.benefits);
+      } catch (e) {
+        // If not JSON, keep as empty object
+      }
+    }
+    // Parse requirements JSON if it exists
+    let parsedRequirements = {};
+    if (job.requirements) {
+      try {
+        parsedRequirements = JSON.parse(job.requirements);
+      } catch (e) {
+        // If not JSON, keep as empty object
+      }
+    }
     setJobForm({
       title: job.title,
-      location: job.location,
+      subjectsTaught: job.subjectsTaught || "",
+      studentAgeGroupMin: job.studentAgeGroupMin,
+      studentAgeGroupMax: job.studentAgeGroupMax,
+      startDate: job.startDate ? job.startDate.split('T')[0] : "",
+      contractLength: job.contractLength || "",
+      city: job.city,
+      country: job.country,
       employmentType: job.type,
       salary: job.salary,
       deadline: job.deadline.split('T')[0],
+      teachingHoursPerWeek: job.teachingHoursPerWeek || "",
       description: job.description,
       qualifications: job.qualification,
-      benefits: job.benefits || "",
+      benefits: typeof job.benefits === 'string' && !job.benefits.startsWith('{') ? job.benefits : "",
       useSchoolProfile: job.useSchoolProfile,
       schoolDescription: job.schoolDescription || "",
+      useSchoolBenefits: job.useSchoolBenefits !== undefined ? job.useSchoolBenefits : true,
       teachingLicenseRequired: job.teachingLicenseRequired,
       kazakhLanguageRequired: job.kazakhLanguageRequired,
       localCertificationRequired: job.localCertificationRequired,
+      // Financial benefits
+      housingProvided: parsedBenefits.housingProvided || false,
+      flightReimbursement: parsedBenefits.flightReimbursement || false,
+      visaWorkPermitSupport: parsedBenefits.visaWorkPermitSupport || false,
+      contractCompletionBonus: parsedBenefits.contractCompletionBonus || false,
+      paidHolidays: parsedBenefits.paidHolidays || false,
+      overtimePay: parsedBenefits.overtimePay || false,
+      // Lifestyle & Wellbeing
+      paidAnnualLeave: parsedBenefits.paidAnnualLeave || false,
+      nationalHolidays: parsedBenefits.nationalHolidays || false,
+      sickLeave: parsedBenefits.sickLeave || false,
+      healthInsurance: parsedBenefits.healthInsurance || false,
+      relocationSupport: parsedBenefits.relocationSupport || false,
+      // Professional Support
+      teachingMaterialsProvided: parsedBenefits.teachingMaterialsProvided || false,
+      curriculumGuidance: parsedBenefits.curriculumGuidance || false,
+      teacherTraining: parsedBenefits.teacherTraining || false,
+      promotionOpportunities: parsedBenefits.promotionOpportunities || false,
+      contractRenewalOptions: parsedBenefits.contractRenewalOptions || false,
+      // Requirements - Essential
+      nativeEnglishLevel: parsedRequirements.nativeEnglishLevel || false,
+      bachelorsDegree: parsedRequirements.bachelorsDegree || false,
+      bachelorsDegreeSubject: parsedRequirements.bachelorsDegreeSubject || "",
+      tefl: parsedRequirements.tefl || false,
+      celta: parsedRequirements.celta || false,
+      tesol: parsedRequirements.tesol || false,
+      minimumTeachingExperience: parsedRequirements.minimumTeachingExperience || "",
+      // Requirements - Preferred
+      ieltsExperience: parsedRequirements.ieltsExperience || false,
+      cambridgeExperience: parsedRequirements.cambridgeExperience || false,
+      satExperience: parsedRequirements.satExperience || false,
+      classroomExperience: parsedRequirements.classroomExperience || false,
+      onlineExperience: parsedRequirements.onlineExperience || false,
+      centralAsiaExperience: parsedRequirements.centralAsiaExperience || false,
+      // Requirements - Legal
+      eligibleNationalities: parsedRequirements.eligibleNationalities || false,
+      backgroundCheckRequired: parsedRequirements.backgroundCheckRequired || false,
     });
     setShowJobModal(true);
   };
@@ -281,15 +657,63 @@ export const SchoolDashboardPage: React.FC = () => {
         },
         body: JSON.stringify({
           title: jobForm.title,
+          subjectsTaught: jobForm.subjectsTaught,
+          studentAgeGroupMin: jobForm.studentAgeGroupMin,
+          studentAgeGroupMax: jobForm.studentAgeGroupMax,
+          startDate: jobForm.startDate,
+          contractLength: jobForm.contractLength,
           description: jobForm.description,
-          location: jobForm.location,
+          city: jobForm.city,
+          country: jobForm.country,
           salary: jobForm.salary,
           type: jobForm.employmentType,
           deadline: jobForm.deadline,
+          teachingHoursPerWeek: jobForm.teachingHoursPerWeek,
           qualification: jobForm.qualifications,
-          benefits: jobForm.benefits,
+          benefits: JSON.stringify({
+            // Financial
+            housingProvided: jobForm.housingProvided,
+            flightReimbursement: jobForm.flightReimbursement,
+            visaWorkPermitSupport: jobForm.visaWorkPermitSupport,
+            contractCompletionBonus: jobForm.contractCompletionBonus,
+            paidHolidays: jobForm.paidHolidays,
+            overtimePay: jobForm.overtimePay,
+            // Lifestyle & Wellbeing
+            paidAnnualLeave: jobForm.paidAnnualLeave,
+            nationalHolidays: jobForm.nationalHolidays,
+            sickLeave: jobForm.sickLeave,
+            healthInsurance: jobForm.healthInsurance,
+            relocationSupport: jobForm.relocationSupport,
+            // Professional Support
+            teachingMaterialsProvided: jobForm.teachingMaterialsProvided,
+            curriculumGuidance: jobForm.curriculumGuidance,
+            teacherTraining: jobForm.teacherTraining,
+            promotionOpportunities: jobForm.promotionOpportunities,
+            contractRenewalOptions: jobForm.contractRenewalOptions,
+          }),
+          requirements: JSON.stringify({
+            // Essential
+            nativeEnglishLevel: jobForm.nativeEnglishLevel,
+            bachelorsDegree: jobForm.bachelorsDegree,
+            bachelorsDegreeSubject: jobForm.bachelorsDegreeSubject,
+            tefl: jobForm.tefl,
+            celta: jobForm.celta,
+            tesol: jobForm.tesol,
+            minimumTeachingExperience: jobForm.minimumTeachingExperience,
+            // Preferred
+            ieltsExperience: jobForm.ieltsExperience,
+            cambridgeExperience: jobForm.cambridgeExperience,
+            satExperience: jobForm.satExperience,
+            classroomExperience: jobForm.classroomExperience,
+            onlineExperience: jobForm.onlineExperience,
+            centralAsiaExperience: jobForm.centralAsiaExperience,
+            // Legal
+            eligibleNationalities: jobForm.eligibleNationalities,
+            backgroundCheckRequired: jobForm.backgroundCheckRequired,
+          }),
           useSchoolProfile: jobForm.useSchoolProfile,
           schoolDescription: jobForm.schoolDescription,
+          useSchoolBenefits: jobForm.useSchoolBenefits,
           teachingLicenseRequired: jobForm.teachingLicenseRequired,
           kazakhLanguageRequired: jobForm.kazakhLanguageRequired,
           localCertificationRequired: jobForm.localCertificationRequired,
@@ -303,33 +727,97 @@ export const SchoolDashboardPage: React.FC = () => {
             ? 'Job updated successfully!' 
             : 'Job posted successfully!'
         );
-        // Reset form
+        // Reset form with pre-populated student age group from school profile
         setJobForm({
           title: "",
-          location: "",
+          subjectsTaught: "",
+          studentAgeGroupMin: schoolProfile?.studentAgeRangeMin,
+          studentAgeGroupMax: schoolProfile?.studentAgeRangeMax,
+          startDate: "",
+          contractLength: "",
+          city: "",
+          country: "",
           employmentType: "",
           salary: "",
           deadline: "",
+          teachingHoursPerWeek: "",
           description: "",
           qualifications: "",
           benefits: "",
           useSchoolProfile: true,
           schoolDescription: "",
+          useSchoolBenefits: true,
           teachingLicenseRequired: false,
           kazakhLanguageRequired: false,
           localCertificationRequired: false,
+          // Financial benefits
+          housingProvided: false,
+          flightReimbursement: false,
+          visaWorkPermitSupport: false,
+          contractCompletionBonus: false,
+          paidHolidays: false,
+          overtimePay: false,
+          // Lifestyle & Wellbeing
+          paidAnnualLeave: false,
+          nationalHolidays: false,
+          sickLeave: false,
+          healthInsurance: false,
+          relocationSupport: false,
+          // Professional Support
+          teachingMaterialsProvided: false,
+          curriculumGuidance: false,
+          teacherTraining: false,
+          promotionOpportunities: false,
+          contractRenewalOptions: false,
+          // Requirements - Essential
+          nativeEnglishLevel: false,
+          bachelorsDegree: false,
+          bachelorsDegreeSubject: "",
+          tefl: false,
+          celta: false,
+          tesol: false,
+          minimumTeachingExperience: "",
+          // Requirements - Preferred
+          ieltsExperience: false,
+          cambridgeExperience: false,
+          satExperience: false,
+          classroomExperience: false,
+          onlineExperience: false,
+          centralAsiaExperience: false,
+          // Requirements - Legal
+          eligibleNationalities: false,
+          backgroundCheckRequired: false,
         });
         setSelectedJobForEdit(null);
         setShowJobModal(false);
-        // Refresh jobs list
+        // Refresh jobs list and school profile (in case description was updated)
         fetchJobs();
+        fetchSchoolProfile();
         // Switch to jobs tab to show the updated listing
         setActiveTab('jobs');
       } else {
         const error = await response.json();
         
+        // Handle subscription expired error
+        if (error.error === "Subscription expired" || error.error === "Active subscription required") {
+          toast.error(
+            <div>
+              <p className="font-medium">{error.error}</p>
+              <p className="text-sm mt-1">{error.message}</p>
+              <button
+                onClick={() => window.location.href = error.redirectUrl || '/schools/subscription'}
+                className="text-primary-600 hover:text-primary-700 underline text-sm mt-2 block"
+              >
+                {error.redirectUrl?.includes('subscription') ? 'Renew Subscription →' : 'View Plans →'}
+              </button>
+            </div>,
+            { duration: 8000 }
+          );
+          // Refresh subscription status
+          fetchSubscriptionStatus();
+        } 
         // Handle profile incomplete error specifically
-        if (!error.profileComplete) {
+        else if (!error.profileComplete) {
           toast.error(
             <div>
               <p className="font-medium">{error.error}</p>
@@ -359,21 +847,7 @@ export const SchoolDashboardPage: React.FC = () => {
       icon: "📝",
       duration: 2000,
     });
-    
-    // Add a small delay to ensure the tab content has rendered
-    setTimeout(() => {
-      // Scroll to the form with offset for header
-      if (postJobFormRef.current) {
-        const offsetTop = postJobFormRef.current.offsetTop - 100;
-        window.scrollTo({
-          top: offsetTop,
-          behavior: "smooth",
-        });
-        // Focus on the first input for better UX
-        const firstInput = postJobFormRef.current.querySelector("input");
-        firstInput?.focus();
-      }
-    }, 150);
+    // Scrolling is handled by useEffect and onAnimationComplete - no need to scroll here
   };
 
   const getStatusColor = (status: string) => {
@@ -480,22 +954,69 @@ export const SchoolDashboardPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen pt-20">
-      <section className="section">
+    <div className="min-h-screen pt-[85px]">
+      <div className="pb-4">
         <div className="container-custom">
+          {/* Subscription Warning Banner */}
+          <SubscriptionWarningBanner
+            subscriptionStatus={subscriptionStatus || undefined}
+            subscriptionEndDate={subscriptionEndDate || undefined}
+            dismissed={bannerDismissed}
+            onDismiss={() => setBannerDismissed(true)}
+          />
+
           {/* Header */}
-          <div className="mb-8">
+          <div className="mb-8 relative overflow-hidden rounded-xl">
+            {/* Cover Photo Background with Fade */}
+            {schoolProfile?.coverPhotoUrl && (
+              <div 
+                className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+                style={{
+                  backgroundImage: `url(${schoolProfile.coverPhotoUrl})`,
+                  height: '200px',
+                  bottom: 0,
+                }}
+              >
+                <div className="absolute inset-0 bg-gradient-to-t from-white dark:from-neutral-900 via-white/80 dark:via-neutral-900/80 to-transparent" />
+              </div>
+            )}
+            
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex flex-col md:flex-row md:items-center justify-between mb-8"
+              className="relative flex flex-col md:flex-row md:items-center justify-between p-6 md:p-8 min-h-[200px]"
             >
-              <div>
-                <h1 className="heading-1 mb-2">School Dashboard</h1>
-                <p className="text-xl text-neutral-600 dark:text-neutral-400">
-                  Manage your job postings and applicants
-                </p>
+              <div className="flex items-start gap-6 flex-1">
+                {/* School Logo/Profile Photo - Always reserve space */}
+                <div className="flex-shrink-0 pt-1">
+                  {schoolProfile?.logoUrl ? (
+                    <img
+                      src={schoolProfile.logoUrl}
+                      alt="School Logo"
+                      className="w-20 h-20 md:w-24 md:h-24 rounded-full object-cover border-4 border-white dark:border-neutral-800 shadow-lg"
+                    />
+                  ) : (
+                    <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-neutral-200 dark:bg-neutral-700 border-4 border-white dark:border-neutral-800" />
+                  )}
+                </div>
+                
+                {/* Text Content - Always in same position */}
+                <div className="flex-1">
+                  <h1 className="heading-3 mb-2">
+                    Welcome back,
+                    <br />
+                    {user?.school?.name 
+                      ? user.school.name.split(' ').map(word => 
+                          word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+                        ).join(' ')
+                      : "School"}
+                  </h1>
+                  <p className="text-base text-neutral-600 dark:text-neutral-400">
+                    Manage your job postings and applicants
+                  </p>
+                </div>
               </div>
+              
               <div className="flex gap-4 mt-4 md:mt-0">
                 <Button
                   variant="gradient"
@@ -506,14 +1027,15 @@ export const SchoolDashboardPage: React.FC = () => {
                 </Button>
               </div>
             </motion.div>
+          </div>
 
-            {/* Stats Overview */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="grid md:grid-cols-4 gap-6 mb-8"
-            >
+          {/* Stats Overview */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="grid md:grid-cols-4 gap-6 mb-8"
+          >
               {loading ? (
                 // Loading skeleton
                 Array.from({ length: 4 }).map((_, i) => (
@@ -532,13 +1054,10 @@ export const SchoolDashboardPage: React.FC = () => {
                       <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
                         <Briefcase className="w-6 h-6" />
                       </div>
-                      <span className="text-sm font-medium text-green-600 dark:text-green-400">
-                        {activeJobs}/{totalJobs} Active
-                      </span>
                     </div>
-                    <div className="text-2xl font-bold mb-1">{totalJobs}</div>
+                    <div className="text-2xl font-bold mb-1">{activeJobs}</div>
                     <div className="text-sm text-neutral-500">
-                      Total Job Postings
+                      Active Job Posts
                     </div>
                   </div>
 
@@ -579,7 +1098,6 @@ export const SchoolDashboardPage: React.FC = () => {
                 </>
               )}
             </motion.div>
-          </div>
 
           {/* Mobile Navigation Grid - Responsive */}
           <div className="mb-8">
@@ -598,6 +1116,8 @@ export const SchoolDashboardPage: React.FC = () => {
                             handlePostNewJobClick();
                           } else if (tab.key === "profile") {
                             window.location.href = "/schools/profile";
+                          } else if (tab.key === "messages") {
+                            setShowMessagesModal(true);
                           } else {
                             setActiveTab(tab.key as "overview" | "jobs" | "applicants" | "post-job");
                           }
@@ -608,7 +1128,14 @@ export const SchoolDashboardPage: React.FC = () => {
                             : "border-transparent text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 hover:border-neutral-300"
                         }`}
                       >
-                        <Icon className="w-5 h-5" />
+                        <div className="relative">
+                          <Icon className="w-5 h-5" />
+                          {tab.key === "messages" && unreadMessageCount > 0 && (
+                            <span className="absolute -top-2 -right-2 min-w-[18px] h-[18px] px-1 flex items-center justify-center text-[10px] font-bold text-white bg-gradient-to-r from-blue-500 to-purple-600 rounded-full">
+                              {unreadMessageCount > 99 ? "99+" : unreadMessageCount}
+                            </span>
+                          )}
+                        </div>
                         {tab.label}
                         {tab.badge && (
                           <span className="ml-1 px-2 py-0.5 text-xs bg-primary-100 dark:bg-primary-900/50 text-primary-600 dark:text-primary-400 rounded-full">
@@ -636,6 +1163,8 @@ export const SchoolDashboardPage: React.FC = () => {
                           handlePostNewJobClick();
                         } else if (tab.key === "profile") {
                           window.location.href = "/schools/profile";
+                        } else if (tab.key === "messages") {
+                          setShowMessagesModal(true);
                         } else {
                           setActiveTab(tab.key as "overview" | "jobs" | "applicants" | "post-job");
                         }
@@ -647,7 +1176,7 @@ export const SchoolDashboardPage: React.FC = () => {
                       }`}
                     >
                       <div className="flex flex-col items-center gap-2">
-                        <div className={`p-2 rounded-lg ${
+                        <div className={`relative p-2 rounded-lg ${
                           isActive 
                             ? "bg-primary-100 dark:bg-primary-900/30" 
                             : "bg-neutral-100 dark:bg-neutral-700"
@@ -657,6 +1186,11 @@ export const SchoolDashboardPage: React.FC = () => {
                               ? "text-primary-600 dark:text-primary-400" 
                               : "text-neutral-600 dark:text-neutral-400"
                           }`} />
+                          {tab.key === "messages" && unreadMessageCount > 0 && (
+                            <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center text-[10px] font-bold text-white bg-gradient-to-r from-blue-500 to-purple-600 rounded-full">
+                              {unreadMessageCount > 99 ? "99+" : unreadMessageCount}
+                            </span>
+                          )}
                         </div>
                         <span className={`text-sm font-medium ${
                           isActive 
@@ -705,7 +1239,8 @@ export const SchoolDashboardPage: React.FC = () => {
                       {jobs.slice(0, 3).map((job) => (
                         <div
                           key={job.id}
-                          className="border border-neutral-200 dark:border-neutral-800 rounded-lg p-4"
+                          className="border border-neutral-200 dark:border-neutral-800 rounded-lg p-4 cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors"
+                          onClick={() => openEditModal(job)}
                         >
                           <div className="flex items-start justify-between mb-2">
                             <div className="flex-1">
@@ -715,7 +1250,7 @@ export const SchoolDashboardPage: React.FC = () => {
                               <div className="flex items-center gap-4 text-sm text-neutral-500 mb-2">
                                 <span className="flex items-center gap-1">
                                   <MapPin className="w-4 h-4" />
-                                  {job.location}
+                                  {job.city}, {job.country}
                                 </span>
                                 <span className="flex items-center gap-1">
                                   <DollarSign className="w-4 h-4" />
@@ -724,9 +1259,9 @@ export const SchoolDashboardPage: React.FC = () => {
                               </div>
                               <div className="flex items-center gap-2">
                                 <span
-                                  className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(job.status)}`}
+                                  className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(getEffectiveStatus(job))}`}
                                 >
-                                  {job.status}
+                                  {getEffectiveStatus(job)}
                                 </span>
                                 <span className="text-sm text-neutral-500">
                                   {job._count.applications} applicants
@@ -817,15 +1352,15 @@ export const SchoolDashboardPage: React.FC = () => {
                           <div className="flex items-center gap-3 mb-2">
                             <h3 className="heading-3">{job.title}</h3>
                             <span
-                              className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(job.status)}`}
+                              className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(getEffectiveStatus(job))}`}
                             >
-                              {job.status}
+                              {getEffectiveStatus(job)}
                             </span>
                           </div>
                           <div className="grid md:grid-cols-3 gap-4 text-sm text-neutral-600 dark:text-neutral-400 mb-4">
                             <span className="flex items-center gap-1">
                               <MapPin className="w-4 h-4" />
-                              {job.location}
+                              {job.city}, {job.country}
                             </span>
                             <span className="flex items-center gap-1">
                               <DollarSign className="w-4 h-4" />
@@ -838,12 +1373,12 @@ export const SchoolDashboardPage: React.FC = () => {
                             </span>
                           </div>
 
-                          {/* Kazakhstan-specific requirements */}
+                          {/* Teaching requirements */}
                           {(job.teachingLicenseRequired || job.kazakhLanguageRequired || job.localCertificationRequired) && (
                             <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 mb-4">
                               <h4 className="font-medium text-amber-800 dark:text-amber-200 mb-2 flex items-center gap-1">
                                 <Globe className="w-4 h-4" />
-                                Kazakhstan Teaching Requirements
+                                Teaching Requirements
                               </h4>
                               <div className="grid md:grid-cols-3 gap-2 text-sm">
                                 {job.teachingLicenseRequired && (
@@ -855,7 +1390,7 @@ export const SchoolDashboardPage: React.FC = () => {
                                 {job.kazakhLanguageRequired && (
                                   <span className="flex items-center gap-1 text-green-600">
                                     <CheckCircle className="w-3 h-3" />
-                                    Kazakh Language
+                                    Local Language
                                   </span>
                                 )}
                                 {job.localCertificationRequired && (
@@ -885,7 +1420,7 @@ export const SchoolDashboardPage: React.FC = () => {
                           >
                             Edit
                           </Button>
-                          {job.status === "ACTIVE" && (
+                          {getEffectiveStatus(job) === "ACTIVE" && (
                             <Button
                               variant="ghost"
                               size="sm"
@@ -895,7 +1430,7 @@ export const SchoolDashboardPage: React.FC = () => {
                               Pause
                             </Button>
                           )}
-                          {job.status === "PAUSED" && (
+                          {getEffectiveStatus(job) === "PAUSED" && (
                             <Button
                               variant="ghost"
                               size="sm"
@@ -1139,10 +1674,41 @@ export const SchoolDashboardPage: React.FC = () => {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 ref={postJobFormRef}
+                onAnimationComplete={() => {
+                  // Scroll after animation completes - backup scroll mechanism
+                  // The main scroll logic is in the useEffect hook above
+                  setTimeout(() => {
+                    const headingElement = postJobHeadingRef.current;
+                    const formElement = postJobFormRef.current;
+                    
+                    const targetElement = headingElement || formElement;
+                    
+                    if (targetElement && targetElement.getBoundingClientRect().height > 0) {
+                      const rect = targetElement.getBoundingClientRect();
+                      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                      const offsetTop = rect.top + scrollTop - 100; // 100px offset for header
+                      
+                      // Only scroll if we're not already at the right position
+                      const currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+                      if (Math.abs(currentScroll - offsetTop) > 50) {
+                        window.scrollTo({
+                          top: offsetTop,
+                          behavior: "smooth",
+                        });
+                      }
+                      
+                      // Focus on the first input after scroll completes
+                      setTimeout(() => {
+                        const firstInput = formElement?.querySelector("input");
+                        firstInput?.focus();
+                      }, 1000);
+                    }
+                  }, 100);
+                }}
               >
                 {/* Job Posting Form */}
                 <div className="card p-8">
-                  <h2 className="heading-2 mb-6">
+                  <h2 className="heading-2 mb-6" ref={postJobHeadingRef}>
                     Post a New Teaching Position
                   </h2>
                   <p className="text-neutral-600 dark:text-neutral-400 mb-8">
@@ -1150,144 +1716,281 @@ export const SchoolDashboardPage: React.FC = () => {
                     teachers to your school.
                   </p>
 
+                  {/* Subscription Warning in Post Job Tab */}
+                  {(subscriptionStatus?.toLowerCase() === "cancelled" || subscriptionStatus?.toLowerCase() === "past_due") && (
+                    <div className={`mb-6 p-4 rounded-lg border ${
+                      subscriptionStatus?.toLowerCase() === "cancelled"
+                        ? "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800"
+                        : "bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800"
+                    }`}>
+                      <div className="flex items-start gap-3">
+                        <AlertCircle className={`w-5 h-5 mt-0.5 ${
+                          subscriptionStatus?.toLowerCase() === "cancelled"
+                            ? "text-red-600 dark:text-red-400"
+                            : "text-amber-600 dark:text-amber-400"
+                        }`} />
+                        <div className="flex-1">
+                          <p className={`font-medium mb-1 ${
+                            subscriptionStatus?.toLowerCase() === "cancelled"
+                              ? "text-red-900 dark:text-red-100"
+                              : "text-amber-900 dark:text-amber-100"
+                          }`}>
+                            {subscriptionStatus?.toLowerCase() === "cancelled"
+                              ? "Subscription Expired"
+                              : "Payment Past Due"}
+                          </p>
+                          <p className={`text-sm mb-3 ${
+                            subscriptionStatus?.toLowerCase() === "cancelled"
+                              ? "text-red-700 dark:text-red-300"
+                              : "text-amber-700 dark:text-amber-300"
+                          }`}>
+                            {subscriptionStatus?.toLowerCase() === "cancelled"
+                              ? "You cannot post new jobs until you renew your subscription. All active jobs have been paused."
+                              : "Please update your payment method to continue posting jobs."}
+                          </p>
+                          <Button
+                            variant={subscriptionStatus?.toLowerCase() === "cancelled" ? "gradient" : "primary"}
+                            size="sm"
+                            onClick={() => window.location.href = "/schools/subscription"}
+                          >
+                            {subscriptionStatus?.toLowerCase() === "cancelled" ? "Renew Subscription" : "Update Payment"}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   <form className="space-y-6" onSubmit={handleJobSubmit}>
-                    <div className="grid md:grid-cols-2 gap-6">
-                      <div>
-                        <label className="block text-sm font-medium mb-2">
-                          Job Title *
-                        </label>
-                        <input
-                          type="text"
-                          value={jobForm.title}
-                          onChange={(e) => setJobForm({
-                            ...jobForm,
-                            title: e.target.value,
-                          })}
-                          className="input"
-                          placeholder="e.g., Senior English Teacher - CELTA Required"
-                          required
-                        />
+                    {/* Role Information Section */}
+                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="font-medium text-blue-800 dark:text-blue-200 flex items-center gap-2">
+                          <Briefcase className="w-5 h-5" />
+                          Role Information
+                        </h3>
+                        <div className="flex items-center gap-2">
+                          <label className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                            Application Deadline *
+                          </label>
+                          <input 
+                            type="date" 
+                            value={jobForm.deadline}
+                            onChange={(e) => setJobForm({
+                              ...jobForm,
+                              deadline: e.target.value,
+                            })}
+                            className="input w-auto" 
+                            required 
+                          />
+                        </div>
                       </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-2">
-                          Location *
-                        </label>
-                        <input
-                          type="text"
-                          value={jobForm.location}
-                          onChange={(e) => setJobForm({
-                            ...jobForm,
-                            location: e.target.value,
-                          })}
-                          className="input"
-                          placeholder="e.g., Almaty, Kazakhstan"
-                          required
-                        />
-                      </div>
-                    </div>
+                      
+                      <div className="space-y-6">
+                        <div>
+                          <label className="block text-sm font-medium mb-2">
+                            Job Title *
+                          </label>
+                          <input
+                            type="text"
+                            value={jobForm.title}
+                            onChange={(e) => setJobForm({
+                              ...jobForm,
+                              title: e.target.value,
+                            })}
+                            className="input"
+                            placeholder="e.g., Senior English Teacher - CELTA Required"
+                            required
+                          />
+                        </div>
 
-                    <div className="grid md:grid-cols-3 gap-6">
-                      <div>
-                        <label className="block text-sm font-medium mb-2">
-                          Employment Type *
-                        </label>
-                        <select 
-                          value={jobForm.employmentType}
-                          onChange={(e) => setJobForm({
-                            ...jobForm,
-                            employmentType: e.target.value,
-                          })}
-                          className="input" 
-                          required
-                        >
-                          <option value="">Select type</option>
-                          <option value="FULL_TIME">Full-time</option>
-                          <option value="PART_TIME">Part-time</option>
-                          <option value="CONTRACT">Contract</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-2">
-                          Salary Range *
-                        </label>
-                        <input
-                          type="text"
-                          value={jobForm.salary}
-                          onChange={(e) => setJobForm({
-                            ...jobForm,
-                            salary: e.target.value,
-                          })}
-                          className="input"
-                          placeholder="e.g., $2,800 - $3,500/month"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-2">
-                          Application Deadline *
-                        </label>
-                        <input 
-                          type="date" 
-                          value={jobForm.deadline}
-                          onChange={(e) => setJobForm({
-                            ...jobForm,
-                            deadline: e.target.value,
-                          })}
-                          className="input" 
-                          required 
-                        />
-                      </div>
-                    </div>
+                        <div className="grid md:grid-cols-2 gap-6">
+                          <div>
+                            <label className="block text-sm font-medium mb-2">
+                              Subject(s) Taught
+                            </label>
+                            <input
+                              type="text"
+                              value={jobForm.subjectsTaught}
+                              onChange={(e) => setJobForm({
+                                ...jobForm,
+                                subjectsTaught: e.target.value,
+                              })}
+                              className="input"
+                              placeholder="e.g., English, Mathematics, Science"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium mb-2">
+                              Student Age Group(s)
+                            </label>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <label className="block text-xs text-neutral-500 mb-1">Min Age</label>
+                                <select
+                                  value={jobForm.studentAgeGroupMin || ""}
+                                  onChange={(e) => setJobForm({
+                                    ...jobForm,
+                                    studentAgeGroupMin: e.target.value ? parseInt(e.target.value) : undefined,
+                                  })}
+                                  className="input"
+                                >
+                                  <option value="">Select...</option>
+                                  {Array.from({ length: 31 }, (_, i) => (
+                                    <option key={i} value={i}>{i}</option>
+                                  ))}
+                                </select>
+                              </div>
+                              <div>
+                                <label className="block text-xs text-neutral-500 mb-1">Max Age</label>
+                                <select
+                                  value={jobForm.studentAgeGroupMax !== undefined && jobForm.studentAgeGroupMax >= 30 ? "30+" : (jobForm.studentAgeGroupMax || "")}
+                                  onChange={(e) => {
+                                    const value = e.target.value;
+                                    if (value === "30+") {
+                                      setJobForm({
+                                        ...jobForm,
+                                        studentAgeGroupMax: 30,
+                                      });
+                                    } else {
+                                      setJobForm({
+                                        ...jobForm,
+                                        studentAgeGroupMax: value ? parseInt(value) : undefined,
+                                      });
+                                    }
+                                  }}
+                                  className="input"
+                                >
+                                  <option value="">Select...</option>
+                                  {Array.from({ length: 31 }, (_, i) => (
+                                    <option key={i} value={i}>{i}</option>
+                                  ))}
+                                  <option value="30+">30+</option>
+                                </select>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
 
-                    {/* Kazakhstan-specific Requirements */}
-                    <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-6">
-                      <h3 className="font-medium text-amber-800 dark:text-amber-200 mb-4 flex items-center gap-2">
-                        <Globe className="w-5 h-5" />
-                        Kazakhstan Teaching Requirements
-                      </h3>
-                      <div className="grid md:grid-cols-3 gap-4">
-                        <label className="flex items-center gap-2">
-                          <input 
-                            type="checkbox" 
-                            checked={jobForm.teachingLicenseRequired}
-                            onChange={(e) => setJobForm({
-                              ...jobForm,
-                              teachingLicenseRequired: e.target.checked,
-                            })}
-                            className="rounded" 
-                          />
-                          <span className="text-sm">
-                            Teaching License Required
-                          </span>
-                        </label>
-                        <label className="flex items-center gap-2">
-                          <input 
-                            type="checkbox" 
-                            checked={jobForm.kazakhLanguageRequired}
-                            onChange={(e) => setJobForm({
-                              ...jobForm,
-                              kazakhLanguageRequired: e.target.checked,
-                            })}
-                            className="rounded" 
-                          />
-                          <span className="text-sm">
-                            Kazakh Language Preferred
-                          </span>
-                        </label>
-                        <label className="flex items-center gap-2">
-                          <input 
-                            type="checkbox" 
-                            checked={jobForm.localCertificationRequired}
-                            onChange={(e) => setJobForm({
-                              ...jobForm,
-                              localCertificationRequired: e.target.checked,
-                            })}
-                            className="rounded" 
-                          />
-                          <span className="text-sm">
-                            Local Certification Required
-                          </span>
-                        </label>
+                        <div className="grid md:grid-cols-2 gap-6">
+                          <div>
+                            <label className="block text-sm font-medium mb-2">
+                              City/Town *
+                            </label>
+                            <input
+                              type="text"
+                              value={jobForm.city}
+                              onChange={(e) => setJobForm({
+                                ...jobForm,
+                                city: e.target.value,
+                              })}
+                              className="input"
+                              placeholder="e.g., Almaty"
+                              required
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium mb-2">
+                              Country *
+                            </label>
+                            <input
+                              type="text"
+                              value={jobForm.country}
+                              onChange={(e) => setJobForm({
+                                ...jobForm,
+                                country: e.target.value,
+                              })}
+                              className="input"
+                              placeholder="e.g., Kazakhstan"
+                              required
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid md:grid-cols-2 gap-6">
+                          <div>
+                            <label className="block text-sm font-medium mb-2">
+                              Start Date
+                            </label>
+                            <input
+                              type="date"
+                              value={jobForm.startDate}
+                              onChange={(e) => setJobForm({
+                                ...jobForm,
+                                startDate: e.target.value,
+                              })}
+                              className="input"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium mb-2">
+                              Contract Length
+                            </label>
+                            <input
+                              type="text"
+                              value={jobForm.contractLength}
+                              onChange={(e) => setJobForm({
+                                ...jobForm,
+                                contractLength: e.target.value,
+                              })}
+                              className="input"
+                              placeholder="e.g., 1 year, 2 years, Permanent"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid md:grid-cols-3 gap-6">
+                          <div>
+                            <label className="block text-sm font-medium mb-2">
+                              Employment Type *
+                            </label>
+                            <select 
+                              value={jobForm.employmentType}
+                              onChange={(e) => setJobForm({
+                                ...jobForm,
+                                employmentType: e.target.value,
+                              })}
+                              className="input" 
+                              required
+                            >
+                              <option value="">Select type</option>
+                              <option value="FULL_TIME">Full-time</option>
+                              <option value="PART_TIME">Part-time</option>
+                              <option value="CONTRACT">Contract</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium mb-2">
+                              Salary Range *
+                            </label>
+                            <input
+                              type="text"
+                              value={jobForm.salary}
+                              onChange={(e) => setJobForm({
+                                ...jobForm,
+                                salary: e.target.value,
+                              })}
+                              className="input"
+                              placeholder="e.g., $2,800 - $3,500/month"
+                              required
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium mb-2">
+                              Teaching Hours Per Week
+                            </label>
+                            <input
+                              type="number"
+                              value={jobForm.teachingHoursPerWeek}
+                              onChange={(e) => setJobForm({
+                                ...jobForm,
+                                teachingHoursPerWeek: e.target.value,
+                              })}
+                              className="input"
+                              placeholder="e.g., 20, 25, 30"
+                              min="0"
+                            />
+                          </div>
+                        </div>
                       </div>
                     </div>
 
@@ -1307,6 +2010,541 @@ export const SchoolDashboardPage: React.FC = () => {
                         required
                       />
                     </div>
+
+                    {/* Requirements */}
+                    <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-6">
+                      <h3 className="font-medium text-green-800 dark:text-green-200 mb-4 flex items-center gap-2">
+                        <Award className="w-5 h-5" />
+                        Requirements
+                      </h3>
+                      
+                      <div className="space-y-6">
+                        {/* Essential Subsection */}
+                        <div>
+                          <h4 className="text-sm font-semibold text-green-900 dark:text-green-100 mb-3">Essential</h4>
+                          <div className="space-y-4">
+                            <label className="flex items-center gap-2">
+                              <input 
+                                type="checkbox" 
+                                checked={jobForm.nativeEnglishLevel}
+                                onChange={(e) => setJobForm({
+                                  ...jobForm,
+                                  nativeEnglishLevel: e.target.checked,
+                                })}
+                                className="rounded" 
+                              />
+                              <span className="text-sm break-words overflow-wrap-anywhere">Native or Near-Native English Level</span>
+                            </label>
+                            
+                            <div className="space-y-2">
+                              <label className="flex items-center gap-2">
+                                <input 
+                                  type="checkbox" 
+                                  checked={jobForm.bachelorsDegree}
+                                  onChange={(e) => setJobForm({
+                                    ...jobForm,
+                                    bachelorsDegree: e.target.checked,
+                                  })}
+                                  className="rounded" 
+                                />
+                                <span className="text-sm break-words overflow-wrap-anywhere">Bachelor's Degree</span>
+                              </label>
+                              {jobForm.bachelorsDegree && (
+                                <div className="ml-6">
+                                  <input
+                                    type="text"
+                                    value={jobForm.bachelorsDegreeSubject}
+                                    onChange={(e) => setJobForm({
+                                      ...jobForm,
+                                      bachelorsDegreeSubject: e.target.value,
+                                    })}
+                                    className="input text-sm"
+                                    placeholder="Subject Specific (Optional)"
+                                  />
+                                </div>
+                              )}
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <label className="text-xs text-neutral-500 mb-2 block">Certification:</label>
+                              <div className="grid md:grid-cols-3 gap-3">
+                                <label className="flex items-center gap-2">
+                                  <input 
+                                    type="checkbox" 
+                                    checked={jobForm.tefl}
+                                    onChange={(e) => setJobForm({
+                                      ...jobForm,
+                                      tefl: e.target.checked,
+                                    })}
+                                    className="rounded" 
+                                  />
+                                  <span className="text-sm">TEFL</span>
+                                </label>
+                                <label className="flex items-center gap-2">
+                                  <input 
+                                    type="checkbox" 
+                                    checked={jobForm.celta}
+                                    onChange={(e) => setJobForm({
+                                      ...jobForm,
+                                      celta: e.target.checked,
+                                    })}
+                                    className="rounded" 
+                                  />
+                                  <span className="text-sm">CELTA</span>
+                                </label>
+                                <label className="flex items-center gap-2">
+                                  <input 
+                                    type="checkbox" 
+                                    checked={jobForm.tesol}
+                                    onChange={(e) => setJobForm({
+                                      ...jobForm,
+                                      tesol: e.target.checked,
+                                    })}
+                                    className="rounded" 
+                                  />
+                                  <span className="text-sm">TESOL</span>
+                                </label>
+                              </div>
+                            </div>
+                            
+                            <div className="flex items-center gap-3">
+                              <label className="text-sm">Minimum Teaching Experience:</label>
+                              <select
+                                value={jobForm.minimumTeachingExperience}
+                                onChange={(e) => setJobForm({
+                                  ...jobForm,
+                                  minimumTeachingExperience: e.target.value,
+                                })}
+                                className="input w-1/4"
+                              >
+                                <option value="">Select...</option>
+                                {Array.from({ length: 30 }, (_, i) => (
+                                  <option key={i + 1} value={i + 1}>{i + 1} {i === 0 ? 'year' : 'years'}</option>
+                                ))}
+                                <option value="30+">30+ years</option>
+                              </select>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Preferred Subsection */}
+                        <div>
+                          <h4 className="text-sm font-semibold text-green-900 dark:text-green-100 mb-3">Preferred</h4>
+                          <div className="space-y-3">
+                            <div>
+                              <label className="text-xs text-neutral-500 mb-2 block">Specific Exam Experience:</label>
+                              <div className="grid md:grid-cols-3 gap-3">
+                                <label className="flex items-center gap-2">
+                                  <input 
+                                    type="checkbox" 
+                                    checked={jobForm.ieltsExperience}
+                                    onChange={(e) => setJobForm({
+                                      ...jobForm,
+                                      ieltsExperience: e.target.checked,
+                                    })}
+                                    className="rounded" 
+                                  />
+                                  <span className="text-sm">IELTS</span>
+                                </label>
+                                <label className="flex items-center gap-2">
+                                  <input 
+                                    type="checkbox" 
+                                    checked={jobForm.cambridgeExperience}
+                                    onChange={(e) => setJobForm({
+                                      ...jobForm,
+                                      cambridgeExperience: e.target.checked,
+                                    })}
+                                    className="rounded" 
+                                  />
+                                  <span className="text-sm">Cambridge</span>
+                                </label>
+                                <label className="flex items-center gap-2">
+                                  <input 
+                                    type="checkbox" 
+                                    checked={jobForm.satExperience}
+                                    onChange={(e) => setJobForm({
+                                      ...jobForm,
+                                      satExperience: e.target.checked,
+                                    })}
+                                    className="rounded" 
+                                  />
+                                  <span className="text-sm">SAT</span>
+                                </label>
+                              </div>
+                            </div>
+                            
+                            <div>
+                              <label className="text-xs text-neutral-500 mb-2 block">Experience Type:</label>
+                              <div className="grid md:grid-cols-2 gap-3">
+                                <label className="flex items-center gap-2">
+                                  <input 
+                                    type="checkbox" 
+                                    checked={jobForm.classroomExperience}
+                                    onChange={(e) => setJobForm({
+                                      ...jobForm,
+                                      classroomExperience: e.target.checked,
+                                    })}
+                                    className="rounded" 
+                                  />
+                                  <span className="text-sm break-words overflow-wrap-anywhere">Classroom Experience</span>
+                                </label>
+                                <label className="flex items-center gap-2">
+                                  <input 
+                                    type="checkbox" 
+                                    checked={jobForm.onlineExperience}
+                                    onChange={(e) => setJobForm({
+                                      ...jobForm,
+                                      onlineExperience: e.target.checked,
+                                    })}
+                                    className="rounded" 
+                                  />
+                                  <span className="text-sm break-words overflow-wrap-anywhere">Online Experience</span>
+                                </label>
+                              </div>
+                            </div>
+                            
+                            <label className="flex items-center gap-2">
+                              <input 
+                                type="checkbox" 
+                                checked={jobForm.centralAsiaExperience}
+                                onChange={(e) => setJobForm({
+                                  ...jobForm,
+                                  centralAsiaExperience: e.target.checked,
+                                })}
+                                className="rounded" 
+                              />
+                              <span className="text-sm break-words overflow-wrap-anywhere">Experience in Central Asia or Similar Region</span>
+                            </label>
+                          </div>
+                        </div>
+
+                        {/* Legal Subsection */}
+                        <div>
+                          <h4 className="text-sm font-semibold text-green-900 dark:text-green-100 mb-3">Legal</h4>
+                          <div className="space-y-3">
+                            <label className="flex items-center gap-2">
+                              <input 
+                                type="checkbox" 
+                                checked={jobForm.eligibleNationalities}
+                                onChange={(e) => setJobForm({
+                                  ...jobForm,
+                                  eligibleNationalities: e.target.checked,
+                                })}
+                                className="rounded" 
+                              />
+                              <span className="text-sm break-words overflow-wrap-anywhere">Nationalities Eligible for Work Visa</span>
+                            </label>
+                            <label className="flex items-center gap-2">
+                              <input 
+                                type="checkbox" 
+                                checked={jobForm.backgroundCheckRequired}
+                                onChange={(e) => setJobForm({
+                                  ...jobForm,
+                                  backgroundCheckRequired: e.target.checked,
+                                })}
+                                className="rounded" 
+                              />
+                              <span className="text-sm break-words overflow-wrap-anywhere">Background Check Requirement</span>
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Benefits & Support */}
+                    <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="font-medium text-amber-800 dark:text-amber-200 flex items-center gap-2">
+                          <Award className="w-5 h-5" />
+                          Benefits & Support
+                        </h3>
+                      </div>
+                      
+                      <div className="space-y-4 mb-6">
+                        <label className="flex items-center gap-3 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={jobForm.useSchoolBenefits}
+                            onChange={(e) => {
+                              const checked = e.target.checked;
+                              // Always populate benefits from school profile when available
+                              // This allows schools to see their defaults whether checked or unchecked
+                              if (schoolProfile?.benefits) {
+                                try {
+                                  const parsedBenefits = JSON.parse(schoolProfile.benefits);
+                                  setJobForm({
+                                    ...jobForm,
+                                    useSchoolBenefits: checked,
+                                    housingProvided: parsedBenefits.housingProvided || false,
+                                    flightReimbursement: parsedBenefits.flightReimbursement || false,
+                                    visaWorkPermitSupport: parsedBenefits.visaWorkPermitSupport || false,
+                                    contractCompletionBonus: parsedBenefits.contractCompletionBonus || false,
+                                    paidHolidays: parsedBenefits.paidHolidays || false,
+                                    overtimePay: parsedBenefits.overtimePay || false,
+                                    paidAnnualLeave: parsedBenefits.paidAnnualLeave || false,
+                                    nationalHolidays: parsedBenefits.nationalHolidays || false,
+                                    sickLeave: parsedBenefits.sickLeave || false,
+                                    healthInsurance: parsedBenefits.healthInsurance || false,
+                                    relocationSupport: parsedBenefits.relocationSupport || false,
+                                    teachingMaterialsProvided: parsedBenefits.teachingMaterialsProvided || false,
+                                    curriculumGuidance: parsedBenefits.curriculumGuidance || false,
+                                    teacherTraining: parsedBenefits.teacherTraining || false,
+                                    promotionOpportunities: parsedBenefits.promotionOpportunities || false,
+                                    contractRenewalOptions: parsedBenefits.contractRenewalOptions || false,
+                                  });
+                                } catch (e) {
+                                  setJobForm({ ...jobForm, useSchoolBenefits: checked });
+                                }
+                              } else {
+                                setJobForm({ ...jobForm, useSchoolBenefits: checked });
+                              }
+                            }}
+                            className="rounded"
+                          />
+                          <span className="text-sm font-medium">Use School Benefits & Support Information</span>
+                        </label>
+                        
+                        {jobForm.useSchoolBenefits && (!schoolProfile?.benefits || schoolProfile.benefits.trim() === "" || schoolProfile.benefits === "{}") && (
+                          <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
+                            <div className="flex items-start gap-2">
+                              <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+                              <div className="flex-1">
+                                <p className="text-sm font-medium text-amber-800 dark:text-amber-200 mb-1">
+                                  No Benefits & Support Information Available
+                                </p>
+                                <p className="text-sm text-amber-700 dark:text-amber-300">
+                                  Please add Benefits & Support information in your school profile, or uncheck this option to add job-specific benefits below.
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {!jobForm.useSchoolBenefits && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <div className="space-y-6">
+                        {/* Financial Subsection */}
+                        <div>
+                          <h4 className="text-sm font-semibold text-amber-900 dark:text-amber-100 mb-3">Financial</h4>
+                          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+                            <label className="flex items-center gap-2">
+                              <input 
+                                type="checkbox" 
+                                checked={jobForm.housingProvided}
+                                onChange={(e) => setJobForm({
+                                  ...jobForm,
+                                  housingProvided: e.target.checked,
+                                })}
+                                className="rounded" 
+                              />
+                              <span className="text-sm break-words overflow-wrap-anywhere">Housing Provided/Allowance/Assistance</span>
+                            </label>
+                            <label className="flex items-center gap-2">
+                              <input 
+                                type="checkbox" 
+                                checked={jobForm.flightReimbursement}
+                                onChange={(e) => setJobForm({
+                                  ...jobForm,
+                                  flightReimbursement: e.target.checked,
+                                })}
+                                className="rounded" 
+                              />
+                              <span className="text-sm break-words overflow-wrap-anywhere">Flight Reimbursement (Full/Partial)</span>
+                            </label>
+                            <label className="flex items-center gap-2">
+                              <input 
+                                type="checkbox" 
+                                checked={jobForm.visaWorkPermitSupport}
+                                onChange={(e) => setJobForm({
+                                  ...jobForm,
+                                  visaWorkPermitSupport: e.target.checked,
+                                })}
+                                className="rounded" 
+                              />
+                              <span className="text-sm break-words overflow-wrap-anywhere">Visa & Work Permit Support</span>
+                            </label>
+                            <label className="flex items-center gap-2">
+                              <input 
+                                type="checkbox" 
+                                checked={jobForm.contractCompletionBonus}
+                                onChange={(e) => setJobForm({
+                                  ...jobForm,
+                                  contractCompletionBonus: e.target.checked,
+                                })}
+                                className="rounded" 
+                              />
+                              <span className="text-sm break-words overflow-wrap-anywhere">Contract Completion Bonus</span>
+                            </label>
+                            <label className="flex items-center gap-2">
+                              <input 
+                                type="checkbox" 
+                                checked={jobForm.paidHolidays}
+                                onChange={(e) => setJobForm({
+                                  ...jobForm,
+                                  paidHolidays: e.target.checked,
+                                })}
+                                className="rounded" 
+                              />
+                              <span className="text-sm break-words overflow-wrap-anywhere">Paid Holidays</span>
+                            </label>
+                            <label className="flex items-center gap-2">
+                              <input 
+                                type="checkbox" 
+                                checked={jobForm.overtimePay}
+                                onChange={(e) => setJobForm({
+                                  ...jobForm,
+                                  overtimePay: e.target.checked,
+                                })}
+                                className="rounded" 
+                              />
+                              <span className="text-sm break-words overflow-wrap-anywhere">Overtime Pay</span>
+                            </label>
+                          </div>
+                        </div>
+
+                        {/* Lifestyle & Wellbeing Subsection */}
+                        <div>
+                          <h4 className="text-sm font-semibold text-amber-900 dark:text-amber-100 mb-3">Lifestyle & Wellbeing</h4>
+                          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+                            <label className="flex items-center gap-2">
+                              <input 
+                                type="checkbox" 
+                                checked={jobForm.paidAnnualLeave}
+                                onChange={(e) => setJobForm({
+                                  ...jobForm,
+                                  paidAnnualLeave: e.target.checked,
+                                })}
+                                className="rounded" 
+                              />
+                              <span className="text-sm break-words overflow-wrap-anywhere">Paid Annual Leave</span>
+                            </label>
+                            <label className="flex items-center gap-2">
+                              <input 
+                                type="checkbox" 
+                                checked={jobForm.nationalHolidays}
+                                onChange={(e) => setJobForm({
+                                  ...jobForm,
+                                  nationalHolidays: e.target.checked,
+                                })}
+                                className="rounded" 
+                              />
+                              <span className="text-sm break-words overflow-wrap-anywhere">National Holidays</span>
+                            </label>
+                            <label className="flex items-center gap-2">
+                              <input 
+                                type="checkbox" 
+                                checked={jobForm.sickLeave}
+                                onChange={(e) => setJobForm({
+                                  ...jobForm,
+                                  sickLeave: e.target.checked,
+                                })}
+                                className="rounded" 
+                              />
+                              <span className="text-sm break-words overflow-wrap-anywhere">Sick Leave</span>
+                            </label>
+                            <label className="flex items-center gap-2">
+                              <input 
+                                type="checkbox" 
+                                checked={jobForm.healthInsurance}
+                                onChange={(e) => setJobForm({
+                                  ...jobForm,
+                                  healthInsurance: e.target.checked,
+                                })}
+                                className="rounded" 
+                              />
+                              <span className="text-sm break-words overflow-wrap-anywhere">Health Insurance (Local/International)</span>
+                            </label>
+                            <label className="flex items-center gap-2">
+                              <input 
+                                type="checkbox" 
+                                checked={jobForm.relocationSupport}
+                                onChange={(e) => setJobForm({
+                                  ...jobForm,
+                                  relocationSupport: e.target.checked,
+                                })}
+                                className="rounded" 
+                              />
+                              <span className="text-sm break-words overflow-wrap-anywhere">Relocation Support</span>
+                            </label>
+                          </div>
+                        </div>
+
+                        {/* Professional Support Subsection */}
+                        <div>
+                          <h4 className="text-sm font-semibold text-amber-900 dark:text-amber-100 mb-3">Professional Support</h4>
+                          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+                            <label className="flex items-center gap-2">
+                              <input 
+                                type="checkbox" 
+                                checked={jobForm.teachingMaterialsProvided}
+                                onChange={(e) => setJobForm({
+                                  ...jobForm,
+                                  teachingMaterialsProvided: e.target.checked,
+                                })}
+                                className="rounded" 
+                              />
+                              <span className="text-sm break-words overflow-wrap-anywhere">Teaching Materials Provided</span>
+                            </label>
+                            <label className="flex items-center gap-2">
+                              <input 
+                                type="checkbox" 
+                                checked={jobForm.curriculumGuidance}
+                                onChange={(e) => setJobForm({
+                                  ...jobForm,
+                                  curriculumGuidance: e.target.checked,
+                                })}
+                                className="rounded" 
+                              />
+                              <span className="text-sm break-words overflow-wrap-anywhere">Curriculum Guidance</span>
+                            </label>
+                            <label className="flex items-center gap-2">
+                              <input 
+                                type="checkbox" 
+                                checked={jobForm.teacherTraining}
+                                onChange={(e) => setJobForm({
+                                  ...jobForm,
+                                  teacherTraining: e.target.checked,
+                                })}
+                                className="rounded" 
+                              />
+                              <span className="text-sm break-words overflow-wrap-anywhere">Teacher Training</span>
+                            </label>
+                            <label className="flex items-center gap-2">
+                              <input 
+                                type="checkbox" 
+                                checked={jobForm.promotionOpportunities}
+                                onChange={(e) => setJobForm({
+                                  ...jobForm,
+                                  promotionOpportunities: e.target.checked,
+                                })}
+                                className="rounded" 
+                              />
+                              <span className="text-sm break-words overflow-wrap-anywhere">Promotion Opportunities</span>
+                            </label>
+                            <label className="flex items-center gap-2">
+                              <input 
+                                type="checkbox" 
+                                checked={jobForm.contractRenewalOptions}
+                                onChange={(e) => setJobForm({
+                                  ...jobForm,
+                                  contractRenewalOptions: e.target.checked,
+                                })}
+                                className="rounded" 
+                              />
+                              <span className="text-sm break-words overflow-wrap-anywhere">Contract Renewal Options</span>
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </div>
 
                     {/* School Description Section */}
                     <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
@@ -1330,9 +2568,40 @@ export const SchoolDashboardPage: React.FC = () => {
                           <span className="text-sm font-medium">Use school profile information</span>
                         </label>
                         
+                        {/* Warning if profile description doesn't exist */}
+                        {jobForm.useSchoolProfile && (!schoolProfile?.description || schoolProfile.description.trim() === "") && (
+                          <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
+                            <div className="flex items-start gap-2">
+                              <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+                              <div className="flex-1">
+                                <p className="text-sm font-medium text-amber-800 dark:text-amber-200 mb-1">
+                                  No School Description Found
+                                </p>
+                                <p className="text-xs text-amber-700 dark:text-amber-300 mb-2">
+                                  Your school profile doesn't have a description yet. You can either:
+                                </p>
+                                <ul className="text-xs text-amber-700 dark:text-amber-300 list-disc list-inside space-y-1 mb-2">
+                                  <li>Uncheck this option and provide a custom description below</li>
+                                  <li>Add a description to your school profile first</li>
+                                </ul>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => window.location.href = "/schools/profile"}
+                                  className="text-xs h-7"
+                                >
+                                  Go to Profile →
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        
                         <p className="text-xs text-neutral-600 dark:text-neutral-400">
                           {jobForm.useSchoolProfile 
-                            ? "Your school's profile description will be displayed to candidates"
+                            ? schoolProfile?.description && schoolProfile.description.trim() !== ""
+                              ? "Your school's profile description will be displayed to candidates"
+                              : "⚠️ No profile description available - please add one or use custom description below"
                             : "Provide a custom description specific to this job posting"
                           }
                         </p>
@@ -1397,7 +2666,12 @@ export const SchoolDashboardPage: React.FC = () => {
                     </div>
 
                     <div className="flex gap-4 pt-6">
-                      <Button type="submit" variant="gradient" size="lg">
+                      <Button 
+                        type="submit" 
+                        variant="gradient" 
+                        size="lg"
+                        disabled={subscriptionStatus?.toLowerCase() === "cancelled" || subscriptionStatus?.toLowerCase() === "past_due"}
+                      >
                         Publish Job Posting
                       </Button>
                     </div>
@@ -1407,7 +2681,7 @@ export const SchoolDashboardPage: React.FC = () => {
             )}
           </AnimatePresence>
         </div>
-      </section>
+      </div>
 
       {/* Applicant Modal */}
       <ApplicantModal
@@ -1464,144 +2738,281 @@ export const SchoolDashboardPage: React.FC = () => {
               {selectedJobForEdit ? "Modify your existing job posting." : "Create a detailed job posting to attract qualified English teachers to your school."}
             </p>
 
+            {/* Subscription Warning in Form */}
+            {(subscriptionStatus?.toLowerCase() === "cancelled" || subscriptionStatus?.toLowerCase() === "past_due") && !selectedJobForEdit && (
+              <div className={`mb-6 p-4 rounded-lg border ${
+                subscriptionStatus?.toLowerCase() === "cancelled"
+                  ? "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800"
+                  : "bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800"
+              }`}>
+                <div className="flex items-start gap-3">
+                  <AlertCircle className={`w-5 h-5 mt-0.5 ${
+                    subscriptionStatus?.toLowerCase() === "cancelled"
+                      ? "text-red-600 dark:text-red-400"
+                      : "text-amber-600 dark:text-amber-400"
+                  }`} />
+                  <div className="flex-1">
+                    <p className={`font-medium mb-1 ${
+                      subscriptionStatus?.toLowerCase() === "cancelled"
+                        ? "text-red-900 dark:text-red-100"
+                        : "text-amber-900 dark:text-amber-100"
+                    }`}>
+                      {subscriptionStatus?.toLowerCase() === "cancelled"
+                        ? "Subscription Expired"
+                        : "Payment Past Due"}
+                    </p>
+                    <p className={`text-sm mb-3 ${
+                      subscriptionStatus?.toLowerCase() === "cancelled"
+                        ? "text-red-700 dark:text-red-300"
+                        : "text-amber-700 dark:text-amber-300"
+                    }`}>
+                      {subscriptionStatus?.toLowerCase() === "cancelled"
+                        ? "You cannot post new jobs until you renew your subscription."
+                        : "Please update your payment method to continue posting jobs."}
+                    </p>
+                    <Button
+                      variant={subscriptionStatus?.toLowerCase() === "cancelled" ? "gradient" : "primary"}
+                      size="sm"
+                      onClick={() => window.location.href = "/schools/subscription"}
+                    >
+                      {subscriptionStatus?.toLowerCase() === "cancelled" ? "Renew Subscription" : "Update Payment"}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <form className="space-y-6" onSubmit={handleJobSubmit}>
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Job Title *
-                  </label>
-                  <input
-                    type="text"
-                    value={jobForm.title}
-                    onChange={(e) => setJobForm({
-                      ...jobForm,
-                      title: e.target.value,
-                    })}
-                    className="input"
-                    placeholder="e.g., Senior English Teacher - CELTA Required"
-                    required
-                  />
+              {/* Role Information Section */}
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-medium text-blue-800 dark:text-blue-200 flex items-center gap-2">
+                    <Briefcase className="w-5 h-5" />
+                    Role Information
+                  </h3>
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                      Application Deadline *
+                    </label>
+                    <input 
+                      type="date" 
+                      value={jobForm.deadline}
+                      onChange={(e) => setJobForm({
+                        ...jobForm,
+                        deadline: e.target.value,
+                      })}
+                      className="input w-auto" 
+                      required 
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Location *
-                  </label>
-                  <input
-                    type="text"
-                    value={jobForm.location}
-                    onChange={(e) => setJobForm({
-                      ...jobForm,
-                      location: e.target.value,
-                    })}
-                    className="input"
-                    placeholder="e.g., Almaty, Kazakhstan"
-                    required
-                  />
-                </div>
-              </div>
+                
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Job Title *
+                    </label>
+                    <input
+                      type="text"
+                      value={jobForm.title}
+                      onChange={(e) => setJobForm({
+                        ...jobForm,
+                        title: e.target.value,
+                      })}
+                      className="input"
+                      placeholder="e.g., Senior English Teacher - CELTA Required"
+                      required
+                    />
+                  </div>
 
-              <div className="grid md:grid-cols-3 gap-6">
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Employment Type *
-                  </label>
-                  <select 
-                    value={jobForm.employmentType}
-                    onChange={(e) => setJobForm({
-                      ...jobForm,
-                      employmentType: e.target.value,
-                    })}
-                    className="input" 
-                    required
-                  >
-                    <option value="">Select type</option>
-                    <option value="FULL_TIME">Full-time</option>
-                    <option value="PART_TIME">Part-time</option>
-                    <option value="CONTRACT">Contract</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Salary Range *
-                  </label>
-                  <input
-                    type="text"
-                    value={jobForm.salary}
-                    onChange={(e) => setJobForm({
-                      ...jobForm,
-                      salary: e.target.value,
-                    })}
-                    className="input"
-                    placeholder="e.g., $2,800 - $3,500/month"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Application Deadline *
-                  </label>
-                  <input 
-                    type="date" 
-                    value={jobForm.deadline}
-                    onChange={(e) => setJobForm({
-                      ...jobForm,
-                      deadline: e.target.value,
-                    })}
-                    className="input" 
-                    required 
-                  />
-                </div>
-              </div>
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">
+                        Subject(s) Taught
+                      </label>
+                      <input
+                        type="text"
+                        value={jobForm.subjectsTaught}
+                        onChange={(e) => setJobForm({
+                          ...jobForm,
+                          subjectsTaught: e.target.value,
+                        })}
+                        className="input"
+                        placeholder="e.g., English, Mathematics, Science"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">
+                        Student Age Group(s)
+                      </label>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs text-neutral-500 mb-1">Min Age</label>
+                          <select
+                            value={jobForm.studentAgeGroupMin || ""}
+                            onChange={(e) => setJobForm({
+                              ...jobForm,
+                              studentAgeGroupMin: e.target.value ? parseInt(e.target.value) : undefined,
+                            })}
+                            className="input"
+                          >
+                            <option value="">Select...</option>
+                            {Array.from({ length: 31 }, (_, i) => (
+                              <option key={i} value={i}>{i}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-xs text-neutral-500 mb-1">Max Age</label>
+                          <select
+                            value={jobForm.studentAgeGroupMax !== undefined && jobForm.studentAgeGroupMax >= 30 ? "30+" : (jobForm.studentAgeGroupMax || "")}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              if (value === "30+") {
+                                setJobForm({
+                                  ...jobForm,
+                                  studentAgeGroupMax: 30,
+                                });
+                              } else {
+                                setJobForm({
+                                  ...jobForm,
+                                  studentAgeGroupMax: value ? parseInt(value) : undefined,
+                                });
+                              }
+                            }}
+                            className="input"
+                          >
+                            <option value="">Select...</option>
+                            {Array.from({ length: 31 }, (_, i) => (
+                              <option key={i} value={i}>{i}</option>
+                            ))}
+                            <option value="30+">30+</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
 
-              {/* Kazakhstan-specific Requirements */}
-              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-6">
-                <h3 className="font-medium text-amber-800 dark:text-amber-200 mb-4 flex items-center gap-2">
-                  <Globe className="w-5 h-5" />
-                  Kazakhstan Teaching Requirements
-                </h3>
-                <div className="grid md:grid-cols-3 gap-4">
-                  <label className="flex items-center gap-2">
-                    <input 
-                      type="checkbox" 
-                      checked={jobForm.teachingLicenseRequired}
-                      onChange={(e) => setJobForm({
-                        ...jobForm,
-                        teachingLicenseRequired: e.target.checked,
-                      })}
-                      className="rounded" 
-                    />
-                    <span className="text-sm">
-                      Teaching License Required
-                    </span>
-                  </label>
-                  <label className="flex items-center gap-2">
-                    <input 
-                      type="checkbox" 
-                      checked={jobForm.kazakhLanguageRequired}
-                      onChange={(e) => setJobForm({
-                        ...jobForm,
-                        kazakhLanguageRequired: e.target.checked,
-                      })}
-                      className="rounded" 
-                    />
-                    <span className="text-sm">
-                      Kazakh Language Preferred
-                    </span>
-                  </label>
-                  <label className="flex items-center gap-2">
-                    <input 
-                      type="checkbox" 
-                      checked={jobForm.localCertificationRequired}
-                      onChange={(e) => setJobForm({
-                        ...jobForm,
-                        localCertificationRequired: e.target.checked,
-                      })}
-                      className="rounded" 
-                    />
-                    <span className="text-sm">
-                      Local Certification Required
-                    </span>
-                  </label>
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">
+                        City/Town *
+                      </label>
+                      <input
+                        type="text"
+                        value={jobForm.city}
+                        onChange={(e) => setJobForm({
+                          ...jobForm,
+                          city: e.target.value,
+                        })}
+                        className="input"
+                        placeholder="e.g., Almaty"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">
+                        Country *
+                      </label>
+                      <input
+                        type="text"
+                        value={jobForm.country}
+                        onChange={(e) => setJobForm({
+                          ...jobForm,
+                          country: e.target.value,
+                        })}
+                        className="input"
+                        placeholder="e.g., Kazakhstan"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">
+                        Start Date
+                      </label>
+                      <input
+                        type="date"
+                        value={jobForm.startDate}
+                        onChange={(e) => setJobForm({
+                          ...jobForm,
+                          startDate: e.target.value,
+                        })}
+                        className="input"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">
+                        Contract Length
+                      </label>
+                      <input
+                        type="text"
+                        value={jobForm.contractLength}
+                        onChange={(e) => setJobForm({
+                          ...jobForm,
+                          contractLength: e.target.value,
+                        })}
+                        className="input"
+                        placeholder="e.g., 1 year, 2 years, Permanent"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid md:grid-cols-3 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">
+                        Employment Type *
+                      </label>
+                      <select 
+                        value={jobForm.employmentType}
+                        onChange={(e) => setJobForm({
+                          ...jobForm,
+                          employmentType: e.target.value,
+                        })}
+                        className="input" 
+                        required
+                      >
+                        <option value="">Select type</option>
+                        <option value="FULL_TIME">Full-time</option>
+                        <option value="PART_TIME">Part-time</option>
+                        <option value="CONTRACT">Contract</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">
+                        Salary Range *
+                      </label>
+                      <input
+                        type="text"
+                        value={jobForm.salary}
+                        onChange={(e) => setJobForm({
+                          ...jobForm,
+                          salary: e.target.value,
+                        })}
+                        className="input"
+                        placeholder="e.g., $2,800 - $3,500/month"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">
+                        Teaching Hours Per Week
+                      </label>
+                      <input
+                        type="number"
+                        value={jobForm.teachingHoursPerWeek}
+                        onChange={(e) => setJobForm({
+                          ...jobForm,
+                          teachingHoursPerWeek: e.target.value,
+                        })}
+                        className="input"
+                        placeholder="e.g., 20, 25, 30"
+                        min="0"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -1621,6 +3032,541 @@ export const SchoolDashboardPage: React.FC = () => {
                   required
                 />
               </div>
+
+              {/* Requirements */}
+              <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-6">
+                <h3 className="font-medium text-green-800 dark:text-green-200 mb-4 flex items-center gap-2">
+                  <Award className="w-5 h-5" />
+                  Requirements
+                </h3>
+                
+                <div className="space-y-6">
+                  {/* Essential Subsection */}
+                  <div>
+                    <h4 className="text-sm font-semibold text-green-900 dark:text-green-100 mb-3">Essential</h4>
+                    <div className="space-y-4">
+                      <label className="flex items-center gap-2">
+                        <input 
+                          type="checkbox" 
+                          checked={jobForm.nativeEnglishLevel}
+                          onChange={(e) => setJobForm({
+                            ...jobForm,
+                            nativeEnglishLevel: e.target.checked,
+                          })}
+                          className="rounded" 
+                        />
+                        <span className="text-sm">Native or Near-Native English Level</span>
+                      </label>
+                      
+                      <div className="space-y-2">
+                        <label className="flex items-center gap-2">
+                          <input 
+                            type="checkbox" 
+                            checked={jobForm.bachelorsDegree}
+                            onChange={(e) => setJobForm({
+                              ...jobForm,
+                              bachelorsDegree: e.target.checked,
+                            })}
+                            className="rounded" 
+                          />
+                          <span className="text-sm">Bachelor's Degree</span>
+                        </label>
+                        {jobForm.bachelorsDegree && (
+                          <div className="ml-6">
+                            <input
+                              type="text"
+                              value={jobForm.bachelorsDegreeSubject}
+                              onChange={(e) => setJobForm({
+                                ...jobForm,
+                                bachelorsDegreeSubject: e.target.value,
+                              })}
+                              className="input text-sm"
+                              placeholder="Subject Specific (Optional)"
+                            />
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <label className="text-xs text-neutral-500 mb-2 block">Certification:</label>
+                        <div className="grid md:grid-cols-3 gap-3">
+                          <label className="flex items-center gap-2">
+                            <input 
+                              type="checkbox" 
+                              checked={jobForm.tefl}
+                              onChange={(e) => setJobForm({
+                                ...jobForm,
+                                tefl: e.target.checked,
+                              })}
+                              className="rounded" 
+                            />
+                            <span className="text-sm">TEFL</span>
+                          </label>
+                          <label className="flex items-center gap-2">
+                            <input 
+                              type="checkbox" 
+                              checked={jobForm.celta}
+                              onChange={(e) => setJobForm({
+                                ...jobForm,
+                                celta: e.target.checked,
+                              })}
+                              className="rounded" 
+                            />
+                            <span className="text-sm">CELTA</span>
+                          </label>
+                          <label className="flex items-center gap-2">
+                            <input 
+                              type="checkbox" 
+                              checked={jobForm.tesol}
+                              onChange={(e) => setJobForm({
+                                ...jobForm,
+                                tesol: e.target.checked,
+                              })}
+                              className="rounded" 
+                            />
+                            <span className="text-sm">TESOL</span>
+                          </label>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-3">
+                        <label className="text-sm">Minimum Teaching Experience:</label>
+                        <select
+                          value={jobForm.minimumTeachingExperience}
+                          onChange={(e) => setJobForm({
+                            ...jobForm,
+                            minimumTeachingExperience: e.target.value,
+                          })}
+                          className="input w-1/4"
+                        >
+                          <option value="">Select...</option>
+                          {Array.from({ length: 30 }, (_, i) => (
+                            <option key={i + 1} value={i + 1}>{i + 1} {i === 0 ? 'year' : 'years'}</option>
+                          ))}
+                          <option value="30+">30+ years</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Preferred Subsection */}
+                  <div>
+                    <h4 className="text-sm font-semibold text-green-900 dark:text-green-100 mb-3">Preferred</h4>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-xs text-neutral-500 mb-2 block">Specific Exam Experience:</label>
+                        <div className="grid md:grid-cols-3 gap-3">
+                          <label className="flex items-center gap-2">
+                            <input 
+                              type="checkbox" 
+                              checked={jobForm.ieltsExperience}
+                              onChange={(e) => setJobForm({
+                                ...jobForm,
+                                ieltsExperience: e.target.checked,
+                              })}
+                              className="rounded" 
+                            />
+                            <span className="text-sm">IELTS</span>
+                          </label>
+                          <label className="flex items-center gap-2">
+                            <input 
+                              type="checkbox" 
+                              checked={jobForm.cambridgeExperience}
+                              onChange={(e) => setJobForm({
+                                ...jobForm,
+                                cambridgeExperience: e.target.checked,
+                              })}
+                              className="rounded" 
+                            />
+                            <span className="text-sm">Cambridge</span>
+                          </label>
+                          <label className="flex items-center gap-2">
+                            <input 
+                              type="checkbox" 
+                              checked={jobForm.satExperience}
+                              onChange={(e) => setJobForm({
+                                ...jobForm,
+                                satExperience: e.target.checked,
+                              })}
+                              className="rounded" 
+                            />
+                            <span className="text-sm">SAT</span>
+                          </label>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <label className="text-xs text-neutral-500 mb-2 block">Experience Type:</label>
+                        <div className="grid md:grid-cols-2 gap-3">
+                          <label className="flex items-center gap-2">
+                            <input 
+                              type="checkbox" 
+                              checked={jobForm.classroomExperience}
+                              onChange={(e) => setJobForm({
+                                ...jobForm,
+                                classroomExperience: e.target.checked,
+                              })}
+                              className="rounded" 
+                            />
+                            <span className="text-sm">Classroom Experience</span>
+                          </label>
+                          <label className="flex items-center gap-2">
+                            <input 
+                              type="checkbox" 
+                              checked={jobForm.onlineExperience}
+                              onChange={(e) => setJobForm({
+                                ...jobForm,
+                                onlineExperience: e.target.checked,
+                              })}
+                              className="rounded" 
+                            />
+                            <span className="text-sm">Online Experience</span>
+                          </label>
+                        </div>
+                      </div>
+                      
+                      <label className="flex items-center gap-2">
+                        <input 
+                          type="checkbox" 
+                          checked={jobForm.centralAsiaExperience}
+                          onChange={(e) => setJobForm({
+                            ...jobForm,
+                            centralAsiaExperience: e.target.checked,
+                          })}
+                          className="rounded" 
+                        />
+                        <span className="text-sm">Experience in Central Asia or Similar Region</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Legal Subsection */}
+                  <div>
+                    <h4 className="text-sm font-semibold text-green-900 dark:text-green-100 mb-3">Legal</h4>
+                    <div className="space-y-3">
+                      <label className="flex items-center gap-2">
+                        <input 
+                          type="checkbox" 
+                          checked={jobForm.eligibleNationalities}
+                          onChange={(e) => setJobForm({
+                            ...jobForm,
+                            eligibleNationalities: e.target.checked,
+                          })}
+                          className="rounded" 
+                        />
+                        <span className="text-sm">Nationalities Eligible for Work Visa</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input 
+                          type="checkbox" 
+                          checked={jobForm.backgroundCheckRequired}
+                          onChange={(e) => setJobForm({
+                            ...jobForm,
+                            backgroundCheckRequired: e.target.checked,
+                          })}
+                          className="rounded" 
+                        />
+                        <span className="text-sm">Background Check Requirement</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Benefits & Support */}
+              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-medium text-amber-800 dark:text-amber-200 flex items-center gap-2">
+                    <Award className="w-5 h-5" />
+                    Benefits & Support
+                  </h3>
+                </div>
+                
+                <div className="space-y-4 mb-6">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={jobForm.useSchoolBenefits}
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        // Always populate benefits from school profile when available
+                        // This allows schools to see their defaults whether checked or unchecked
+                        if (schoolProfile?.benefits) {
+                          try {
+                            const parsedBenefits = JSON.parse(schoolProfile.benefits);
+                            setJobForm({
+                              ...jobForm,
+                              useSchoolBenefits: checked,
+                              housingProvided: parsedBenefits.housingProvided || false,
+                              flightReimbursement: parsedBenefits.flightReimbursement || false,
+                              visaWorkPermitSupport: parsedBenefits.visaWorkPermitSupport || false,
+                              contractCompletionBonus: parsedBenefits.contractCompletionBonus || false,
+                              paidHolidays: parsedBenefits.paidHolidays || false,
+                              overtimePay: parsedBenefits.overtimePay || false,
+                              paidAnnualLeave: parsedBenefits.paidAnnualLeave || false,
+                              nationalHolidays: parsedBenefits.nationalHolidays || false,
+                              sickLeave: parsedBenefits.sickLeave || false,
+                              healthInsurance: parsedBenefits.healthInsurance || false,
+                              relocationSupport: parsedBenefits.relocationSupport || false,
+                              teachingMaterialsProvided: parsedBenefits.teachingMaterialsProvided || false,
+                              curriculumGuidance: parsedBenefits.curriculumGuidance || false,
+                              teacherTraining: parsedBenefits.teacherTraining || false,
+                              promotionOpportunities: parsedBenefits.promotionOpportunities || false,
+                              contractRenewalOptions: parsedBenefits.contractRenewalOptions || false,
+                            });
+                          } catch (e) {
+                            setJobForm({ ...jobForm, useSchoolBenefits: checked });
+                          }
+                        } else {
+                          setJobForm({ ...jobForm, useSchoolBenefits: checked });
+                        }
+                      }}
+                      className="rounded"
+                    />
+                    <span className="text-sm font-medium">Use School Benefits & Support Information</span>
+                  </label>
+                  
+                  {jobForm.useSchoolBenefits && (!schoolProfile?.benefits || schoolProfile.benefits.trim() === "" || schoolProfile.benefits === "{}") && (
+                    <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
+                      <div className="flex items-start gap-2">
+                        <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-amber-800 dark:text-amber-200 mb-1">
+                            No Benefits & Support Information Available
+                          </p>
+                          <p className="text-sm text-amber-700 dark:text-amber-300">
+                            Please add Benefits & Support information in your school profile, or uncheck this option to add job-specific benefits below.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                {!jobForm.useSchoolBenefits && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <div className="space-y-6">
+                  {/* Financial Subsection */}
+                  <div>
+                    <h4 className="text-sm font-semibold text-amber-900 dark:text-amber-100 mb-3">Financial</h4>
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+                      <label className="flex items-center gap-2">
+                        <input 
+                          type="checkbox" 
+                          checked={jobForm.housingProvided}
+                          onChange={(e) => setJobForm({
+                            ...jobForm,
+                            housingProvided: e.target.checked,
+                          })}
+                          className="rounded" 
+                        />
+                        <span className="text-sm">Housing Assistance</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input 
+                          type="checkbox" 
+                          checked={jobForm.flightReimbursement}
+                          onChange={(e) => setJobForm({
+                            ...jobForm,
+                            flightReimbursement: e.target.checked,
+                          })}
+                          className="rounded" 
+                        />
+                        <span className="text-sm">Flight Reimbursement Allowance</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input 
+                          type="checkbox" 
+                          checked={jobForm.visaWorkPermitSupport}
+                          onChange={(e) => setJobForm({
+                            ...jobForm,
+                            visaWorkPermitSupport: e.target.checked,
+                          })}
+                          className="rounded" 
+                        />
+                        <span className="text-sm">Visa & Work Permit Support</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input 
+                          type="checkbox" 
+                          checked={jobForm.contractCompletionBonus}
+                          onChange={(e) => setJobForm({
+                            ...jobForm,
+                            contractCompletionBonus: e.target.checked,
+                          })}
+                          className="rounded" 
+                        />
+                        <span className="text-sm">Contract Completion Bonus</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input 
+                          type="checkbox" 
+                          checked={jobForm.paidHolidays}
+                          onChange={(e) => setJobForm({
+                            ...jobForm,
+                            paidHolidays: e.target.checked,
+                          })}
+                          className="rounded" 
+                        />
+                        <span className="text-sm">Paid Holidays</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input 
+                          type="checkbox" 
+                          checked={jobForm.overtimePay}
+                          onChange={(e) => setJobForm({
+                            ...jobForm,
+                            overtimePay: e.target.checked,
+                          })}
+                          className="rounded" 
+                        />
+                        <span className="text-sm">Overtime Pay</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Lifestyle & Wellbeing Subsection */}
+                  <div>
+                    <h4 className="text-sm font-semibold text-amber-900 dark:text-amber-100 mb-3">Lifestyle & Wellbeing</h4>
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+                      <label className="flex items-center gap-2">
+                        <input 
+                          type="checkbox" 
+                          checked={jobForm.paidAnnualLeave}
+                          onChange={(e) => setJobForm({
+                            ...jobForm,
+                            paidAnnualLeave: e.target.checked,
+                          })}
+                          className="rounded" 
+                        />
+                        <span className="text-sm">Paid Annual Leave</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input 
+                          type="checkbox" 
+                          checked={jobForm.nationalHolidays}
+                          onChange={(e) => setJobForm({
+                            ...jobForm,
+                            nationalHolidays: e.target.checked,
+                          })}
+                          className="rounded" 
+                        />
+                        <span className="text-sm">National Holidays</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input 
+                          type="checkbox" 
+                          checked={jobForm.sickLeave}
+                          onChange={(e) => setJobForm({
+                            ...jobForm,
+                            sickLeave: e.target.checked,
+                          })}
+                          className="rounded" 
+                        />
+                        <span className="text-sm">Sick Leave</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input 
+                          type="checkbox" 
+                          checked={jobForm.healthInsurance}
+                          onChange={(e) => setJobForm({
+                            ...jobForm,
+                            healthInsurance: e.target.checked,
+                          })}
+                          className="rounded" 
+                        />
+                        <span className="text-sm">Health Insurance</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input 
+                          type="checkbox" 
+                          checked={jobForm.relocationSupport}
+                          onChange={(e) => setJobForm({
+                            ...jobForm,
+                            relocationSupport: e.target.checked,
+                          })}
+                          className="rounded" 
+                        />
+                        <span className="text-sm">Relocation Support</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Professional Support Subsection */}
+                  <div>
+                    <h4 className="text-sm font-semibold text-amber-900 dark:text-amber-100 mb-3">Professional Support</h4>
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+                      <label className="flex items-center gap-2">
+                        <input 
+                          type="checkbox" 
+                          checked={jobForm.teachingMaterialsProvided}
+                          onChange={(e) => setJobForm({
+                            ...jobForm,
+                            teachingMaterialsProvided: e.target.checked,
+                          })}
+                          className="rounded" 
+                        />
+                        <span className="text-sm">Teaching Materials Provided</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input 
+                          type="checkbox" 
+                          checked={jobForm.curriculumGuidance}
+                          onChange={(e) => setJobForm({
+                            ...jobForm,
+                            curriculumGuidance: e.target.checked,
+                          })}
+                          className="rounded" 
+                        />
+                        <span className="text-sm">Curriculum Guidance</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input 
+                          type="checkbox" 
+                          checked={jobForm.teacherTraining}
+                          onChange={(e) => setJobForm({
+                            ...jobForm,
+                            teacherTraining: e.target.checked,
+                          })}
+                          className="rounded" 
+                        />
+                        <span className="text-sm">Teacher Training</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input 
+                          type="checkbox" 
+                          checked={jobForm.promotionOpportunities}
+                          onChange={(e) => setJobForm({
+                            ...jobForm,
+                            promotionOpportunities: e.target.checked,
+                          })}
+                          className="rounded" 
+                        />
+                        <span className="text-sm">Promotion Opportunities</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input 
+                          type="checkbox" 
+                          checked={jobForm.contractRenewalOptions}
+                          onChange={(e) => setJobForm({
+                            ...jobForm,
+                            contractRenewalOptions: e.target.checked,
+                          })}
+                          className="rounded" 
+                        />
+                        <span className="text-sm">Contract Renewal Options</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </div>
 
               {/* School Description Section */}
               <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
@@ -1644,9 +3590,40 @@ export const SchoolDashboardPage: React.FC = () => {
                     <span className="text-sm font-medium">Use school profile information</span>
                   </label>
                   
+                  {/* Warning if profile description doesn't exist */}
+                  {jobForm.useSchoolProfile && (!schoolProfile?.description || schoolProfile.description.trim() === "") && (
+                    <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
+                      <div className="flex items-start gap-2">
+                        <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-amber-800 dark:text-amber-200 mb-1">
+                            No School Description Found
+                          </p>
+                          <p className="text-xs text-amber-700 dark:text-amber-300 mb-2">
+                            Your school profile doesn't have a description yet. You can either:
+                          </p>
+                          <ul className="text-xs text-amber-700 dark:text-amber-300 list-disc list-inside space-y-1 mb-2">
+                            <li>Uncheck this option and provide a custom description below</li>
+                            <li>Add a description to your school profile first</li>
+                          </ul>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => window.location.href = "/schools/profile"}
+                            className="text-xs h-7"
+                          >
+                            Go to Profile →
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
                   <p className="text-xs text-neutral-600 dark:text-neutral-400">
                     {jobForm.useSchoolProfile 
-                      ? "Your school's profile description will be displayed to candidates"
+                      ? schoolProfile?.description && schoolProfile.description.trim() !== ""
+                        ? "Your school's profile description will be displayed to candidates"
+                        : "⚠️ No profile description available - please add one or use custom description below"
                       : "Provide a custom description specific to this job posting"
                     }
                   </p>
@@ -1715,6 +3692,7 @@ export const SchoolDashboardPage: React.FC = () => {
                   type="submit" 
                   variant="gradient" 
                   size="lg"
+                  disabled={!selectedJobForEdit && (subscriptionStatus?.toLowerCase() === "cancelled" || subscriptionStatus?.toLowerCase() === "past_due")}
                 >
                   {selectedJobForEdit ? "Update Job Posting" : "Publish Job Posting"}
                 </Button>
@@ -1726,6 +3704,13 @@ export const SchoolDashboardPage: React.FC = () => {
           </div>
         </motion.div>
       )}
+
+      {/* Messages Modal */}
+      <MessagesModal
+        isOpen={showMessagesModal}
+        onClose={() => setShowMessagesModal(false)}
+        onUnreadCountChange={setUnreadMessageCount}
+      />
     </div>
   );
 };

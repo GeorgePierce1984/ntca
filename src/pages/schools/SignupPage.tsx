@@ -6,7 +6,7 @@ import { CENTRAL_ASIA_COUNTRIES, SCHOOL_TYPES } from "@/constants/options";
 
 interface SchoolForm {
   name: string;
-  address: string;
+  streetAddress: string; // Changed from 'address' to match database
   email: string;
   password: string;
   contactName: string;
@@ -21,7 +21,7 @@ interface SchoolForm {
 
 const initialForm: SchoolForm = {
   name: "",
-  address: "",
+  streetAddress: "", // Changed from 'address'
   email: "",
   password: "",
   contactName: "",
@@ -230,7 +230,7 @@ const SignupPage: React.FC = () => {
                 className={`w-full p-3 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-800 ${errors.schoolType ? "border-red-500" : ""}`}
                 required
               >
-                <option value="">Select school type</option>
+                <option value="">Select...</option>
                 {SCHOOL_TYPES.map((type) => (
                   <option key={type.value} value={type.value}>
                     {type.label}
@@ -251,8 +251,8 @@ const SignupPage: React.FC = () => {
             <input
               className="input"
               placeholder="Enter street address"
-              name="address"
-              value={form.address}
+              name="streetAddress"
+              value={form.streetAddress}
               required
               onChange={handleChange}
             />
@@ -390,14 +390,20 @@ const SignupPage: React.FC = () => {
               <label className="block text-sm font-medium mb-2">
                 Estimated Jobs Per Year *
               </label>
-              <input
-                className="input"
-                placeholder="e.g. 5-10"
+              <select
                 name="estimateJobs"
                 value={form.estimateJobs}
-                required
                 onChange={handleChange}
-              />
+                className="w-full p-3 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-800"
+                required
+              >
+                <option value="">Select estimate</option>
+                <option value="1-2 jobs per year">1-2 jobs per year</option>
+                <option value="3-5 jobs per year">3-5 jobs per year</option>
+                <option value="6-10 jobs per year">6-10 jobs per year</option>
+                <option value="10+ jobs per year">10+ jobs per year</option>
+                <option value="As needed">As needed</option>
+              </select>
             </div>
           </div>
 
