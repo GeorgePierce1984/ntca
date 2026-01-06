@@ -43,6 +43,7 @@ import {
   MessageSquare,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { MessagesModal } from "@/components/messages/MessagesModal";
 import { getCountryByName } from "@/data/countries";
 
 interface Teacher {
@@ -207,6 +208,7 @@ const TeacherDashboard: React.FC = () => {
     const handleVisibilityChange = () => {
       if (!document.hidden) {
         // User switched back to the tab - refresh data
+        fetchUnreadMessageCount();
         // Optionally refresh other data too
         fetchJobs();
         fetchSavedJobs();

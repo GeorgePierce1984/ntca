@@ -29,6 +29,7 @@ import SchoolDashboard from "@/pages/schools/SchoolDashboard";
 // Teacher pages
 import { TeacherJobsPage } from "@/pages/teachers/JobsPage";
 import { TeacherProfilePage } from "@/pages/teachers/ProfilePage";
+import { TeacherPrivacyPage } from "@/pages/teachers/PrivacyPage";
 import TeacherDashboard from "@/pages/teachers/DashboardPage";
 import { ResourcesPage } from "@/pages/teachers/ResourcesPage";
 import { CareerGuidancePage } from "@/pages/teachers/CareerGuidancePage";
@@ -56,6 +57,9 @@ import { ForgotPasswordPage } from "@/pages/auth/ForgotPasswordPage";
 
 // Error pages
 import { NotFoundPage } from "@/pages/NotFoundPage";
+
+// Messaging
+import { MessagesPage } from "@/pages/MessagesPage";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -242,6 +246,22 @@ function AppContent() {
             }
           />
           <Route
+            path="/teachers/privacy"
+            element={
+              <ProtectedRoute allowedUserTypes={["TEACHER"]}>
+                <TeacherPrivacyPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/teachers/messages"
+            element={
+              <ProtectedRoute allowedUserTypes={["TEACHER"]}>
+                <MessagesPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/teachers/resources"
             element={
               <ProtectedRoute allowedUserTypes={["TEACHER"]}>
@@ -254,6 +274,16 @@ function AppContent() {
             element={
               <ProtectedRoute allowedUserTypes={["TEACHER"]}>
                 <CareerGuidancePage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Messages route - redirects based on user type */}
+          <Route
+            path="/messages"
+            element={
+              <ProtectedRoute allowedUserTypes={["SCHOOL", "TEACHER"]}>
+                <MessagesPage />
               </ProtectedRoute>
             }
           />
