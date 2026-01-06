@@ -43,7 +43,6 @@ import {
   MessageSquare,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessagesModal } from "@/components/messages/MessagesModal";
 import { getCountryByName } from "@/data/countries";
 
 interface Teacher {
@@ -855,7 +854,7 @@ const TeacherDashboard: React.FC = () => {
                   key={key}
                   onClick={() => {
                     if (isLink) {
-                      setShowMessagesModal(true);
+                      // Messages functionality removed
                     } else {
                       setActiveTab(key as any);
                     }
@@ -2162,12 +2161,6 @@ const TeacherDashboard: React.FC = () => {
         )}
       </div>
 
-      {/* Messages Modal */}
-      <MessagesModal
-        isOpen={showMessagesModal}
-        onClose={() => setShowMessagesModal(false)}
-        onUnreadCountChange={setUnreadMessageCount}
-      />
     </div>
   );
 };
