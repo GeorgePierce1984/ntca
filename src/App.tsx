@@ -207,14 +207,6 @@ function AppContent() {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/schools/messages"
-            element={
-              <ProtectedRoute allowedUserTypes={["SCHOOL"]}>
-                <MessagesPage />
-              </ProtectedRoute>
-            }
-          />
 
           {/* Protected Teacher routes */}
           <Route
@@ -262,24 +254,6 @@ function AppContent() {
             element={
               <ProtectedRoute allowedUserTypes={["TEACHER"]}>
                 <CareerGuidancePage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/teachers/messages"
-            element={
-              <ProtectedRoute allowedUserTypes={["TEACHER"]}>
-                <MessagesPage />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Messages route - redirects based on user type */}
-          <Route
-            path="/messages"
-            element={
-              <ProtectedRoute allowedUserTypes={["SCHOOL", "TEACHER"]}>
-                <MessagesPage />
               </ProtectedRoute>
             }
           />
