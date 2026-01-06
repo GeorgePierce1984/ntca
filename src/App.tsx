@@ -245,14 +245,6 @@ function AppContent() {
             }
           />
           <Route
-            path="/teachers/privacy"
-            element={
-              <ProtectedRoute allowedUserTypes={["TEACHER"]}>
-                <TeacherPrivacyPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
             path="/teachers/dashboard"
             element={
               <ProtectedRoute allowedUserTypes={["TEACHER"]}>
