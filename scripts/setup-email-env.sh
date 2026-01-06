@@ -15,7 +15,9 @@ fi
 echo "Configuring Resend email service..."
 
 # Set Resend API key
-vercel env add RESEND_API_KEY production <<< "REDACTED"
+# IMPORTANT: Replace with your actual Resend API key from https://resend.com
+read -p "Enter your Resend API key: " RESEND_KEY
+vercel env add RESEND_API_KEY production <<< "$RESEND_KEY"
 echo "✓ RESEND_API_KEY set for production"
 
 # Set email domain and addresses
@@ -58,7 +60,7 @@ echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
     echo "Setting up development environment..."
 
-    vercel env add RESEND_API_KEY development <<< "REDACTED"
+    vercel env add RESEND_API_KEY development <<< "$RESEND_KEY"
     vercel env add EMAIL_FROM_ADDRESS development <<< "dev@ntca.com"
     vercel env add EMAIL_FROM_NAME development <<< "NTCA Dev"
     vercel env add EMAIL_REPLY_TO development <<< "dev-support@ntca.com"

@@ -9,7 +9,7 @@ import sys
 from urllib.parse import urlparse, parse_qs
 
 # Connection string
-conn_string = "postgresql://neondb_owner:REDACTED@ep-purple-union-ab9djram-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+conn_string = "postgresql://neondb_owner:YOUR_PASSWORD@ep-purple-union-ab9djram-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
 
 print("🔗 Connecting to Neon database...")
 

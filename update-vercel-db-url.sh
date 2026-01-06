@@ -2,7 +2,7 @@
 
 # Script to update DATABASE_URL in Vercel
 # New database connection string
-NEW_DB_URL="postgresql://neondb_owner:REDACTED@ep-winter-sound-abyxdvv7-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require"
+NEW_DB_URL="postgresql://neondb_owner:YOUR_PASSWORD@ep-winter-sound-abyxdvv7-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require"
 
 cd "/Users/georgepierce/Desktop/Projects/ntca/ntca"
 export PATH="$PWD/node-v20.11.0-darwin-x64/bin:$PATH"

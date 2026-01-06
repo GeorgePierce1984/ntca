@@ -15,7 +15,7 @@
 
 4. **Replace the value with**:
    ```
-   postgresql://neondb_owner:REDACTED@ep-winter-sound-abyxdvv7-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require
+   postgresql://neondb_owner:YOUR_PASSWORD@ep-winter-sound-abyxdvv7-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require
    ```
 
 5. **Make sure all environments are checked**:
@@ -58,13 +58,13 @@ vercel --prod
 
 **When prompted**, you'll need to:
 1. Type `y` and press Enter
-2. Paste: `postgresql://neondb_owner:REDACTED@ep-winter-sound-abyxdvv7-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require`
+2. Paste: `postgresql://neondb_owner:YOUR_PASSWORD@ep-winter-sound-abyxdvv7-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require`
 3. Press Enter
 
 ## New Database Connection String
 
 ```
-postgresql://neondb_owner:REDACTED@ep-winter-sound-abyxdvv7-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require
+postgresql://neondb_owner:YOUR_PASSWORD@ep-winter-sound-abyxdvv7-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require
 ```
 
 ## Verification

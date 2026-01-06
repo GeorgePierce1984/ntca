@@ -3,7 +3,7 @@
 ## Your Connection String
 
 ```
-postgresql://neondb_owner:REDACTED@ep-winter-sound-abyxdvv7-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+postgresql://neondb_owner:YOUR_PASSWORD@ep-winter-sound-abyxdvv7-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require
 ```
 
 ✅ **Good:** Uses pooler connection (`-pooler` in hostname)
@@ -33,7 +33,7 @@ postgresql://neondb_owner:REDACTED@ep-winter-sound-abyxdvv7-pooler.eu-west-2.aws
 If you're still getting connection errors, try removing `channel_binding=require`:
 
 ```
-postgresql://neondb_owner:REDACTED@ep-winter-sound-abyxdvv7-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require
+postgresql://neondb_owner:YOUR_PASSWORD@ep-winter-sound-abyxdvv7-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require
 ```
 
 Some serverless environments don't support channel binding.

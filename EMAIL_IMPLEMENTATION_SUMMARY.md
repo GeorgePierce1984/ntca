@@ -82,7 +82,7 @@ Handles subscription lifecycle emails:
 
 ```bash
 # Email Service
-RESEND_API_KEY=REDACTED  # Your Resend API key
+RESEND_API_KEY=YOUR_RESEND_API_KEY  # Your Resend API key
 
 # Email Configuration
 EMAIL_FROM_ADDRESS=noreply@ntca.com         # Must be verified domain

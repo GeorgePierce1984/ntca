@@ -15,7 +15,7 @@ This means `DATABASE_URL` in Vercel is either:
 ## Your Correct Connection String
 
 ```
-postgresql://neondb_owner:REDACTED@ep-winter-sound-abyxdvv7-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require
+postgresql://neondb_owner:YOUR_PASSWORD@ep-winter-sound-abyxdvv7-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require
 ```
 
 ## Step-by-Step Fix
@@ -36,7 +36,7 @@ Visit: https://vercel.com/george-pierces-projects/ntca/settings/environment-vari
    - **Key**: `DATABASE_URL`
    - **Value**: Paste your connection string:
      ```
-     postgresql://neondb_owner:REDACTED@ep-winter-sound-abyxdvv7-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require
+     postgresql://neondb_owner:YOUR_PASSWORD@ep-winter-sound-abyxdvv7-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require
      ```
    - **Environments**: Select ALL three:
      - ✅ Production
@@ -50,7 +50,7 @@ Visit: https://vercel.com/george-pierces-projects/ntca/settings/environment-vari
 2. **Delete** the current value
 3. **Paste** your connection string:
    ```
-   postgresql://neondb_owner:REDACTED@ep-winter-sound-abyxdvv7-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require
+   postgresql://neondb_owner:YOUR_PASSWORD@ep-winter-sound-abyxdvv7-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require
    ```
 4. **Verify** it starts with `postgresql://`
 5. **No quotes** around it
@@ -92,7 +92,7 @@ export PATH="$PWD/node-v20.11.0-darwin-x64/bin:$PATH"
 
 # Add/update DATABASE_URL
 vercel env add DATABASE_URL production
-# When prompted, paste: postgresql://neondb_owner:REDACTED@ep-winter-sound-abyxdvv7-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require
+# When prompted, paste: postgresql://neondb_owner:YOUR_PASSWORD@ep-winter-sound-abyxdvv7-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require
 
 # Repeat for other environments
 vercel env add DATABASE_URL preview

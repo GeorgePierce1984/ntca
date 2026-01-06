@@ -9,7 +9,7 @@ import sys
 import re
 
 # Connection string
-conn_string = "postgresql://neondb_owner:REDACTED@ep-winter-sound-abyxdvv7-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require"
+conn_string = "postgresql://neondb_owner:YOUR_PASSWORD@ep-winter-sound-abyxdvv7-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require"
 
 # Backup file
 backup_file = "database_backup.sql"

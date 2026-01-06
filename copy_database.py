@@ -15,10 +15,10 @@ register_adapter(dict, Json)
 register_adapter(list, Json)
 
 # Source database (original)
-SOURCE_CONN_STRING = "postgresql://neondb_owner:REDACTED@ep-purple-union-ab9djram-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+SOURCE_CONN_STRING = "postgresql://neondb_owner:YOUR_PASSWORD@ep-purple-union-ab9djram-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
 
 # Destination database (new)
-DEST_CONN_STRING = "postgresql://neondb_owner:REDACTED@ep-winter-sound-abyxdvv7-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require"
+DEST_CONN_STRING = "postgresql://neondb_owner:YOUR_PASSWORD@ep-winter-sound-abyxdvv7-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require"
 
 print("🔗 Connecting to databases...")
 

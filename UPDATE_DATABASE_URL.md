@@ -3,7 +3,7 @@
 ## New Database Connection String
 
 ```
-postgresql://neondb_owner:REDACTED@ep-winter-sound-abyxdvv7-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require
+postgresql://neondb_owner:YOUR_PASSWORD@ep-winter-sound-abyxdvv7-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require
 ```
 
 ## Update Vercel Environment Variables
@@ -20,7 +20,7 @@ postgresql://neondb_owner:REDACTED@ep-winter-sound-abyxdvv7-pooler.eu-west-2.aws
 3. **Update the Value**
    - Replace the existing connection string with:
      ```
-     postgresql://neondb_owner:REDACTED@ep-winter-sound-abyxdvv7-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require
+     postgresql://neondb_owner:YOUR_PASSWORD@ep-winter-sound-abyxdvv7-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require
      ```
 
 4. **Select Environments**
@@ -49,7 +49,7 @@ source setup-local-env.sh
 vercel env update DATABASE_URL production
 # When prompted:
 #   1. Type: y
-#   2. Paste: postgresql://neondb_owner:REDACTED@ep-winter-sound-abyxdvv7-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require
+#   2. Paste: postgresql://neondb_owner:YOUR_PASSWORD@ep-winter-sound-abyxdvv7-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require
 #   3. Press Enter
 
 # Update Preview

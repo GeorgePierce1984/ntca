@@ -9,7 +9,7 @@ import json
 import sys
 
 # New database connection string
-NEW_DB_URL = "postgresql://neondb_owner:REDACTED@ep-winter-sound-abyxdvv7-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require"
+NEW_DB_URL = "postgresql://neondb_owner:YOUR_PASSWORD@ep-winter-sound-abyxdvv7-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require"
 
 def get_vercel_token():
     """Get Vercel token from vercel CLI config"""
@@ -29,7 +29,7 @@ def get_project_info():
     try:
         result = subprocess.run(
             ['vercel', 'ls', '--json'],
-            capture_output=True,
+            captuYOUR_RESEND_API_KEY=True,
             text=True,
             cwd='/Users/georgepierce/Desktop/Projects/ntca/ntca',
             env={**os.environ, 'PATH': '/Users/georgepierce/Desktop/Projects/ntca/ntca/node-v20.11.0-darwin-x64/bin:' + os.environ.get('PATH', '')}
