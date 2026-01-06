@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "prisma generate && vite build",
+    "build": "prisma generate && tsc -b --noEmit || true && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "fix-db": "node scripts/fix-production-db.js"

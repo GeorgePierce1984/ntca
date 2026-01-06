@@ -1,0 +1,16 @@
+#!/bin/bash
+cd "/Users/georgepierce/Desktop/Projects/ntca/ntca"
+export PATH="$PWD/node-v20.11.0-darwin-x64/bin:$PATH"
+
+echo "🔗 Updating DATABASE_URL..."
+echo ""
+echo "Connection String:"
+echo "postgresql://neondb_owner:REDACTED@ep-purple-union-ab9djram-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+echo ""
+echo "Run this command:"
+echo "vercel env update DATABASE_URL production"
+echo ""
+echo "Then:"
+echo "1. Type 'y' and press Enter"
+echo "2. Paste the connection string above"
+echo "3. Press Enter"

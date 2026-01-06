@@ -68,7 +68,7 @@ export default async function handler(req, res) {
         }
 
         jobs = await retryOperation(async () => {
-          return await prisma.job.findMany({
+          const allJobs = await prisma.job.findMany({
             where: { schoolId: school.id },
             include: {
               school: true,
@@ -83,6 +83,38 @@ export default async function handler(req, res) {
             },
             orderBy: { createdAt: "desc" },
           });
+
+          // Auto-close jobs with passed deadlines
+          const now = new Date();
+          const jobsToClose = allJobs.filter(job => {
+            if (job.status === "ACTIVE") {
+              const deadlineDate = new Date(job.deadline);
+              deadlineDate.setHours(23, 59, 59, 999); // End of deadline day
+              return now > deadlineDate;
+            }
+            return false;
+          });
+
+          // Update jobs with passed deadlines to CLOSED
+          if (jobsToClose.length > 0) {
+            await Promise.all(
+              jobsToClose.map(job =>
+                prisma.job.update({
+                  where: { id: job.id },
+                  data: { status: "CLOSED" },
+                })
+              )
+            );
+            // Update the jobs array with new statuses
+            jobsToClose.forEach(closedJob => {
+              const index = allJobs.findIndex(j => j.id === closedJob.id);
+              if (index !== -1) {
+                allJobs[index].status = "CLOSED";
+              }
+            });
+          }
+
+          return allJobs;
         });
       } else {
         // Teachers see all active jobs
@@ -183,11 +215,18 @@ export default async function handler(req, res) {
 
       const {
         title,
+        subjectsTaught,
+        studentAgeGroupMin,
+        studentAgeGroupMax,
+        startDate,
+        contractLength,
         description,
-        location,
+        city,
+        country,
         salary,
         type,
         deadline,
+        teachingHoursPerWeek,
         qualification,
         experience,
         language,
@@ -200,13 +239,15 @@ export default async function handler(req, res) {
         status,
         useSchoolProfile,
         schoolDescription,
+        useSchoolBenefits,
       } = req.body;
 
       // Validate required fields
       if (
         !title ||
         !description ||
-        !location ||
+        !city ||
+        !country ||
         !salary ||
         !type ||
         !deadline
@@ -214,17 +255,49 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: "Missing required fields" });
       }
 
+      // Parse dates and numbers
+      let parsedStartDate = null;
+      if (startDate) {
+        const startDateObj = new Date(startDate);
+        if (!isNaN(startDateObj.getTime())) {
+          parsedStartDate = startDateObj;
+        }
+      }
+
+      let parsedStudentAgeGroupMin = null;
+      if (studentAgeGroupMin !== undefined && studentAgeGroupMin !== null) {
+        const min = parseInt(studentAgeGroupMin);
+        if (!isNaN(min) && min >= 0) {
+          parsedStudentAgeGroupMin = min;
+        }
+      }
+
+      let parsedStudentAgeGroupMax = null;
+      if (studentAgeGroupMax !== undefined && studentAgeGroupMax !== null) {
+        const max = parseInt(studentAgeGroupMax);
+        if (!isNaN(max) && max >= 0) {
+          parsedStudentAgeGroupMax = max;
+        }
+      }
+
       const job = await retryOperation(async () => {
         return await prisma.job.create({
           data: {
             schoolId: school.id,
             title,
+            subjectsTaught: subjectsTaught || null,
+            studentAgeGroupMin: parsedStudentAgeGroupMin,
+            studentAgeGroupMax: parsedStudentAgeGroupMax,
+            startDate: parsedStartDate,
+            contractLength: contractLength || null,
             description,
-            location,
+            city,
+            country,
             salary,
             type: type.toUpperCase(),
             status: status || "ACTIVE",
             deadline: new Date(deadline),
+            teachingHoursPerWeek: teachingHoursPerWeek || null,
             qualification: qualification || "",
             experience: experience || "",
             language: language || "English",
@@ -237,6 +310,7 @@ export default async function handler(req, res) {
             useSchoolProfile: useSchoolProfile !== false,
             schoolDescription:
               useSchoolProfile === false ? schoolDescription : null,
+            useSchoolBenefits: useSchoolBenefits !== undefined ? useSchoolBenefits : true,
           },
           include: {
             school: true,

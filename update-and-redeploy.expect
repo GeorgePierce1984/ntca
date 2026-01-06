@@ -1,0 +1,104 @@
+#!/usr/bin/expect -f
+
+set timeout 60
+set new_db_url "postgresql://neondb_owner:REDACTED@ep-winter-sound-abyxdvv7-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require"
+
+cd "/Users/georgepierce/Desktop/Projects/ntca/ntca"
+set env(PATH) "$env(PWD)/node-v20.11.0-darwin-x64/bin:$env(PATH)"
+
+# Update Production
+spawn vercel env update DATABASE_URL production
+
+expect {
+    -re "Are you sure.*\\(y/N\\)" {
+        send "y\r"
+        exp_continue
+    }
+    -re "What's the new value" {
+        send "$new_db_url\r"
+        exp_continue
+    }
+    -re "new value of DATABASE_URL" {
+        send "$new_db_url\r"
+        exp_continue
+    }
+    -re "Updated" {
+        exp_continue
+    }
+    timeout {
+        puts "Timeout waiting for prompt"
+        exit 1
+    }
+    eof
+}
+
+wait
+
+# Update Preview
+spawn vercel env update DATABASE_URL preview
+
+expect {
+    -re "Are you sure.*\\(y/N\\)" {
+        send "y\r"
+        exp_continue
+    }
+    -re "What's the new value" {
+        send "$new_db_url\r"
+        exp_continue
+    }
+    -re "new value of DATABASE_URL" {
+        send "$new_db_url\r"
+        exp_continue
+    }
+    -re "Updated" {
+        exp_continue
+    }
+    timeout {
+        puts "Timeout waiting for prompt"
+        exit 1
+    }
+    eof
+}
+
+wait
+
+# Update Development
+spawn vercel env update DATABASE_URL development
+
+expect {
+    -re "Are you sure.*\\(y/N\\)" {
+        send "y\r"
+        exp_continue
+    }
+    -re "What's the new value" {
+        send "$new_db_url\r"
+        exp_continue
+    }
+    -re "new value of DATABASE_URL" {
+        send "$new_db_url\r"
+        exp_continue
+    }
+    -re "Updated" {
+        exp_continue
+    }
+    timeout {
+        puts "Timeout waiting for prompt"
+        exit 1
+    }
+    eof
+}
+
+wait
+
+# Redeploy
+spawn vercel --prod
+
+expect {
+    timeout {
+        puts "Deployment started"
+    }
+    eof
+}
+
+wait
+

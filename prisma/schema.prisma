@@ -70,13 +70,19 @@ model School {
 
   // School details
   schoolType     String  // "private" or "public"
+  curriculum     String?
   estimateJobs   String
   website        String?
   description    String?
+  teachingPhilosophy String?
   logoUrl        String?
   coverPhotoUrl  String?
   established    DateTime?
   studentCount   Int?
+  studentAgeRangeMin Int?
+  studentAgeRangeMax Int?
+  averageClassSize Int?
+  benefits         String? // JSON string of benefits
 
   verified       Boolean @default(false)
   subscriptionId String?
@@ -134,6 +140,7 @@ model Teacher {
   // Language proficiency
   nativeLanguage String?
   languageSkills Json? // {language: level} pairs
+  otherLanguages String?
 
   // Location & Availability
   currentLocation String?
@@ -146,6 +153,7 @@ model Teacher {
 
   // Education
   education        Json[] // Array of education objects
+  teachingExperience Json? // Array of teaching experience entries
   specializations  String[]
 
   // Professional
@@ -165,11 +173,15 @@ model Teacher {
   profileViews     Int @default(0)
   lastActive       DateTime?
   searchable       Boolean @default(true)
+  anonymiseProfile Boolean @default(false)
+  downloadableProfilePDF Boolean @default(true)
 
   // Preferences
   salaryExpectation String?
+  salaryExpectationVisible Boolean @default(true)
   jobTypePreference String[] // FULL_TIME, PART_TIME, CONTRACT
   workEnvironmentPreference String[] // In-person, Online, Hybrid
+  refereeAvailable Boolean @default(false)
 
   // Skills assessment
   technicalSkills  String[]
@@ -206,12 +218,19 @@ model Job {
   id          String        @id @default(cuid())
   schoolId    String
   title       String
+  subjectsTaught String?
+  studentAgeGroupMin Int?
+  studentAgeGroupMax Int?
+  startDate  DateTime?
+  contractLength String?
   description String
-  location    String
+  city        String
+  country     String
   salary      String
   type        EmploymentType
   status      JobStatus     @default(ACTIVE)
   deadline    DateTime
+  teachingHoursPerWeek String?
 
   // Requirements
   qualification String
@@ -231,6 +250,7 @@ model Job {
   // School description preference
   useSchoolProfile Boolean @default(true)
   schoolDescription String?
+  useSchoolBenefits Boolean @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

@@ -44,7 +44,8 @@ interface Job {
   schoolId: string;
   title: string;
   description: string;
-  location: string;
+  city: string;
+  country: string;
   salary: string;
   type: "FULL_TIME" | "PART_TIME" | "CONTRACT";
   status: "ACTIVE" | "PAUSED" | "CLOSED";
@@ -515,7 +516,7 @@ export const TeacherJobsPage: React.FC = () => {
         {/* Results */}
         {loading ? (
           <div className="flex justify-center items-center h-64">
-            <Loader2 className="w-8 h-8 animate-spin text-primary-600" />
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-600"></div>
           </div>
         ) : jobs.length === 0 ? (
           <motion.div
@@ -578,7 +579,7 @@ export const TeacherJobsPage: React.FC = () => {
                   <div className="flex items-center gap-3 mb-3">
                     <div className="flex items-center gap-1 text-sm text-neutral-600 dark:text-neutral-400">
                       <MapPin className="w-4 h-4" />
-                      <span>{job.location}</span>
+                      <span>{job.city}, {job.country}</span>
                     </div>
                     <span
                       className={cn(
@@ -631,7 +632,7 @@ export const TeacherJobsPage: React.FC = () => {
                     )}
                     {job.kazakhLanguageRequired && (
                       <span className="badge badge-secondary text-xs">
-                        Kazakh Required
+                        Local Language Required
                       </span>
                     )}
                   </div>
@@ -781,7 +782,7 @@ export const TeacherJobsPage: React.FC = () => {
                       <p className="text-sm text-neutral-600 dark:text-neutral-400">
                         Location
                       </p>
-                      <p className="font-medium">{selectedJob.location}</p>
+                      <p className="font-medium">{selectedJob.city}, {selectedJob.country}</p>
                     </div>
                     <div className="glass rounded-lg p-4">
                       <DollarSign className="w-5 h-5 text-primary-600 mb-2" />
@@ -822,18 +823,18 @@ export const TeacherJobsPage: React.FC = () => {
                   <div>
                     <h3 className="text-lg font-semibold mb-3">Requirements</h3>
                     <div className="space-y-2">
-                      <p className="text-neutral-600 dark:text-neutral-400">
+                      <p className="text-neutral-600 dark:text-neutral-400 break-words overflow-wrap-anywhere">
                         <strong>Qualification:</strong>{" "}
                         {selectedJob.qualification}
                       </p>
-                      <p className="text-neutral-600 dark:text-neutral-400">
+                      <p className="text-neutral-600 dark:text-neutral-400 break-words overflow-wrap-anywhere">
                         <strong>Experience:</strong> {selectedJob.experience}
                       </p>
-                      <p className="text-neutral-600 dark:text-neutral-400">
+                      <p className="text-neutral-600 dark:text-neutral-400 break-words overflow-wrap-anywhere">
                         <strong>Language:</strong> {selectedJob.language}
                       </p>
                       {selectedJob.requirements && (
-                        <p className="text-neutral-600 dark:text-neutral-400 whitespace-pre-wrap">
+                        <p className="text-neutral-600 dark:text-neutral-400 whitespace-pre-wrap break-words overflow-wrap-anywhere">
                           {selectedJob.requirements}
                         </p>
                       )}
@@ -844,7 +845,7 @@ export const TeacherJobsPage: React.FC = () => {
                   {selectedJob.benefits && (
                     <div>
                       <h3 className="text-lg font-semibold mb-3">Benefits</h3>
-                      <p className="text-neutral-600 dark:text-neutral-400 whitespace-pre-wrap">
+                      <p className="text-neutral-600 dark:text-neutral-400 whitespace-pre-wrap break-words overflow-wrap-anywhere">
                         {selectedJob.benefits}
                       </p>
                     </div>
@@ -871,7 +872,7 @@ export const TeacherJobsPage: React.FC = () => {
                       {selectedJob.kazakhLanguageRequired && (
                         <span className="badge badge-secondary">
                           <Globe className="w-4 h-4 mr-1" />
-                          Kazakh Language Required
+                          Local Language Required
                         </span>
                       )}
                       {selectedJob.localCertificationRequired && (

@@ -31,7 +31,8 @@ interface Job {
   id: string;
   title: string;
   description: string;
-  location: string;
+  city: string;
+  country: string;
   salary: string;
   type: string;
   status: string;
@@ -275,7 +276,7 @@ export function MyApplications() {
                         <div className="flex items-center gap-4 mt-2 text-sm text-neutral-500">
                           <span className="flex items-center gap-1">
                             <MapPin className="w-4 h-4" />
-                            {application.job.location}
+                            {application.job.city}, {application.job.country}
                           </span>
                           <span>{application.job.salary}</span>
                           <span>{application.job.type.replace("_", " ")}</span>

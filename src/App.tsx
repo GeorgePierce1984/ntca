@@ -211,6 +211,14 @@ function AppContent() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/schools/messages"
+            element={
+              <ProtectedRoute allowedUserTypes={["SCHOOL"]}>
+                <MessagesPage />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Protected Teacher routes */}
           <Route
@@ -238,14 +246,6 @@ function AppContent() {
             }
           />
           <Route
-            path="/teachers/dashboard"
-            element={
-              <ProtectedRoute allowedUserTypes={["TEACHER"]}>
-                <TeacherDashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
             path="/teachers/privacy"
             element={
               <ProtectedRoute allowedUserTypes={["TEACHER"]}>
@@ -254,10 +254,10 @@ function AppContent() {
             }
           />
           <Route
-            path="/teachers/messages"
+            path="/teachers/dashboard"
             element={
               <ProtectedRoute allowedUserTypes={["TEACHER"]}>
-                <MessagesPage />
+                <TeacherDashboard />
               </ProtectedRoute>
             }
           />
@@ -274,6 +274,14 @@ function AppContent() {
             element={
               <ProtectedRoute allowedUserTypes={["TEACHER"]}>
                 <CareerGuidancePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/teachers/messages"
+            element={
+              <ProtectedRoute allowedUserTypes={["TEACHER"]}>
+                <MessagesPage />
               </ProtectedRoute>
             }
           />

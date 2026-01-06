@@ -24,7 +24,8 @@ interface Job {
   id: string;
   title: string;
   description: string;
-  location: string;
+  city: string;
+  country: string;
   salary: string;
   type: string;
   status: string;
@@ -128,7 +129,7 @@ export function JobCard({
             <div className="flex items-center gap-4 text-sm text-neutral-600 dark:text-neutral-400">
               <span className="flex items-center gap-1">
                 <MapPin className="w-3 h-3" />
-                {job.location}
+                {job.city}, {job.country}
               </span>
               <span className="flex items-center gap-1">
                 <DollarSign className="w-3 h-3" />
@@ -203,7 +204,7 @@ export function JobCard({
           <div className="flex flex-wrap items-center gap-4 text-sm text-neutral-600 dark:text-neutral-400">
             <span className="flex items-center gap-1">
               <MapPin className="w-4 h-4" />
-              {job.location}
+              {job.city}, {job.country}
             </span>
             <span className="flex items-center gap-1">
               <DollarSign className="w-4 h-4" />
@@ -211,7 +212,14 @@ export function JobCard({
             </span>
             <span className="flex items-center gap-1">
               <Briefcase className="w-4 h-4" />
-              {job.type.replace("_", " ")}
+              {job.type
+                .split("_")
+                .map(
+                  (word) =>
+                    word.charAt(0).toUpperCase() +
+                    word.slice(1).toLowerCase()
+                )
+                .join(" ")}
             </span>
             <span className="flex items-center gap-1">
               <Clock className="w-4 h-4" />

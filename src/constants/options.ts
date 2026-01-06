@@ -14,16 +14,21 @@ export const CENTRAL_ASIA_COUNTRIES = [
 
 // School types available on the platform
 export const SCHOOL_TYPES = [
-  { value: "international", label: "International School" },
-  { value: "english-language", label: "English Language School" },
-  { value: "german-language", label: "German Language School" },
-  { value: "spanish-language", label: "Spanish Language School" },
-  { value: "french-language", label: "French Language School" },
+  { value: "language-centre", label: "Language Centre" },
+  { value: "private-school", label: "Private School" },
+  { value: "international-school", label: "International School" },
   { value: "university", label: "University" },
-  { value: "exam-prep", label: "Exam Preparation (IELTS/SAT/TOEFL)" },
-  { value: "university-prep", label: "University Preparation" },
-  { value: "private", label: "Private School (Other)" },
-  { value: "public", label: "Public School" },
+  { value: "public-school", label: "Public School" },
+] as const;
+
+// Curriculum/Focus options
+export const CURRICULUM_OPTIONS = [
+  { value: "esl", label: "ESL" },
+  { value: "ielts", label: "IELTS" },
+  { value: "cambridge", label: "Cambridge" },
+  { value: "ib", label: "IB" },
+  { value: "national-curriculum", label: "National Curriculum" },
+  { value: "business-english", label: "Business English" },
 ] as const;
 
 // Job types
@@ -115,6 +120,7 @@ export const VISA_STATUSES = [
 // Type exports
 export type Country = typeof CENTRAL_ASIA_COUNTRIES[number]["value"];
 export type SchoolType = typeof SCHOOL_TYPES[number]["value"];
+export type Curriculum = typeof CURRICULUM_OPTIONS[number]["value"];
 export type JobType = typeof JOB_TYPES[number]["value"];
 export type ExperienceLevel = typeof EXPERIENCE_LEVELS[number]["value"];
 export type Qualification = typeof TEACHER_QUALIFICATIONS[number]["value"];

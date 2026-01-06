@@ -2162,6 +2162,12 @@ const TeacherDashboard: React.FC = () => {
         )}
       </div>
 
+      {/* Messages Modal */}
+      <MessagesModal
+        isOpen={showMessagesModal}
+        onClose={() => setShowMessagesModal(false)}
+        onUnreadCountChange={setUnreadMessageCount}
+      />
     </div>
   );
 };

@@ -1,0 +1,28 @@
+<!--
+  Modern flat logo
+  Size: 64x64
+  Features:
+  - Rounded square with vibrant diagonal gradient
+  - White graduation cap for teaching theme
+  This SVG mirrors the inline SVG used in the React component for downloads.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="ntcaGradSvg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6"/><!-- blue -->
+      <stop offset="50%" stop-color="#9333ea"/><!-- purple -->
+      <stop offset="100%" stop-color="#f59e0b"/><!-- amber -->
+    </linearGradient>
+  </defs>
+
+  <!-- background -->
+  <rect x="2" y="2" width="60" height="60" rx="12" fill="url(#ntcaGradSvg)"/>
+
+  <!-- Graduation cap symbol -->
+  <g fill="#ffffff" opacity="0.95">
+    <!-- Cap top -->
+    <path d="M8 24 L32 12 L56 24 L32 36 Z" />
+    <!-- Tassel -->
+    <rect x="31" y="36" width="2" height="20" />
+  </g>
+</svg> 
