@@ -57,9 +57,6 @@ import { ForgotPasswordPage } from "@/pages/auth/ForgotPasswordPage";
 // Error pages
 import { NotFoundPage } from "@/pages/NotFoundPage";
 
-// Messaging
-import { MessagesPage } from "@/pages/MessagesPage";
-
 // Create a client
 const queryClient = new QueryClient({
   defaultOptions: {
