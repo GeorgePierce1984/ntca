@@ -197,31 +197,6 @@ const TeacherDashboard: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  // Fetch unread message count
-  const fetchUnreadMessageCount = async () => {
-    try {
-      const token = localStorage.getItem("authToken");
-      if (!token) return;
-
-      const response = await fetch("/api/messages/conversations", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        const totalUnread = (data.conversations || []).reduce(
-          (sum: number, conv: any) => sum + (conv.unreadCount || 0),
-          0
-        );
-        setUnreadMessageCount(totalUnread);
-      }
-    } catch (error) {
-      console.error("Error fetching unread message count:", error);
-    }
-  };
-
   useEffect(() => {
     // Initial data fetch on page load
     fetchTeacherProfile();
