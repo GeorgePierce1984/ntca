@@ -197,12 +197,40 @@ const TeacherDashboard: React.FC = () => {
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [showMessagesModal, setShowMessagesModal] = useState(false);
+  const [unreadMessageCount, setUnreadMessageCount] = useState(0);
+
+  // Fetch unread message count
+  const fetchUnreadMessageCount = async () => {
+    try {
+      const token = localStorage.getItem("authToken");
+      if (!token) return;
+
+      const response = await fetch("/api/messages/conversations", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const totalUnread = (data.conversations || []).reduce(
+          (sum: number, conv: any) => sum + (conv.unreadCount || 0),
+          0
+        );
+        setUnreadMessageCount(totalUnread);
+      }
+    } catch (error) {
+      console.error("Error fetching unread message count:", error);
+    }
+  };
 
   useEffect(() => {
     // Initial data fetch on page load
     fetchTeacherProfile();
     fetchJobs();
     fetchSavedJobs();
+    fetchUnreadMessageCount();
     
     // Only fetch when user switches back to the tab (not on intervals)
     const handleVisibilityChange = () => {
@@ -827,7 +855,7 @@ const TeacherDashboard: React.FC = () => {
                   key={key}
                   onClick={() => {
                     if (isLink) {
-                      // Messages functionality removed
+                      setShowMessagesModal(true);
                     } else {
                       setActiveTab(key as any);
                     }
@@ -841,6 +869,11 @@ const TeacherDashboard: React.FC = () => {
                   <div className="flex items-center gap-2">
                     <div className="relative">
                       <Icon className="w-4 h-4" />
+                      {key === "messages" && unreadMessageCount > 0 && (
+                      <span className="absolute -top-2 -right-2 min-w-[18px] h-[18px] px-1 flex items-center justify-center text-[10px] font-bold text-white bg-gradient-to-r from-blue-500 to-purple-600 rounded-full">
+                        {unreadMessageCount > 99 ? "99+" : unreadMessageCount}
+                      </span>
+                    )}
                   </div>
                   {label}
                 </div>
