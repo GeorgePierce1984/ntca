@@ -1,0 +1,356 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserType {
+  SCHOOL
+  TEACHER
+}
+
+enum JobStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  CLOSED
+}
+
+enum ApplicationStatus {
+  APPLIED
+  REVIEWING
+  INTERVIEW
+  DECLINED
+  HIRED
+}
+
+enum EmploymentType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String?  // Optional for OAuth users
+  userType  UserType
+  stripeCustomerId String? // Stripe customer ID
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  school  School?
+  teacher Teacher?
+
+  @@map("users")
+}
+
+model School {
+  id             String  @id @default(cuid())
+  userId         String  @unique
+  name           String
+  contactName    String
+  contactEmail   String?
+  telephone      String
+  phoneCountryCode String @default("+1")
+
+  // Address fields
+  streetAddress  String
+  city           String
+  state          String?
+  postalCode     String
+  country        String
+
+  // School details
+  schoolType     String  // "private" or "public"
+  estimateJobs   String
+  website        String?
+  description    String?
+  logoUrl        String?
+  coverPhotoUrl  String?
+  established    DateTime?
+  studentCount   Int?
+
+  verified       Boolean @default(false)
+  subscriptionId String?
+  subscriptionStatus String? // active, cancelled, past_due, etc.
+  currentPeriodEnd DateTime?
+  cancelAtPeriodEnd Boolean @default(false)
+  subscriptionEndDate DateTime?
+  flagged        Boolean @default(false)
+  flagReason     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobs Job[]
+  conversations Conversation[]
+
+  @@map("schools")
+}
+
+model Teacher {
+  id           String  @id @default(cuid())
+  userId       String  @unique
+  firstName    String
+  lastName     String
+  phone        String
+  phoneCountryCode String @default("+1")
+
+  // Address fields
+  streetAddress String?
+  city          String
+  state         String?
+  postalCode    String?
+  country       String
+
+  // Core qualifications
+  qualification String
+  experienceYears Int?
+  experience    String
+  bio           String?
+  resumeUrl     String?
+  portfolioUrl  String?
+  photoUrl      String?
+  verified      Boolean @default(false)
+  rating        Float?
+
+  // Teaching specific
+  teachingLicense String? // License number or type
+  certifications String[] // Array of certifications (CELTA, TESOL, etc.)
+  subjects       String[] // Subjects they can teach
+  ageGroups      String[] // Age groups they prefer (Kids, Teens, Adults)
+  teachingStyle  String? // Teaching methodology preference
+
+  // Language proficiency
+  nativeLanguage String?
+  languageSkills Json? // {language: level} pairs
+
+  // Location & Availability
+  currentLocation String?
+  willingToRelocate Boolean @default(false)
+  preferredLocations String[]
+  visaStatus       String?
+  workAuthorization String[]
+  availability     String?
+  startDate        DateTime?
+
+  // Education
+  education        Json[] // Array of education objects
+  specializations  String[]
+
+  // Professional
+  previousSchools  String[]
+  references       Json[] // Array of reference objects
+  achievements     String[]
+  publications     String[]
+
+  // Personal
+  dateOfBirth      DateTime?
+  nationality      String?
+  gender           String?
+  maritalStatus    String?
+
+  // Platform specific
+  profileComplete  Boolean @default(false)
+  profileViews     Int @default(0)
+  lastActive       DateTime?
+  searchable       Boolean @default(true)
+
+  // Preferences
+  salaryExpectation String?
+  jobTypePreference String[] // FULL_TIME, PART_TIME, CONTRACT
+  workEnvironmentPreference String[] // In-person, Online, Hybrid
+
+  // Skills assessment
+  technicalSkills  String[]
+  softSkills       String[]
+  languageTestScores Json? // IELTS, TOEFL scores
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  applications Application[]
+  savedJobs    SavedJob[]
+  conversations Conversation[]
+
+  @@map("teachers")
+}
+
+model SavedJob {
+  id        String   @id @default(cuid())
+  teacherId String
+  jobId     String
+  createdAt DateTime @default(now())
+
+  // Relations
+  teacher Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  job     Job     @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@unique([teacherId, jobId])
+  @@map("saved_jobs")
+}
+
+model Job {
+  id          String        @id @default(cuid())
+  schoolId    String
+  title       String
+  description String
+  location    String
+  salary      String
+  type        EmploymentType
+  status      JobStatus     @default(ACTIVE)
+  deadline    DateTime
+
+  // Requirements
+  qualification String
+  experience    String
+  language      String
+  visaRequired  Boolean @default(false)
+
+  // Kazakhstan-specific requirements
+  teachingLicenseRequired Boolean @default(false)
+  kazakhLanguageRequired  Boolean @default(false)
+  localCertificationRequired Boolean @default(false)
+
+  // Additional fields
+  benefits     String?
+  requirements String?
+
+  // School description preference
+  useSchoolProfile Boolean @default(true)
+  schoolDescription String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  school       School        @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  applications Application[]
+  savedJobs    SavedJob[]
+
+  @@map("jobs")
+}
+
+model Application {
+  id        String            @id @default(cuid())
+  jobId     String
+  teacherId String?           // Made optional for guest applications
+  status    ApplicationStatus @default(APPLIED)
+
+  // Application details
+  coverLetter   String?
+  resumeUrl     String?
+  portfolioUrl  String?
+
+  // Guest application fields (for non-authenticated users)
+  isGuestApplication Boolean @default(false)
+  guestFirstName     String?
+  guestLastName      String?
+  guestEmail         String?
+  guestPhone         String?
+  guestCity          String?
+  guestCountry       String?
+
+  // Interview details
+  interviewDate DateTime?
+  interviewNotes String?
+
+  // Rating and feedback
+  rating        Float?
+  feedback      String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  job     Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  teacher Teacher? @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  notes   ApplicationNote[]
+
+  @@map("applications")
+}
+
+model ApplicationNote {
+  id            String @id @default(cuid())
+  applicationId String
+  content       String
+  authorType    String // "school" or "system"
+  authorName    String?
+
+  createdAt DateTime @default(now())
+
+  // Relations
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@map("application_notes")
+}
+
+model JobAlert {
+  id        String @id @default(cuid())
+  teacherId String
+  title     String
+  criteria  Json   // Search criteria as JSON
+  active    Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("job_alerts")
+}
+
+model ActivityLog {
+  id         String @id @default(cuid())
+  userId     String
+  action     String
+  details    Json?
+  ipAddress  String?
+  userAgent  String?
+
+  createdAt DateTime @default(now())
+
+  @@map("activity_logs")
+}
+
+model Conversation {
+  id        String   @id @default(cuid())
+  schoolId  String
+  teacherId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  school  School     @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  teacher Teacher    @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  messages Message[]
+
+  @@unique([schoolId, teacherId])
+  @@map("conversations")
+}
+
+model Message {
+  id             String   @id @default(cuid())
+  conversationId String
+  senderId        String   // User ID of the sender
+  senderType     UserType // SCHOOL or TEACHER
+  content        String
+  read           Boolean  @default(false)
+  readAt         DateTime?
+  createdAt      DateTime @default(now())
+
+  // Relations
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@map("messages")
+}
