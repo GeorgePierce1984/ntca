@@ -29,7 +29,6 @@ import SchoolDashboard from "@/pages/schools/SchoolDashboard";
 // Teacher pages
 import { TeacherJobsPage } from "@/pages/teachers/JobsPage";
 import { TeacherProfilePage } from "@/pages/teachers/ProfilePage";
-import { TeacherPrivacyPage } from "@/pages/teachers/PrivacyPage";
 import TeacherDashboard from "@/pages/teachers/DashboardPage";
 import { ResourcesPage } from "@/pages/teachers/ResourcesPage";
 import { CareerGuidancePage } from "@/pages/teachers/CareerGuidancePage";
