@@ -36,6 +36,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/contexts/AuthContext";
+import { SchoolProfilePopup } from "@/components/SchoolProfilePopup";
 import toast from "react-hot-toast";
 import { format } from "date-fns";
 
@@ -67,6 +68,7 @@ interface Job {
     city: string;
     country: string;
     logoUrl?: string;
+    coverPhotoUrl?: string;
     verified: boolean;
     description?: string;
     website?: string;
@@ -77,6 +79,15 @@ interface Job {
     studentAgeRangeMin?: number;
     studentAgeRangeMax?: number;
     averageClassSize?: number;
+    curriculum?: string;
+    teachingPhilosophy?: string;
+    streetAddress?: string;
+    state?: string;
+    postalCode?: string;
+    contactName?: string;
+    contactEmail?: string;
+    telephone?: string;
+    phoneCountryCode?: string;
   };
   _count: {
     applications: number;
@@ -1363,16 +1374,12 @@ const JobDetail: React.FC = () => {
                   </div>
                 )}
                 
-                {job.school.website && (
-                  <a
-                    href={job.school.website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
-                  >
-                    Visit School Website →
-                  </a>
-                )}
+                <button
+                  onClick={() => setShowSchoolProfile(true)}
+                  className="text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 font-medium"
+                >
+                  View School Profile →
+                </button>
               </div>
             </motion.div>
           </div>
@@ -1642,6 +1649,15 @@ const JobDetail: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* School Profile Modal */}
+      {job && (
+        <SchoolProfilePopup
+          school={job.school}
+          isOpen={showSchoolProfile}
+          onClose={() => setShowSchoolProfile(false)}
+        />
       )}
     </div>
   );
