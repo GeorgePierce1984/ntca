@@ -282,6 +282,12 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error("Conversation messages API error:", error);
+    console.error("Error details:", {
+      name: error.name,
+      message: error.message,
+      code: error.code,
+      stack: error.stack,
+    });
 
     // Handle specific error types
     if (error.name === "NoTokenError") {
@@ -298,10 +304,13 @@ export default async function handler(req, res) {
 
     return res.status(500).json({
       error: "Internal server error",
+      message: error.message || "Unknown error",
       details: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   } finally {
-    await prisma.$disconnect();
+    await prisma.$disconnect().catch(() => {
+      // Ignore disconnect errors
+    });
   }
 }
 
