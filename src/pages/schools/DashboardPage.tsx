@@ -433,7 +433,7 @@ export const SchoolDashboardPage: React.FC = () => {
       // This allows schools to see their defaults even when not using school profile benefits
       if (schoolProfile?.benefits && !jobForm.useSchoolBenefits) {
         try {
-          const parsedBenefits = JSON.parse(schoolProfile.benefits);
+          const parsedBenefits: any = JSON.parse(schoolProfile.benefits);
           setJobForm(prev => ({
             ...prev,
             housingProvided: parsedBenefits.housingProvided || false,
@@ -1092,7 +1092,7 @@ export const SchoolDashboardPage: React.FC = () => {
                         } else if (tab.key === "messages") {
                           setShowMessagesModal(true);
                         } else {
-                          setActiveTab(tab.key as "overview" | "jobs" | "applicants" | "post-job");
+                          setActiveTab(tab.key as "overview" | "jobs" | "applicants");
                         }
                       }}
                       className={`relative p-4 rounded-xl border-2 transition-all duration-200 ${
@@ -1592,6 +1592,7 @@ export const SchoolDashboardPage: React.FC = () => {
                 </div>
               </motion.div>
             )}
+          </AnimatePresence>
         </div>
       </div>
 
