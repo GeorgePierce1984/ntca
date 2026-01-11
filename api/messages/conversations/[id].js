@@ -192,7 +192,92 @@ export default async function handler(req, res) {
       return res.status(200).json({ messages });
     }
 
-    res.setHeader("Allow", ["GET"]);
+    if (req.method === "POST") {
+      // Send a message in an existing conversation
+      const { content } = req.body;
+
+      if (!content || !content.trim()) {
+        return res.status(400).json({ error: "Message content is required" });
+      }
+
+      // Get conversation and verify user has access
+      const conversation = await retryOperation(async () => {
+        return await prisma.conversation.findUnique({
+          where: { id },
+          include: {
+            school: {
+              include: {
+                user: true,
+              },
+            },
+            teacher: {
+              include: {
+                user: true,
+              },
+            },
+          },
+        });
+      });
+
+      if (!conversation) {
+        return res.status(404).json({ error: "Conversation not found" });
+      }
+
+      // Verify user has access to this conversation
+      let senderType;
+      if (decoded.userType === "SCHOOL") {
+        const school = await retryOperation(async () => {
+          return await prisma.school.findUnique({
+            where: { userId: decoded.userId },
+          });
+        });
+
+        if (!school || conversation.schoolId !== school.id) {
+          return res.status(403).json({ error: "Access denied" });
+        }
+        senderType = UserType.SCHOOL;
+      } else if (decoded.userType === "TEACHER") {
+        const teacher = await retryOperation(async () => {
+          return await prisma.teacher.findUnique({
+            where: { userId: decoded.userId },
+          });
+        });
+
+        if (!teacher || conversation.teacherId !== teacher.id) {
+          return res.status(403).json({ error: "Access denied" });
+        }
+        senderType = UserType.TEACHER;
+      } else {
+        return res.status(403).json({ error: "Invalid user type" });
+      }
+
+      // Create the message
+      const message = await retryOperation(async () => {
+        return await prisma.message.create({
+          data: {
+            conversationId: id,
+            senderId: decoded.userId,
+            senderType: senderType,
+            content: content.trim(),
+          },
+        });
+      });
+
+      // Update conversation timestamp
+      await retryOperation(async () => {
+        return await prisma.conversation.update({
+          where: { id },
+          data: { updatedAt: new Date() },
+        });
+      }).catch((error) => {
+        console.error("Error updating conversation timestamp:", error);
+        // Don't fail the request if this fails
+      });
+
+      return res.status(200).json({ message });
+    }
+
+    res.setHeader("Allow", ["GET", "POST"]);
     return res.status(405).json({ error: "Method Not Allowed" });
 
   } catch (error) {
