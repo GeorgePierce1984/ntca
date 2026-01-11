@@ -148,12 +148,31 @@ export const SchoolProfilePopup: React.FC<SchoolProfilePopupProps> = ({
 
                   {/* School Name and Verification */}
                   <div className="mt-4 ml-6">
-                    <div className="flex items-center gap-2">
-                      <h1 className="text-2xl md:text-3xl font-bold text-neutral-900 dark:text-white">
-                        {school.name}
-                      </h1>
-                      {school.verified && (
-                        <CheckCircle className="w-6 h-6 text-green-500" />
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-2 flex-1">
+                        <h1 className="text-2xl md:text-3xl font-bold text-neutral-900 dark:text-white">
+                          {school.name}
+                        </h1>
+                        {school.verified && (
+                          <CheckCircle className="w-6 h-6 text-green-500" />
+                        )}
+                      </div>
+                      {/* Message School Button - 1/4 width, inline with name */}
+                      {onMessageSchool && (
+                        <div className="w-1/4 flex-shrink-0">
+                          <Button
+                            onClick={() => {
+                              onClose();
+                              onMessageSchool();
+                            }}
+                            variant="gradient"
+                            size="sm"
+                            leftIcon={<MessageSquare className="w-4 h-4" />}
+                            className="w-full"
+                          >
+                            Message School
+                          </Button>
+                        </div>
                       )}
                     </div>
                     <p className="text-neutral-600 dark:text-neutral-400 mt-1">
@@ -271,23 +290,6 @@ export const SchoolProfilePopup: React.FC<SchoolProfilePopupProps> = ({
                   </div>
                 )}
 
-                {/* Message School Button */}
-                {onMessageSchool && (
-                  <div className="mb-6">
-                    <Button
-                      onClick={() => {
-                        onClose();
-                        onMessageSchool();
-                      }}
-                      variant="gradient"
-                      size="lg"
-                      leftIcon={<MessageSquare className="w-5 h-5" />}
-                      className="w-full"
-                    >
-                      Message School
-                    </Button>
-                  </div>
-                )}
 
                 {/* Benefits */}
                 {benefits && typeof benefits === "object" && (

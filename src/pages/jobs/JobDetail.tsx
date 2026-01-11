@@ -1312,16 +1312,29 @@ const JobDetail: React.FC = () => {
                     className="w-20 h-20 rounded-lg object-cover"
                   />
                 )}
-                <div>
-                  <h4 className="font-medium flex items-center gap-2">
-                    {job.school.name}
-                    {job.school.verified && (
-                      <CheckCircle className="w-4 h-4 text-green-500" />
-                    )}
-                  </h4>
-                  <p className="text-sm text-neutral-500">
-                    {job.school.city}, {job.school.country}
-                  </p>
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1">
+                    <h4 className="font-medium flex items-center gap-2">
+                      {job.school.name}
+                      {job.school.verified && (
+                        <CheckCircle className="w-4 h-4 text-green-500" />
+                      )}
+                    </h4>
+                    <p className="text-sm text-neutral-500">
+                      {job.school.city}, {job.school.country}
+                    </p>
+                  </div>
+                  {/* View School Profile Button - 1/4 width, inline with name */}
+                  <div className="w-1/4 flex-shrink-0">
+                    <Button
+                      onClick={() => setShowSchoolProfile(true)}
+                      variant="gradient"
+                      size="sm"
+                      className="w-full"
+                    >
+                      View School Profile
+                    </Button>
+                  </div>
                 </div>
                 {job.useSchoolProfile === false && job.schoolDescription ? (
                   <div>
@@ -1374,13 +1387,6 @@ const JobDetail: React.FC = () => {
                     )}
                   </div>
                 )}
-                
-                <button
-                  onClick={() => setShowSchoolProfile(true)}
-                  className="text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 font-medium"
-                >
-                  View School Profile →
-                </button>
               </div>
             </motion.div>
           </div>
