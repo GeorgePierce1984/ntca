@@ -4,15 +4,12 @@ import {
   X,
   Building,
   MapPin,
-  Globe,
-  Mail,
-  Phone,
-  Users,
-  Calendar,
+  MessageSquare,
   CheckCircle,
   Award,
   BookOpen,
 } from "lucide-react";
+import { Button } from "@/components/ui/Button";
 
 interface School {
   id: string;
@@ -46,12 +43,14 @@ interface SchoolProfilePopupProps {
   school: School;
   isOpen: boolean;
   onClose: () => void;
+  onMessageSchool?: () => void;
 }
 
 export const SchoolProfilePopup: React.FC<SchoolProfilePopupProps> = ({
   school,
   isOpen,
   onClose,
+  onMessageSchool,
 }) => {
   // Parse benefits if it's a JSON string
   let benefits = null;
@@ -65,6 +64,26 @@ export const SchoolProfilePopup: React.FC<SchoolProfilePopupProps> = ({
       benefits = null;
     }
   }
+
+  // Benefit label mapping to match Profile & Settings page
+  const benefitLabels: Record<string, string> = {
+    housingProvided: "Housing Assistance",
+    flightReimbursement: "Flight Reimbursement Allowance",
+    visaWorkPermitSupport: "Visa & Work Permit Support",
+    contractCompletionBonus: "Contract Completion Bonus",
+    paidHolidays: "Paid Holidays",
+    overtimePay: "Overtime Pay",
+    paidAnnualLeave: "Paid Annual Leave",
+    nationalHolidays: "National Holidays",
+    sickLeave: "Sick Leave",
+    healthInsurance: "Health Insurance",
+    relocationSupport: "Relocation Support",
+    teachingMaterialsProvided: "Teaching Materials Provided",
+    curriculumGuidance: "Curriculum Guidance",
+    teacherTraining: "Teacher Training",
+    promotionOpportunities: "Promotion Opportunities",
+    contractRenewalOptions: "Contract Renewal Options",
+  };
 
   return (
     <AnimatePresence>
@@ -238,74 +257,35 @@ export const SchoolProfilePopup: React.FC<SchoolProfilePopupProps> = ({
                   )}
                 </div>
 
-                {/* Address */}
-                {(school.streetAddress || school.city || school.country) && (
+                {/* Address - Only City and Country */}
+                {(school.city || school.country) && (
                   <div className="mb-6">
                     <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
                       <MapPin className="w-5 h-5" />
-                      Address
+                      Location
                     </h3>
                     <p className="text-neutral-600 dark:text-neutral-400">
-                      {school.streetAddress && `${school.streetAddress}, `}
                       {school.city}
-                      {school.state && `, ${school.state}`}
-                      {school.postalCode && ` ${school.postalCode}`}
-                      {school.country && `, ${school.country}`}
+                      {school.country && (school.city ? `, ${school.country}` : school.country)}
                     </p>
                   </div>
                 )}
 
-                {/* Contact Information */}
-                {(school.contactName || school.contactEmail || school.telephone) && (
+                {/* Message School Button */}
+                {onMessageSchool && (
                   <div className="mb-6">
-                    <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                      <Users className="w-5 h-5" />
-                      Contact Information
-                    </h3>
-                    <div className="space-y-2">
-                      {school.contactName && (
-                        <p className="text-neutral-600 dark:text-neutral-400">
-                          <span className="font-medium">Contact:</span> {school.contactName}
-                        </p>
-                      )}
-                      {school.contactEmail && (
-                        <p className="text-neutral-600 dark:text-neutral-400 flex items-center gap-2">
-                          <Mail className="w-4 h-4" />
-                          <a
-                            href={`mailto:${school.contactEmail}`}
-                            className="text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
-                          >
-                            {school.contactEmail}
-                          </a>
-                        </p>
-                      )}
-                      {school.telephone && (
-                        <p className="text-neutral-600 dark:text-neutral-400 flex items-center gap-2">
-                          <Phone className="w-4 h-4" />
-                          <a
-                            href={`tel:${school.phoneCountryCode || ""}${school.telephone}`}
-                            className="text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
-                          >
-                            {school.phoneCountryCode} {school.telephone}
-                          </a>
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Website */}
-                {school.website && (
-                  <div className="mb-6">
-                    <a
-                      href={school.website}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 font-medium"
+                    <Button
+                      onClick={() => {
+                        onClose();
+                        onMessageSchool();
+                      }}
+                      variant="gradient"
+                      size="lg"
+                      leftIcon={<MessageSquare className="w-5 h-5" />}
+                      className="w-full"
                     >
-                      <Globe className="w-5 h-5" />
-                      Visit School Website
-                    </a>
+                      Message School
+                    </Button>
                   </div>
                 )}
 
@@ -319,7 +299,8 @@ export const SchoolProfilePopup: React.FC<SchoolProfilePopupProps> = ({
                     <div className="grid md:grid-cols-2 gap-3">
                       {Object.entries(benefits).map(([key, value]) => {
                         if (value === true) {
-                          const label = key
+                          // Use the mapped label if available, otherwise generate from key
+                          const label = benefitLabels[key] || key
                             .replace(/([A-Z])/g, " $1")
                             .replace(/^./, (str) => str.toUpperCase())
                             .trim();

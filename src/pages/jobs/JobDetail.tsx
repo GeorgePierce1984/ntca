@@ -1658,6 +1658,7 @@ const JobDetail: React.FC = () => {
           school={job.school}
           isOpen={showSchoolProfile}
           onClose={() => setShowSchoolProfile(false)}
+          onMessageSchool={() => setShowMessageModal(true)}
         />
       )}
     </div>
