@@ -106,8 +106,7 @@ export const SchoolProfilePopup: React.FC<SchoolProfilePopupProps> = ({
               className="bg-white dark:bg-neutral-800 rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
             >
               {/* Header with Close Button */}
-              <div className="sticky top-0 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700 px-6 py-4 flex items-center justify-between z-10">
-                <h2 className="text-xl font-semibold">School Profile</h2>
+              <div className="sticky top-0 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700 px-6 py-4 flex items-center justify-end z-10">
                 <button
                   onClick={onClose}
                   className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg transition-colors"
