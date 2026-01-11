@@ -157,7 +157,7 @@ export const SchoolProfilePopup: React.FC<SchoolProfilePopupProps> = ({
                           <CheckCircle className="w-6 h-6 text-green-500" />
                         )}
                       </div>
-                      {/* Message School Button - 1/4 width, inline with name */}
+                      {/* Message School Button - 1/4 width, inline with name, double height */}
                       {onMessageSchool && (
                         <div className="w-1/4 flex-shrink-0">
                           <Button
@@ -168,7 +168,7 @@ export const SchoolProfilePopup: React.FC<SchoolProfilePopupProps> = ({
                             variant="gradient"
                             size="sm"
                             leftIcon={<MessageSquare className="w-4 h-4" />}
-                            className="w-full"
+                            className="w-full h-16"
                           >
                             Message School
                           </Button>

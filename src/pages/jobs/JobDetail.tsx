@@ -1312,29 +1312,16 @@ const JobDetail: React.FC = () => {
                     className="w-20 h-20 rounded-lg object-cover"
                   />
                 )}
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <h4 className="font-medium flex items-center gap-2">
-                      {job.school.name}
-                      {job.school.verified && (
-                        <CheckCircle className="w-4 h-4 text-green-500" />
-                      )}
-                    </h4>
-                    <p className="text-sm text-neutral-500">
-                      {job.school.city}, {job.school.country}
-                    </p>
-                  </div>
-                  {/* View School Profile Button - 1/4 width, inline with name */}
-                  <div className="w-1/4 flex-shrink-0">
-                    <Button
-                      onClick={() => setShowSchoolProfile(true)}
-                      variant="gradient"
-                      size="sm"
-                      className="w-full"
-                    >
-                      View School Profile
-                    </Button>
-                  </div>
+                <div>
+                  <h4 className="font-medium flex items-center gap-2">
+                    {job.school.name}
+                    {job.school.verified && (
+                      <CheckCircle className="w-4 h-4 text-green-500" />
+                    )}
+                  </h4>
+                  <p className="text-sm text-neutral-500">
+                    {job.school.city}, {job.school.country}
+                  </p>
                 </div>
                 {job.useSchoolProfile === false && job.schoolDescription ? (
                   <div>
