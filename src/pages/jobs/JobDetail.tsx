@@ -1316,9 +1316,6 @@ const JobDetail: React.FC = () => {
                     <p className="text-sm text-neutral-600 dark:text-neutral-400">
                       {job.schoolDescription}
                     </p>
-                    <p className="text-xs text-neutral-500 mt-2 italic">
-                      * Custom description for this position
-                    </p>
                   </div>
                 ) : job.school.description ? (
                   <p className="text-sm text-neutral-600 dark:text-neutral-400">
