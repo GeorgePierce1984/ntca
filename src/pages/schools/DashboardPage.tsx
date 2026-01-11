@@ -464,7 +464,7 @@ export const SchoolDashboardPage: React.FC = () => {
   const openEditModal = (job: JobPosting) => {
     setSelectedJobForEdit(job);
     // Parse benefits JSON if it exists
-    let parsedBenefits = {};
+    let parsedBenefits: any = {};
     if (job.benefits) {
       try {
         parsedBenefits = JSON.parse(job.benefits);
@@ -473,7 +473,7 @@ export const SchoolDashboardPage: React.FC = () => {
       }
     }
     // Parse requirements JSON if it exists
-    let parsedRequirements = {};
+    let parsedRequirements: any = {};
     if (job.requirements) {
       try {
         parsedRequirements = JSON.parse(job.requirements);
