@@ -114,6 +114,7 @@ const JobDetail: React.FC = () => {
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [messageContent, setMessageContent] = useState("");
   const [sendingMessage, setSendingMessage] = useState(false);
+  const [showSchoolProfile, setShowSchoolProfile] = useState(false);
   const [guestForm, setGuestForm] = useState({
     firstName: "",
     lastName: "",
