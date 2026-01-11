@@ -449,7 +449,20 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method Not Allowed" });
   } catch (error) {
     console.error("Messages API error:", error);
-    
+
+    // Handle specific error types
+    if (error.name === "NoTokenError") {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    if (error.name === "JsonWebTokenError" || error.name === "TokenExpiredError") {
+      return res.status(401).json({ error: "Invalid or expired token" });
+    }
+
+    if (error.name === "ConfigError") {
+      return res.status(500).json({ error: "Server configuration error" });
+    }
+
     if (error.message === "No token provided" || error.message?.includes("jwt")) {
       return res.status(401).json({ error: "Unauthorized" });
     }
