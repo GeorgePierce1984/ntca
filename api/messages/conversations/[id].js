@@ -10,37 +10,13 @@ const prisma = new PrismaClient({
   },
 });
 
-// Track connection state to avoid unnecessary delays
-let connectionAttempted = false;
-
-// Ensure Prisma connection is active (optimized for performance)
-async function ensureConnected() {
-  try {
-    // Only disconnect/reconnect on first attempt (cold start)
-    if (!connectionAttempted) {
-      connectionAttempted = true;
-      await prisma.$disconnect().catch(() => {});
-      await prisma.$connect();
-      // Minimal delay for cold start - let Prisma handle connection pooling
-      await new Promise(resolve => setTimeout(resolve, 300));
-    }
-    // Subsequent calls: Prisma connection pooling handles it, no delay needed
-  } catch (error) {
-    await prisma.$disconnect().catch(() => {});
-    connectionAttempted = false; // Reset on error
-    throw error;
-  }
-}
-
 // Helper function to retry database operations
+// In serverless environments, Prisma handles connections automatically
+// Don't manually disconnect/connect as it causes "Engine is not yet connected" errors
 async function retryOperation(operation, maxRetries = 3, initialDelay = 800) {
   let delay = initialDelay;
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      // Only ensure connection on first attempt
-      if (attempt === 1) {
-        await ensureConnected();
-      }
       return await operation();
     } catch (error) {
       const isConnectionError = 
@@ -56,8 +32,7 @@ async function retryOperation(operation, maxRetries = 3, initialDelay = 800) {
 
       if (isConnectionError && attempt < maxRetries) {
         console.log(`Connection error on attempt ${attempt}, retrying in ${delay}ms...`);
-        await prisma.$disconnect().catch(() => {});
-        connectionAttempted = false;
+        // Don't disconnect - let Prisma handle connections
         await new Promise(resolve => setTimeout(resolve, delay));
         delay = Math.min(delay * 1.5, 2000); // Cap at 2 seconds
         continue;
@@ -112,9 +87,6 @@ function verifyToken(req) {
 }
 
 export default async function handler(req, res) {
-  // Reset connection state for each new request
-  connectionAttempted = false;
-  
   try {
     const decoded = verifyToken(req);
     const { id } = req.query;
@@ -308,9 +280,8 @@ export default async function handler(req, res) {
       details: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   } finally {
-    await prisma.$disconnect().catch(() => {
-      // Ignore disconnect errors
-    });
+    // Don't disconnect in serverless - Prisma handles connections automatically
+    // await prisma.$disconnect() causes "Engine is not yet connected" errors
   }
 }
 
