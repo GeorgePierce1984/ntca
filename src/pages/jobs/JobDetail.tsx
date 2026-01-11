@@ -72,6 +72,11 @@ interface Job {
     website?: string;
     studentCount?: number;
     benefits?: string;
+    schoolType?: string;
+    established?: string;
+    studentAgeRangeMin?: number;
+    studentAgeRangeMax?: number;
+    averageClassSize?: number;
   };
   _count: {
     applications: number;
@@ -1320,6 +1325,47 @@ const JobDetail: React.FC = () => {
                     {job.school.description}
                   </p>
                 ) : null}
+                
+                {/* School Details Grid */}
+                {(job.school.schoolType || job.school.established || 
+                  (job.school.studentAgeRangeMin != null && job.school.studentAgeRangeMax != null) || 
+                  job.school.averageClassSize != null) && (
+                  <div className="grid grid-cols-2 gap-4 pt-4 border-t border-neutral-200 dark:border-neutral-700">
+                    {job.school.schoolType && (
+                      <div>
+                        <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">School Type</p>
+                        <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100 capitalize">
+                          {job.school.schoolType}
+                        </p>
+                      </div>
+                    )}
+                    {job.school.established && (
+                      <div>
+                        <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">Year Established</p>
+                        <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                          {new Date(job.school.established).getFullYear()}
+                        </p>
+                      </div>
+                    )}
+                    {(job.school.studentAgeRangeMin != null && job.school.studentAgeRangeMax != null) && (
+                      <div>
+                        <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">Student Age Range</p>
+                        <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                          {job.school.studentAgeRangeMin} - {job.school.studentAgeRangeMax} years
+                        </p>
+                      </div>
+                    )}
+                    {job.school.averageClassSize != null && (
+                      <div>
+                        <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">Average Class Size</p>
+                        <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                          {job.school.averageClassSize} students
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+                
                 {job.school.website && (
                   <a
                     href={job.school.website}

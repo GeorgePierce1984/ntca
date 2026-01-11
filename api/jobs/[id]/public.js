@@ -31,6 +31,11 @@ export default async function handler(req, res) {
             website: true,
             studentCount: true,
             benefits: true,
+            schoolType: true,
+            established: true,
+            studentAgeRangeMin: true,
+            studentAgeRangeMax: true,
+            averageClassSize: true,
           },
         },
         _count: {
