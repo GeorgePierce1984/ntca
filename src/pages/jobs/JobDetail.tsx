@@ -1374,6 +1374,13 @@ const JobDetail: React.FC = () => {
                     )}
                   </div>
                 )}
+                
+                <button
+                  onClick={() => setShowSchoolProfile(true)}
+                  className="text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 font-medium"
+                >
+                  View School Profile →
+                </button>
               </div>
             </motion.div>
           </div>
