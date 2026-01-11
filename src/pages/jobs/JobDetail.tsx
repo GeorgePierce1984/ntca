@@ -1648,7 +1648,7 @@ const JobDetail: React.FC = () => {
           school={job.school}
           isOpen={showSchoolProfile}
           onClose={() => setShowSchoolProfile(false)}
-          onMessageSchool={() => setShowMessageModal(true)}
+          onMessageSchool={user?.userType === "TEACHER" ? () => setShowMessageModal(true) : undefined}
         />
       )}
     </div>
