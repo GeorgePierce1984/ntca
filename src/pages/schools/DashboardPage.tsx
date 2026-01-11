@@ -383,7 +383,7 @@ export const SchoolDashboardPage: React.FC = () => {
     const urlParams = new URLSearchParams(window.location.search);
     const tabParam = urlParams.get('tab');
     if (tabParam === 'post-job') {
-      setActiveTab('post-job');
+      setShowPostJobModal(true);
       // Clear the query parameter from URL
       window.history.replaceState({}, '', '/schools/dashboard');
     }
