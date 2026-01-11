@@ -255,16 +255,6 @@ const JobDetail: React.FC = () => {
       toast.success("Message sent successfully!");
       setShowMessageModal(false);
       setMessageContent("");
-      
-      // Small delay to ensure database transaction is committed
-      setTimeout(() => {
-        // Navigate to messages page with conversation ID to auto-select it
-        if (data.conversationId) {
-          navigate(`/messages?conversation=${data.conversationId}`);
-        } else {
-          navigate("/messages");
-        }
-      }, 300);
     } catch (error: any) {
       console.error("Error starting conversation:", error);
       toast.error(error.message || "Failed to send message");
