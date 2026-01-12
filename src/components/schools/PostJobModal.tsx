@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -118,6 +118,13 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({
     { key: "school", label: "School Information", icon: Building },
   ];
 
+  // Reset to "Role Information" tab whenever modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setActiveTab("role");
+    }
+  }, [isOpen]);
+
   const currentTabIndex = tabs.findIndex(tab => tab.key === activeTab);
   const isFirstTab = currentTabIndex === 0;
   const isLastTab = currentTabIndex === tabs.length - 1;
@@ -152,7 +159,7 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white dark:bg-neutral-800 rounded-xl shadow-2xl max-w-6xl w-full h-[85vh] flex flex-col"
+              className="bg-white dark:bg-neutral-800 rounded-2xl shadow-2xl max-w-6xl w-full h-[85vh] flex flex-col"
             >
               {/* Header with Close Button */}
               <div className="flex-shrink-0 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700 px-6 py-4 flex items-center justify-between z-10">
