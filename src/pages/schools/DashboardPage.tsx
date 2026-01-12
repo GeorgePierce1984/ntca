@@ -231,6 +231,8 @@ export const SchoolDashboardPage: React.FC = () => {
     benefits?: string;
     coverPhotoUrl?: string;
     logoUrl?: string;
+    profileComplete?: boolean;
+    completionPercentage?: number;
   } | null>(null);
 
   // Add job modal state

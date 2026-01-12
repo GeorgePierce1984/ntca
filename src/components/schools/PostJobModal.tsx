@@ -79,6 +79,8 @@ interface SchoolProfile {
   studentAgeRangeMin?: number;
   studentAgeRangeMax?: number;
   benefits?: string;
+  profileComplete?: boolean;
+  completionPercentage?: number;
 }
 
 interface JobPosting {
@@ -157,12 +159,28 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({
                 <h2 className="heading-2">
                   {selectedJobForEdit ? "Edit Job Posting" : "Post a New Teaching Position"}
                 </h2>
-                <button
-                  onClick={onClose}
-                  className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+                <div className="flex items-center gap-3">
+                  {activeTab === "school" && schoolProfile && !schoolProfile.profileComplete && (
+                    <div className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400">
+                      <AlertCircle className="w-4 h-4" />
+                      <span className="hidden sm:inline">Missing required fields</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => window.location.href = "/schools/profile"}
+                        className="text-xs h-7"
+                      >
+                        Complete Profile Now →
+                      </Button>
+                    </div>
+                  )}
+                  <button
+                    onClick={onClose}
+                    className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
 
               {/* Subscription Warning */}
