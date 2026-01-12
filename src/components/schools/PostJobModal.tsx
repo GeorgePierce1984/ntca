@@ -64,6 +64,7 @@ interface JobForm {
   tefl: boolean;
   celta: boolean;
   tesol: boolean;
+  delta: boolean;
   minimumTeachingExperience: string;
   // Requirements - Preferred
   ieltsExperience: boolean;
