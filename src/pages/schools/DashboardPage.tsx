@@ -493,6 +493,8 @@ export const SchoolDashboardPage: React.FC = () => {
       studentAgeGroupMax: job.studentAgeGroupMax,
       startDate: job.startDate ? job.startDate.split('T')[0] : "",
       contractLength: job.contractLength || "",
+      contractMonths: undefined,
+      contractYears: undefined,
       city: job.city,
       country: job.country,
       employmentType: job.type,
@@ -725,6 +727,9 @@ export const SchoolDashboardPage: React.FC = () => {
           // Requirements - Legal
           visaSupport: "",
           backgroundCheckRequired: false,
+          // Contract length fields
+          contractMonths: undefined,
+          contractYears: undefined,
         });
         setSelectedJobForEdit(null);
         setShowJobModal(false);
