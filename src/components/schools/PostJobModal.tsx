@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -6,6 +6,8 @@ import {
   Award,
   Building,
   AlertCircle,
+  FileText,
+  Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 
@@ -102,6 +104,16 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({
   schoolProfile,
   selectedJobForEdit,
 }) => {
+  const [activeTab, setActiveTab] = useState("role");
+
+  const tabs = [
+    { key: "role", label: "Role Information", icon: Briefcase },
+    { key: "description", label: "Job Description", icon: FileText },
+    { key: "requirements", label: "Requirements", icon: Award },
+    { key: "benefits", label: "Benefits & Support", icon: Users },
+    { key: "school", label: "School Information", icon: Building },
+  ];
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -186,32 +198,51 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({
                   </div>
                 )}
 
+                {/* Tab Navigation */}
+                <div className="mb-6 border-b border-neutral-200 dark:border-neutral-700">
+                  <nav className="flex space-x-1 overflow-x-auto">
+                    {tabs.map((tab) => {
+                      const Icon = tab.icon;
+                      const isActive = activeTab === tab.key;
+                      return (
+                        <button
+                          key={tab.key}
+                          onClick={() => setActiveTab(tab.key)}
+                          className={`flex items-center gap-2 py-3 px-4 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
+                            isActive
+                              ? "border-primary-500 text-primary-600 dark:text-primary-400"
+                              : "border-transparent text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 hover:border-neutral-300"
+                          }`}
+                        >
+                          <Icon className="w-4 h-4" />
+                          <span>{tab.label}</span>
+                        </button>
+                      );
+                    })}
+                  </nav>
+                </div>
+
                 <form className="space-y-6" onSubmit={handleJobSubmit}>
-                  {/* Role Information Section */}
-                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-medium text-blue-800 dark:text-blue-200 flex items-center gap-2">
-                        <Briefcase className="w-5 h-5" />
-                        Role Information
-                      </h3>
-                      <div className="flex items-center gap-2">
-                        <label className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                          Application Deadline *
-                        </label>
-                        <input 
-                          type="date" 
-                          value={jobForm.deadline}
-                          onChange={(e) => setJobForm({
-                            ...jobForm,
-                            deadline: e.target.value,
-                          })}
-                          className="input w-auto" 
-                          required 
-                        />
-                      </div>
-                    </div>
-                    
+                  {/* Role Information Tab */}
+                  {activeTab === "role" && (
                     <div className="space-y-6">
+                      <div className="flex items-center justify-end mb-4">
+                        <div className="flex items-center gap-2">
+                          <label className="text-sm font-medium">
+                            Application Deadline *
+                          </label>
+                          <input 
+                            type="date" 
+                            value={jobForm.deadline}
+                            onChange={(e) => setJobForm({
+                              ...jobForm,
+                              deadline: e.target.value,
+                            })}
+                            className="input w-auto" 
+                            required 
+                          />
+                        </div>
+                      </div>
                       <div>
                         <label className="block text-sm font-medium mb-2">
                           Job Title *
@@ -418,32 +449,30 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({
                         </div>
                       </div>
                     </div>
-                  </div>
+                  )}
 
-                  <div>
-                    <label className="block text-sm font-medium mb-2">
-                      Job Description *
-                    </label>
-                    <textarea
-                      value={jobForm.description}
-                      onChange={(e) => setJobForm({
-                        ...jobForm,
-                        description: e.target.value,
-                      })}
-                      className="input"
-                      rows={6}
-                      placeholder="Describe the role, responsibilities, and what makes your school a great place to work..."
-                      required
-                    />
-                  </div>
+                  {/* Job Description Tab */}
+                  {activeTab === "description" && (
+                    <div>
+                      <label className="block text-sm font-medium mb-2">
+                        Job Description *
+                      </label>
+                      <textarea
+                        value={jobForm.description}
+                        onChange={(e) => setJobForm({
+                          ...jobForm,
+                          description: e.target.value,
+                        })}
+                        className="input"
+                        rows={6}
+                        placeholder="Describe the role, responsibilities, and what makes your school a great place to work..."
+                        required
+                      />
+                    </div>
+                  )}
 
-                  {/* Requirements */}
-                  <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-6">
-                    <h3 className="font-medium text-green-800 dark:text-green-200 mb-4 flex items-center gap-2">
-                      <Award className="w-5 h-5" />
-                      Requirements
-                    </h3>
-                    
+                  {/* Requirements Tab */}
+                  {activeTab === "requirements" && (
                     <div className="space-y-6">
                       {/* Essential Subsection */}
                       <div>
@@ -675,18 +704,12 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({
                         </div>
                       </div>
                     </div>
-                  </div>
+                  )}
 
-                  {/* Benefits & Support */}
-                  <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-medium text-amber-800 dark:text-amber-200 flex items-center gap-2">
-                        <Award className="w-5 h-5" />
-                        Benefits & Support
-                      </h3>
-                    </div>
-                    
-                    <div className="space-y-4 mb-6">
+                  {/* Benefits & Support Tab */}
+                  {activeTab === "benefits" && (
+                    <div className="space-y-6">
+                      <div className="space-y-4 mb-6">
                       <label className="flex items-center gap-3 cursor-pointer">
                         <input
                           type="checkbox"
@@ -970,15 +993,12 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({
                     </div>
                   </motion.div>
                 )}
-              </div>
+                      </div>
+                    </div>
+                  )}
 
-                  {/* School Description Section */}
-                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
-                    <h3 className="font-medium text-blue-800 dark:text-blue-200 mb-4 flex items-center gap-2">
-                      <Building className="w-5 h-5" />
-                      School Information for Job Posting
-                    </h3>
-                    
+                  {/* School Information Tab */}
+                  {activeTab === "school" && (
                     <div className="space-y-4">
                       <label className="flex items-center gap-3 cursor-pointer">
                         <input
@@ -1055,41 +1075,7 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({
                         </motion.div>
                       )}
                     </div>
-                  </div>
-
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium mb-2">
-                        Required Qualifications *
-                      </label>
-                      <textarea
-                        value={jobForm.qualifications}
-                        onChange={(e) => setJobForm({
-                          ...jobForm,
-                          qualifications: e.target.value,
-                        })}
-                        className="input"
-                        rows={4}
-                        placeholder="e.g., CELTA/TESOL certification, Bachelor's degree, 3+ years experience..."
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-2">
-                        Benefits & Perks
-                      </label>
-                      <textarea
-                        value={jobForm.benefits}
-                        onChange={(e) => setJobForm({
-                          ...jobForm,
-                          benefits: e.target.value,
-                        })}
-                        className="input"
-                        rows={4}
-                        placeholder="e.g., Housing allowance, health insurance, professional development..."
-                      />
-                    </div>
-                  </div>
+                  )}
 
                   <div className="flex gap-4 pt-6">
                     <Button 
