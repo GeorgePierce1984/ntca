@@ -116,7 +116,7 @@ export default async function handler(req, res) {
     if (studentAgeGroupMin !== undefined) updateData.studentAgeGroupMin = studentAgeGroupMin ? parseInt(studentAgeGroupMin) : null;
     if (studentAgeGroupMax !== undefined) updateData.studentAgeGroupMax = studentAgeGroupMax ? parseInt(studentAgeGroupMax) : null;
     if (startDate !== undefined) updateData.startDate = startDate ? new Date(startDate) : null;
-    if (teachingHoursPerWeek !== undefined) updateData.teachingHoursPerWeek = teachingHoursPerWeek ? parseInt(teachingHoursPerWeek) : null;
+    if (teachingHoursPerWeek !== undefined) updateData.teachingHoursPerWeek = teachingHoursPerWeek ? String(teachingHoursPerWeek) : null;
     if (useSchoolBenefits !== undefined) updateData.useSchoolBenefits = useSchoolBenefits;
 
     // Handle status separately with validation
