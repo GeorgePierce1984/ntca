@@ -993,7 +993,6 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({
                     </div>
                   </motion.div>
                 )}
-                      </div>
                     </div>
                   )}
 
