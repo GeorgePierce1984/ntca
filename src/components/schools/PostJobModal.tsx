@@ -1029,35 +1029,6 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({
                         <span className="text-sm font-medium">Use school profile information</span>
                       </label>
                       
-                      {/* Warning if profile description doesn't exist */}
-                      {jobForm.useSchoolProfile && (!schoolProfile?.description || schoolProfile.description.trim() === "") && (
-                        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
-                          <div className="flex items-start gap-2">
-                            <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
-                            <div className="flex-1">
-                              <p className="text-sm font-medium text-amber-800 dark:text-amber-200 mb-1">
-                                No School Description Found
-                              </p>
-                              <p className="text-xs text-amber-700 dark:text-amber-300 mb-2">
-                                Your school profile doesn't have a description yet. You can either:
-                              </p>
-                              <ul className="text-xs text-amber-700 dark:text-amber-300 list-disc list-inside space-y-1 mb-2">
-                                <li>Uncheck this option and provide a custom description below</li>
-                                <li>Add a description to your school profile first</li>
-                              </ul>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => window.location.href = "/schools/profile"}
-                                className="text-xs h-7"
-                              >
-                                Go to Profile →
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                      
                       <p className="text-xs text-neutral-600 dark:text-neutral-400">
                         {jobForm.useSchoolProfile 
                           ? schoolProfile?.description && schoolProfile.description.trim() !== ""
