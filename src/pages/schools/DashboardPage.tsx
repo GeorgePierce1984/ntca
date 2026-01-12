@@ -540,7 +540,7 @@ export const SchoolDashboardPage: React.FC = () => {
       onlineExperience: parsedRequirements.onlineExperience || false,
       centralAsiaExperience: parsedRequirements.centralAsiaExperience || false,
       // Requirements - Legal
-      eligibleNationalities: parsedRequirements.eligibleNationalities || false,
+      visaSupport: parsedRequirements.visaSupport || "",
       backgroundCheckRequired: parsedRequirements.backgroundCheckRequired || false,
     });
     setShowJobModal(true);
@@ -641,7 +641,7 @@ export const SchoolDashboardPage: React.FC = () => {
             onlineExperience: jobForm.onlineExperience,
             centralAsiaExperience: jobForm.centralAsiaExperience,
             // Legal
-            eligibleNationalities: jobForm.eligibleNationalities,
+            visaSupport: jobForm.visaSupport,
             backgroundCheckRequired: jobForm.backgroundCheckRequired,
           }),
           useSchoolProfile: jobForm.useSchoolProfile,
@@ -718,7 +718,7 @@ export const SchoolDashboardPage: React.FC = () => {
           onlineExperience: false,
           centralAsiaExperience: false,
           // Requirements - Legal
-          eligibleNationalities: false,
+          visaSupport: "",
           backgroundCheckRequired: false,
         });
         setSelectedJobForEdit(null);
