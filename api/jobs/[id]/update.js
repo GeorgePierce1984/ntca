@@ -72,6 +72,15 @@ export default async function handler(req, res) {
       status,
       useSchoolProfile,
       schoolDescription,
+      city,
+      country,
+      contractLength,
+      subjectsTaught,
+      studentAgeGroupMin,
+      studentAgeGroupMax,
+      startDate,
+      teachingHoursPerWeek,
+      useSchoolBenefits,
     } = req.body;
 
     // Build update data object
@@ -100,6 +109,15 @@ export default async function handler(req, res) {
       updateData.useSchoolProfile = useSchoolProfile;
     if (schoolDescription !== undefined)
       updateData.schoolDescription = schoolDescription;
+    if (city !== undefined) updateData.city = city;
+    if (country !== undefined) updateData.country = country;
+    if (contractLength !== undefined) updateData.contractLength = contractLength;
+    if (subjectsTaught !== undefined) updateData.subjectsTaught = subjectsTaught;
+    if (studentAgeGroupMin !== undefined) updateData.studentAgeGroupMin = studentAgeGroupMin ? parseInt(studentAgeGroupMin) : null;
+    if (studentAgeGroupMax !== undefined) updateData.studentAgeGroupMax = studentAgeGroupMax ? parseInt(studentAgeGroupMax) : null;
+    if (startDate !== undefined) updateData.startDate = startDate ? new Date(startDate) : null;
+    if (teachingHoursPerWeek !== undefined) updateData.teachingHoursPerWeek = teachingHoursPerWeek ? parseInt(teachingHoursPerWeek) : null;
+    if (useSchoolBenefits !== undefined) updateData.useSchoolBenefits = useSchoolBenefits;
 
     // Handle status separately with validation
     if (status !== undefined) {

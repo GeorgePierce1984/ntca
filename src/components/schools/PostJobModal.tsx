@@ -432,46 +432,6 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({
                           </label>
                           <div className="grid grid-cols-2 gap-3">
                             <div>
-                              <label className="block text-xs text-neutral-500 mb-1">Months</label>
-                              <select
-                                value={jobForm.contractMonths || ""}
-                                onChange={(e) => {
-                                  const value = e.target.value;
-                                  const months = value === "N/A" ? "N/A" : (value ? parseInt(value) : undefined);
-                                  const years = jobForm.contractYears;
-                                  
-                                  // Build contract length string
-                                  let contractLengthStr = "";
-                                  if (months === "N/A" && years === "N/A") {
-                                    contractLengthStr = "N/A";
-                                  } else if (months === "N/A" && years && years !== "N/A") {
-                                    contractLengthStr = `${years} year(s)`;
-                                  } else if (years === "N/A" && months && months !== "N/A") {
-                                    contractLengthStr = `${months} month(s)`;
-                                  } else if (months && months !== "N/A" && years && years !== "N/A") {
-                                    contractLengthStr = `${years} year(s) ${months} month(s)`;
-                                  } else if (months && months !== "N/A") {
-                                    contractLengthStr = `${months} month(s)`;
-                                  } else if (years && years !== "N/A") {
-                                    contractLengthStr = `${years} year(s)`;
-                                  }
-                                  
-                                  setJobForm({
-                                    ...jobForm,
-                                    contractMonths: months,
-                                    contractLength: contractLengthStr,
-                                  });
-                                }}
-                                className={`input ${jobForm.contractMonths === "N/A" ? "bg-neutral-100 dark:bg-neutral-700 text-neutral-400" : ""}`}
-                              >
-                                <option value="">Select...</option>
-                                <option value="N/A">N/A</option>
-                                {Array.from({ length: 12 }, (_, i) => (
-                                  <option key={i + 1} value={i + 1}>{i + 1}</option>
-                                ))}
-                              </select>
-                            </div>
-                            <div>
                               <label className="block text-xs text-neutral-500 mb-1">Years</label>
                               <select
                                 value={jobForm.contractYears || ""}
@@ -507,6 +467,46 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({
                                 <option value="">Select...</option>
                                 <option value="N/A">N/A</option>
                                 {Array.from({ length: 5 }, (_, i) => (
+                                  <option key={i + 1} value={i + 1}>{i + 1}</option>
+                                ))}
+                              </select>
+                            </div>
+                            <div>
+                              <label className="block text-xs text-neutral-500 mb-1">Months</label>
+                              <select
+                                value={jobForm.contractMonths || ""}
+                                onChange={(e) => {
+                                  const value = e.target.value;
+                                  const months = value === "N/A" ? "N/A" : (value ? parseInt(value) : undefined);
+                                  const years = jobForm.contractYears;
+                                  
+                                  // Build contract length string
+                                  let contractLengthStr = "";
+                                  if (months === "N/A" && years === "N/A") {
+                                    contractLengthStr = "N/A";
+                                  } else if (months === "N/A" && years && years !== "N/A") {
+                                    contractLengthStr = `${years} year(s)`;
+                                  } else if (years === "N/A" && months && months !== "N/A") {
+                                    contractLengthStr = `${months} month(s)`;
+                                  } else if (months && months !== "N/A" && years && years !== "N/A") {
+                                    contractLengthStr = `${years} year(s) ${months} month(s)`;
+                                  } else if (months && months !== "N/A") {
+                                    contractLengthStr = `${months} month(s)`;
+                                  } else if (years && years !== "N/A") {
+                                    contractLengthStr = `${years} year(s)`;
+                                  }
+                                  
+                                  setJobForm({
+                                    ...jobForm,
+                                    contractMonths: months,
+                                    contractLength: contractLengthStr,
+                                  });
+                                }}
+                                className={`input ${jobForm.contractMonths === "N/A" ? "bg-neutral-100 dark:bg-neutral-700 text-neutral-400" : ""}`}
+                              >
+                                <option value="">Select...</option>
+                                <option value="N/A">N/A</option>
+                                {Array.from({ length: 12 }, (_, i) => (
                                   <option key={i + 1} value={i + 1}>{i + 1}</option>
                                 ))}
                               </select>

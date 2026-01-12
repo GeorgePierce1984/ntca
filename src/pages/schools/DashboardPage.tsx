@@ -465,6 +465,29 @@ export const SchoolDashboardPage: React.FC = () => {
     }
   }, [showPostJobModal, schoolProfile, selectedJobForEdit, jobForm.useSchoolBenefits]);
 
+  // Helper function to parse contract length string into months and years
+  const parseContractLength = (contractLength: string | null | undefined): { months: number | string | undefined, years: number | string | undefined } => {
+    if (!contractLength || contractLength === "N/A") {
+      return { months: undefined, years: undefined };
+    }
+    
+    let months: number | string | undefined = undefined;
+    let years: number | string | undefined = undefined;
+    
+    // Try to match patterns like "2 year(s) 3 month(s)" or "1 year(s)" or "6 month(s)"
+    const yearMatch = contractLength.match(/(\d+)\s+year/i);
+    const monthMatch = contractLength.match(/(\d+)\s+month/i);
+    
+    if (yearMatch) {
+      years = parseInt(yearMatch[1]);
+    }
+    if (monthMatch) {
+      months = parseInt(monthMatch[1]);
+    }
+    
+    return { months, years };
+  };
+
   // Job editing functions
   const openEditModal = (job: JobPosting) => {
     setSelectedJobForEdit(job);
@@ -486,6 +509,10 @@ export const SchoolDashboardPage: React.FC = () => {
         // If not JSON, keep as empty object
       }
     }
+    
+    // Parse contract length
+    const { months: contractMonths, years: contractYears } = parseContractLength(job.contractLength);
+    
     setJobForm({
       title: job.title,
       subjectsTaught: job.subjectsTaught || "",
@@ -493,14 +520,14 @@ export const SchoolDashboardPage: React.FC = () => {
       studentAgeGroupMax: job.studentAgeGroupMax,
       startDate: job.startDate ? job.startDate.split('T')[0] : "",
       contractLength: job.contractLength || "",
-      contractMonths: undefined,
-      contractYears: undefined,
+      contractMonths: contractMonths,
+      contractYears: contractYears,
       city: job.city,
-      country: job.country,
+      country: job.country || "",
       employmentType: job.type,
       salary: job.salary,
       deadline: job.deadline.split('T')[0],
-      teachingHoursPerWeek: job.teachingHoursPerWeek || "",
+      teachingHoursPerWeek: job.teachingHoursPerWeek ? String(job.teachingHoursPerWeek) : "",
       description: job.description,
       qualifications: job.qualification,
       benefits: typeof job.benefits === 'string' && !job.benefits.startsWith('{') ? job.benefits : "",
@@ -513,7 +540,7 @@ export const SchoolDashboardPage: React.FC = () => {
       // Financial benefits
       housingProvided: parsedBenefits.housingProvided || false,
       flightReimbursement: parsedBenefits.flightReimbursement || false,
-      visaWorkPermitSupport: parsedBenefits.visaWorkPermitSupport || false,
+      visaWorkPermitSupport: parsedBenefits.visaWorkPermitSupport || "No Visa Support",
       contractCompletionBonus: parsedBenefits.contractCompletionBonus || false,
       paidHolidays: parsedBenefits.paidHolidays || false,
       overtimePay: parsedBenefits.overtimePay || false,
@@ -546,7 +573,7 @@ export const SchoolDashboardPage: React.FC = () => {
       onlineExperience: parsedRequirements.onlineExperience || false,
       centralAsiaExperience: parsedRequirements.centralAsiaExperience || false,
       // Requirements - Legal
-      visaSupport: parsedRequirements.visaSupport || "",
+      visaSupport: parsedRequirements.visaSupport || "No Visa Support",
       backgroundCheckRequired: parsedRequirements.backgroundCheckRequired || false,
     });
     setShowPostJobModal(true);
