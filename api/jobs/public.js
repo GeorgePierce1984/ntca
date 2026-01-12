@@ -269,19 +269,22 @@ export default async function handler(req, res) {
         orderBy = { createdAt: "desc" };
     }
 
-    // Check if we need post-filtering (salary, online experience, qualifications, experience, teaching context, or contract length > 12 months)
+    // Check if we need post-filtering (salary, online experience, qualifications, experience, teaching context, contract length > 12 months, visa requirement, or student age groups)
     // Only when salary values are non-default or online_experience is explicitly set or qualifications/experience/teaching context are selected
     const experienceMin = req.query.experience_min ? parseInt(req.query.experience_min) : 0;
     const teachingContexts = Array.isArray(teaching_context) ? teaching_context : teaching_context ? [teaching_context] : [];
     const contractLengths = Array.isArray(contract_length) ? contract_length : contract_length ? [contract_length] : [];
     const hasGreaterThan12Months = contractLengths.includes("Greater than 12 months");
+    const studentAges = Array.isArray(student_age) ? student_age : student_age ? [student_age] : [];
     const needsPostFiltering = (salary_min && parseInt(salary_min) > 0) || 
                                (salary_max && parseInt(salary_max) < 10000) || 
                                req.query.online_experience === "true" ||
                                (qualifications && qualifications.length > 0) ||
                                experienceMin > 0 ||
                                (teachingContexts && teachingContexts.length > 0) ||
-                               hasGreaterThan12Months;
+                               hasGreaterThan12Months ||
+                               (visa_requirement && visa_requirement !== "") ||
+                               (studentAges && studentAges.length > 0);
 
     // Fetch jobs - if we need post-filtering, fetch more than needed
     const fetchLimit = needsPostFiltering ? parseInt(limit) * 3 : parseInt(limit);
