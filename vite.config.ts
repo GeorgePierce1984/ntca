@@ -19,10 +19,10 @@ export default defineConfig({
     outDir: "dist",
     sourcemap: true,
     cssCodeSplit: false,
-  },
-  css: {
-    postcss: {
-      plugins: [],
+    rollupOptions: {
+      output: {
+        manualChunks: undefined,
+      },
     },
   },
 });
