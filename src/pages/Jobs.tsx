@@ -682,7 +682,7 @@ export default function Jobs() {
                               <input
                                 type="range"
                                 min="0"
-                                max="10000"
+                                max={stagedFilters.salaryMax}
                                 step="100"
                                 value={stagedFilters.salaryMin}
                                 onChange={(e) => {
@@ -698,7 +698,7 @@ export default function Jobs() {
                               {/* Max slider */}
                               <input
                                 type="range"
-                                min="0"
+                                min={stagedFilters.salaryMin}
                                 max="10000"
                                 step="100"
                                 value={stagedFilters.salaryMax}

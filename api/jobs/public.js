@@ -283,16 +283,19 @@ export default async function handler(req, res) {
         orderBy = { createdAt: "desc" };
     }
 
-    // Check if we need post-filtering (salary, online experience, qualifications, experience, or teaching context)
+    // Check if we need post-filtering (salary, online experience, qualifications, experience, teaching context, or contract length > 12 months)
     // Only when salary values are non-default or online_experience is explicitly set or qualifications/experience/teaching context are selected
     const experienceMin = req.query.experience_min ? parseInt(req.query.experience_min) : 0;
     const teachingContexts = Array.isArray(teaching_context) ? teaching_context : teaching_context ? [teaching_context] : [];
+    const contractLengths = Array.isArray(contract_length) ? contract_length : contract_length ? [contract_length] : [];
+    const hasGreaterThan12Months = contractLengths.includes("Greater than 12 months");
     const needsPostFiltering = (salary_min && parseInt(salary_min) > 0) || 
                                (salary_max && parseInt(salary_max) < 10000) || 
                                req.query.online_experience === "true" ||
                                (qualifications && qualifications.length > 0) ||
                                experienceMin > 0 ||
-                               (teachingContexts && teachingContexts.length > 0);
+                               (teachingContexts && teachingContexts.length > 0) ||
+                               hasGreaterThan12Months;
 
     // Fetch jobs - if we need post-filtering, fetch more than needed
     const fetchLimit = needsPostFiltering ? parseInt(limit) * 3 : parseInt(limit);
@@ -470,6 +473,34 @@ export default async function handler(req, res) {
           
           if (!matchesFilter) {
             console.log('Teaching context filter excluded job:', job.id, 'hasClassroom:', hasClassroom, 'hasOnline:', hasOnline, 'selected:', teachingContexts);
+            return false;
+          }
+        }
+
+        // Contract Length filter - "Greater than 12 months" (post-filtering for accurate calculation)
+        if (hasGreaterThan12Months) {
+          if (!job.contractLength || job.contractLength === "N/A") {
+            return false;
+          }
+          
+          // Parse contract length to calculate total months
+          let totalMonths = 0;
+          
+          // Extract years (e.g., "1 year" or "2 years")
+          const yearMatch = job.contractLength.match(/(\d+)\s+year/i);
+          if (yearMatch) {
+            totalMonths += parseInt(yearMatch[1]) * 12;
+          }
+          
+          // Extract months (e.g., "1 month" or "3 months")
+          const monthMatch = job.contractLength.match(/(\d+)\s+month/i);
+          if (monthMatch) {
+            totalMonths += parseInt(monthMatch[1]);
+          }
+          
+          // If total months is not > 12, exclude this job
+          if (totalMonths <= 12) {
+            console.log('Contract length filter excluded job:', job.id, 'contractLength:', job.contractLength, 'totalMonths:', totalMonths);
             return false;
           }
         }
