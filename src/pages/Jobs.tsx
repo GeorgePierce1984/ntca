@@ -1261,6 +1261,16 @@ export default function Jobs() {
               <Button type="submit" variant="gradient">
                 Search
               </Button>
+              {(activeFilterCount > 0 || searchTerm) && (
+                <Button 
+                  type="button" 
+                  variant="ghost"
+                  onClick={clearAllFiltersAndSearch}
+                  className="text-sm"
+                >
+                  Clear All
+                </Button>
+              )}
             </div>
           </form>
 
