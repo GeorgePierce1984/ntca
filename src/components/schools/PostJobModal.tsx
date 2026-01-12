@@ -165,16 +165,10 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({
                 </button>
               </div>
 
-              {/* Content */}
-              <div className="flex-1 overflow-y-auto p-8">
-                <p className="text-neutral-600 dark:text-neutral-400 mb-8">
-                  Create a detailed job posting to attract qualified English
-                  teachers to your school.
-                </p>
-
-                {/* Subscription Warning */}
-                {(subscriptionStatus?.toLowerCase() === "cancelled" || subscriptionStatus?.toLowerCase() === "past_due") && (
-                  <div className={`mb-6 p-4 rounded-lg border ${
+              {/* Subscription Warning */}
+              {(subscriptionStatus?.toLowerCase() === "cancelled" || subscriptionStatus?.toLowerCase() === "past_due") && (
+                <div className="flex-shrink-0 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700 px-6 py-4">
+                  <div className={`p-4 rounded-lg border ${
                     subscriptionStatus?.toLowerCase() === "cancelled"
                       ? "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800"
                       : "bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800"
@@ -214,31 +208,35 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({
                       </div>
                     </div>
                   </div>
-                )}
-
-                {/* Tab Navigation */}
-                <div className="mb-6 border-b border-neutral-200 dark:border-neutral-700">
-                  <nav className="flex space-x-1 overflow-x-auto">
-                    {tabs.map((tab) => {
-                      const Icon = tab.icon;
-                      const isActive = activeTab === tab.key;
-                      return (
-                        <button
-                          key={tab.key}
-                          onClick={() => setActiveTab(tab.key)}
-                          className={`flex items-center gap-2 py-3 px-4 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
-                            isActive
-                              ? "border-primary-500 text-primary-600 dark:text-primary-400"
-                              : "border-transparent text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 hover:border-neutral-300"
-                          }`}
-                        >
-                          <Icon className="w-4 h-4" />
-                          <span>{tab.label}</span>
-                        </button>
-                      );
-                    })}
-                  </nav>
                 </div>
+              )}
+
+              {/* Tab Navigation */}
+              <div className="flex-shrink-0 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
+                <nav className="flex space-x-1 overflow-x-auto px-6">
+                  {tabs.map((tab) => {
+                    const Icon = tab.icon;
+                    const isActive = activeTab === tab.key;
+                    return (
+                      <button
+                        key={tab.key}
+                        onClick={() => setActiveTab(tab.key)}
+                        className={`flex items-center gap-2 py-3 px-4 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
+                          isActive
+                            ? "border-primary-500 text-primary-600 dark:text-primary-400"
+                            : "border-transparent text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 hover:border-neutral-300"
+                        }`}
+                      >
+                        <Icon className="w-4 h-4" />
+                        <span>{tab.label}</span>
+                      </button>
+                    );
+                  })}
+                </nav>
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 overflow-y-auto p-8">
 
                 <form id="job-form" className="space-y-6" onSubmit={handleJobSubmit}>
                   {/* Role Information Tab */}
