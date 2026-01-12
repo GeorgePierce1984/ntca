@@ -550,62 +550,6 @@ export default async function handler(req, res) {
           }
         }
 
-        // Visa Requirement filter
-        if (visa_requirement && visa_requirement !== "") {
-          try {
-            if (job.requirements) {
-              const requirements = JSON.parse(job.requirements);
-              const jobVisaSupport = requirements.visaSupport;
-              
-              // Check if job's visa support matches the filter
-              if (jobVisaSupport !== visa_requirement) {
-                return false;
-              }
-            } else {
-              // If no requirements JSON, exclude if filter is set
-              return false;
-            }
-          } catch (e) {
-            // If parsing fails, exclude the job
-            return false;
-          }
-        }
-
-        // Student Age Group filter
-        if (studentAges && studentAges.length > 0) {
-          // Map age group strings to min/max ranges
-          const ageGroupMap = {
-            "0-5": { min: 0, max: 5 },
-            "6-11": { min: 6, max: 11 },
-            "12-14": { min: 12, max: 14 },
-            "15-18": { min: 15, max: 18 },
-            "19-30": { min: 19, max: 30 },
-            "30+": { min: 30, max: null }, // 30+ means 30 or older
-          };
-          
-          // Check if job's age range overlaps with any selected age group
-          const jobMinAge = job.studentAgeGroupMin ?? 0;
-          const jobMaxAge = job.studentAgeGroupMax ?? 30; // Default to 30 if not set
-          
-          const matchesAgeGroup = studentAges.some(ageGroup => {
-            const range = ageGroupMap[ageGroup];
-            if (!range) return false;
-            
-            // For "30+", check if job max is >= 30
-            if (ageGroup === "30+") {
-              return jobMaxAge >= 30;
-            }
-            
-            // Check for overlap: job range overlaps with filter range if:
-            // jobMin <= range.max AND jobMax >= range.min
-            return jobMinAge <= range.max && jobMaxAge >= range.min;
-          });
-          
-          if (!matchesAgeGroup) {
-            return false;
-          }
-        }
-
         return true;
       });
 
@@ -639,7 +583,5 @@ export default async function handler(req, res) {
       details:
         process.env.NODE_ENV === "development" ? error.message : undefined,
     });
-  } finally {
-    await prisma.$disconnect();
   }
 }

@@ -67,6 +67,7 @@ interface FilterState {
   countries: string[];
   city: string;
   jobTypes: string[];
+  onlineExperience: boolean;
   salaryMin: number | "";
   salaryMax: number | "";
   showUndisclosedSalaries: boolean;
