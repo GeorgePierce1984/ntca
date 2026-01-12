@@ -178,23 +178,41 @@ export default async function handler(req, res) {
     // School Type filter
     const schoolTypes = Array.isArray(school_type) ? school_type : school_type ? [school_type] : [];
     if (schoolTypes.length > 0) {
-      where.school = {
-        ...(where.school || {}),
-        schoolType: {
-          in: schoolTypes.map(st => {
-            // Map to database values
-            const typeMap = {
-              "Language centre": "Language Centre",
-              "International school": "International School",
-              "Private school": "Private School",
-              "University": "University",
-              "Public school": "Public School",
-            };
-            return typeMap[st] || st;
-          }),
-          mode: "insensitive",
-        },
+      // Map frontend filter values to search terms that can match database values
+      // Database might have: "language-centre", "Language Centre", "Private International School", "university", etc.
+      const typeSearchTerms = schoolTypes.map(st => {
+        const typeMap = {
+          "Language centre": ["language", "centre", "center"],
+          "International school": ["international"],
+          "Private school": ["private"],
+          "University": ["university"],
+          "Public school": ["public"],
+        };
+        return typeMap[st] || [st.toLowerCase()];
+      });
+      
+      // Flatten and get unique search terms
+      const allSearchTerms = [...new Set(typeSearchTerms.flat())];
+      
+      // Build school filter with OR conditions for school type
+      const schoolTypeConditions = {
+        OR: allSearchTerms.map(term => ({
+          schoolType: {
+            contains: term,
+            mode: "insensitive",
+          },
+        })),
       };
+      
+      // Merge with existing school conditions
+      if (where.school) {
+        where.school = {
+          ...where.school,
+          ...schoolTypeConditions,
+        };
+      } else {
+        where.school = schoolTypeConditions;
+      }
     }
 
     // Student Age Group filter
