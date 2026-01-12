@@ -244,6 +244,7 @@ export const SchoolDashboardPage: React.FC = () => {
   const [selectedJobForEdit, setSelectedJobForEdit] = useState<JobPosting | null>(null);
   const [showMessagesModal, setShowMessagesModal] = useState(false);
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Calculate stats from real data
   const totalJobs = jobs.length;
