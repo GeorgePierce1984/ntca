@@ -549,7 +549,7 @@ export const SchoolDashboardPage: React.FC = () => {
       visaSupport: parsedRequirements.visaSupport || "",
       backgroundCheckRequired: parsedRequirements.backgroundCheckRequired || false,
     });
-    setShowJobModal(true);
+    setShowPostJobModal(true);
   };
 
   const updateJobStatus = async (jobId: string, newStatus: string) => {
@@ -1715,8 +1715,8 @@ export const SchoolDashboardPage: React.FC = () => {
         />
       )}
 
-      {/* Job Edit Modal */}
-      {showJobModal && selectedJobForEdit && (
+      {/* Job Edit Modal - Removed, now using PostJobModal */}
+      {false && showJobModal && selectedJobForEdit && (
         <motion.div
           key="job-edit-modal"
           initial={{ opacity: 0, y: 20 }}
