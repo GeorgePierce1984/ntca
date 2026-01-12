@@ -749,6 +749,11 @@ export const SchoolDashboardPage: React.FC = () => {
           // Refresh subscription status
           fetchSubscriptionStatus();
         } else {
+          // Suppress "Missing required fields" error message
+          if (error.error && error.error.toLowerCase().includes('missing required fields')) {
+            // Don't show toast for this error
+            return;
+          }
           toast.error(error.error || 'Failed to save job');
         }
       }
