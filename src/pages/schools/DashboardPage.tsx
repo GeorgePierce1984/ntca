@@ -716,6 +716,7 @@ export const SchoolDashboardPage: React.FC = () => {
           tefl: false,
           celta: false,
           tesol: false,
+          delta: false,
           minimumTeachingExperience: "",
           // Requirements - Preferred
           ieltsExperience: false,
