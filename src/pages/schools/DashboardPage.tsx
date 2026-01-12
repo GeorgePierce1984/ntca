@@ -1612,6 +1612,8 @@ export const SchoolDashboardPage: React.FC = () => {
             studentAgeGroupMax: schoolProfile?.studentAgeRangeMax,
             startDate: "",
             contractLength: "",
+            contractMonths: undefined,
+            contractYears: undefined,
             city: "",
             country: "",
             employmentType: "",
