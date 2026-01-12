@@ -748,22 +748,6 @@ export const SchoolDashboardPage: React.FC = () => {
           );
           // Refresh subscription status
           fetchSubscriptionStatus();
-        } 
-        // Handle profile incomplete error specifically
-        else if (!error.profileComplete) {
-          toast.error(
-            <div>
-              <p className="font-medium">{error.error}</p>
-              <p className="text-sm mt-1">{error.message}</p>
-              <button
-                onClick={() => window.location.href = '/schools/profile'}
-                className="text-primary-600 hover:text-primary-700 underline text-sm mt-2 block"
-              >
-                Complete Profile Now →
-              </button>
-            </div>,
-            { duration: 6000 }
-          );
         } else {
           toast.error(error.error || 'Failed to save job');
         }
