@@ -12,6 +12,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { countries, type Country } from "@/data/countries";
 
 interface JobForm {
   title: string;
@@ -20,6 +21,8 @@ interface JobForm {
   studentAgeGroupMax?: number;
   startDate: string;
   contractLength: string;
+  contractMonths?: number | string;
+  contractYears?: number | string;
   city: string;
   country: string;
   employmentType: string;
@@ -124,6 +127,20 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({
       setActiveTab("role");
     }
   }, [isOpen]);
+
+  // Central Asian countries only
+  const centralAsianCountries = countries.filter(country => {
+    const countryName = country.name.toLowerCase();
+    return countryName === "kazakhstan" || 
+           countryName === "uzbekistan" || 
+           countryName === "kyrgyzstan" || 
+           countryName === "tajikistan" || 
+           countryName === "turkmenistan" || 
+           countryName === "afghanistan";
+  });
+
+  // Get selected country object for display
+  const selectedCountry = centralAsianCountries.find(c => c.name === jobForm.country);
 
   const currentTabIndex = tabs.findIndex(tab => tab.key === activeTab);
   const isFirstTab = currentTabIndex === 0;
@@ -374,17 +391,22 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({
                           <label className="block text-sm font-medium mb-2">
                             Country *
                           </label>
-                          <input
-                            type="text"
+                          <select
                             value={jobForm.country}
                             onChange={(e) => setJobForm({
                               ...jobForm,
                               country: e.target.value,
                             })}
                             className="input"
-                            placeholder="e.g., Kazakhstan"
                             required
-                          />
+                          >
+                            <option value="">Select a country</option>
+                            {centralAsianCountries.map((country) => (
+                              <option key={country.code} value={country.name}>
+                                {country.flag} {country.name}
+                              </option>
+                            ))}
+                          </select>
                         </div>
                       </div>
 
@@ -407,16 +429,90 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({
                           <label className="block text-sm font-medium mb-2">
                             Contract Length
                           </label>
-                          <input
-                            type="text"
-                            value={jobForm.contractLength}
-                            onChange={(e) => setJobForm({
-                              ...jobForm,
-                              contractLength: e.target.value,
-                            })}
-                            className="input"
-                            placeholder="e.g., 1 year, 2 years, Permanent"
-                          />
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-xs text-neutral-500 mb-1">Months</label>
+                              <select
+                                value={jobForm.contractMonths || ""}
+                                onChange={(e) => {
+                                  const value = e.target.value;
+                                  const months = value === "N/A" ? "N/A" : (value ? parseInt(value) : undefined);
+                                  const years = jobForm.contractYears;
+                                  
+                                  // Build contract length string
+                                  let contractLengthStr = "";
+                                  if (months === "N/A" && years === "N/A") {
+                                    contractLengthStr = "N/A";
+                                  } else if (months === "N/A" && years && years !== "N/A") {
+                                    contractLengthStr = `${years} year(s)`;
+                                  } else if (years === "N/A" && months && months !== "N/A") {
+                                    contractLengthStr = `${months} month(s)`;
+                                  } else if (months && months !== "N/A" && years && years !== "N/A") {
+                                    contractLengthStr = `${years} year(s) ${months} month(s)`;
+                                  } else if (months && months !== "N/A") {
+                                    contractLengthStr = `${months} month(s)`;
+                                  } else if (years && years !== "N/A") {
+                                    contractLengthStr = `${years} year(s)`;
+                                  }
+                                  
+                                  setJobForm({
+                                    ...jobForm,
+                                    contractMonths: months,
+                                    contractLength: contractLengthStr,
+                                  });
+                                }}
+                                className={`input ${jobForm.contractMonths === "N/A" ? "bg-neutral-100 dark:bg-neutral-700 text-neutral-400 cursor-not-allowed" : ""}`}
+                                disabled={jobForm.contractMonths === "N/A"}
+                              >
+                                <option value="">Select...</option>
+                                <option value="N/A">N/A</option>
+                                {Array.from({ length: 12 }, (_, i) => (
+                                  <option key={i + 1} value={i + 1}>{i + 1}</option>
+                                ))}
+                              </select>
+                            </div>
+                            <div>
+                              <label className="block text-xs text-neutral-500 mb-1">Years</label>
+                              <select
+                                value={jobForm.contractYears || ""}
+                                onChange={(e) => {
+                                  const value = e.target.value;
+                                  const years = value === "N/A" ? "N/A" : (value ? parseInt(value) : undefined);
+                                  const months = jobForm.contractMonths;
+                                  
+                                  // Build contract length string
+                                  let contractLengthStr = "";
+                                  if (months === "N/A" && years === "N/A") {
+                                    contractLengthStr = "N/A";
+                                  } else if (months === "N/A" && years && years !== "N/A") {
+                                    contractLengthStr = `${years} year(s)`;
+                                  } else if (years === "N/A" && months && months !== "N/A") {
+                                    contractLengthStr = `${months} month(s)`;
+                                  } else if (months && months !== "N/A" && years && years !== "N/A") {
+                                    contractLengthStr = `${years} year(s) ${months} month(s)`;
+                                  } else if (months && months !== "N/A") {
+                                    contractLengthStr = `${months} month(s)`;
+                                  } else if (years && years !== "N/A") {
+                                    contractLengthStr = `${years} year(s)`;
+                                  }
+                                  
+                                  setJobForm({
+                                    ...jobForm,
+                                    contractYears: years,
+                                    contractLength: contractLengthStr,
+                                  });
+                                }}
+                                className={`input ${jobForm.contractYears === "N/A" ? "bg-neutral-100 dark:bg-neutral-700 text-neutral-400 cursor-not-allowed" : ""}`}
+                                disabled={jobForm.contractYears === "N/A"}
+                              >
+                                <option value="">Select...</option>
+                                <option value="N/A">N/A</option>
+                                {Array.from({ length: 5 }, (_, i) => (
+                                  <option key={i + 1} value={i + 1}>{i + 1}</option>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
                         </div>
                       </div>
 
@@ -442,19 +538,22 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({
                         </div>
                         <div>
                           <label className="block text-sm font-medium mb-2">
-                            Salary Range *
+                            Salary (Monthly) *
                           </label>
-                          <input
-                            type="text"
-                            value={jobForm.salary}
-                            onChange={(e) => setJobForm({
-                              ...jobForm,
-                              salary: e.target.value,
-                            })}
-                            className="input"
-                            placeholder="e.g., $2,800 - $3,500/month"
-                            required
-                          />
+                          <div className="relative">
+                            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-500">$</span>
+                            <input
+                              type="text"
+                              value={jobForm.salary}
+                              onChange={(e) => setJobForm({
+                                ...jobForm,
+                                salary: e.target.value,
+                              })}
+                              className="input pl-7"
+                              placeholder="e.g., 2,800 - 3,500"
+                              required
+                            />
+                          </div>
                         </div>
                         <div>
                           <label className="block text-sm font-medium mb-2">
