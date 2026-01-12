@@ -163,6 +163,8 @@ export const SchoolDashboardPage: React.FC = () => {
     studentAgeGroupMax: undefined as number | undefined,
     startDate: "",
     contractLength: "",
+    contractMonths: undefined as number | string | undefined,
+    contractYears: undefined as number | string | undefined,
     city: "",
     country: "",
     employmentType: "",
