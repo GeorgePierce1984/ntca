@@ -8,6 +8,8 @@ import {
   AlertCircle,
   FileText,
   Users,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 
@@ -113,6 +115,22 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({
     { key: "benefits", label: "Benefits & Support", icon: Users },
     { key: "school", label: "School Information", icon: Building },
   ];
+
+  const currentTabIndex = tabs.findIndex(tab => tab.key === activeTab);
+  const isFirstTab = currentTabIndex === 0;
+  const isLastTab = currentTabIndex === tabs.length - 1;
+
+  const handlePreviousTab = () => {
+    if (!isFirstTab) {
+      setActiveTab(tabs[currentTabIndex - 1].key);
+    }
+  };
+
+  const handleNextTab = () => {
+    if (!isLastTab) {
+      setActiveTab(tabs[currentTabIndex + 1].key);
+    }
+  };
 
   return (
     <AnimatePresence>
