@@ -95,6 +95,72 @@ export const SchoolProfilePage: React.FC = () => {
   const [uploadingCoverPhoto, setUploadingCoverPhoto] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState<Country | undefined>(undefined);
   const [selectedPhoneCountry, setSelectedPhoneCountry] = useState<Country | undefined>(undefined);
+  const [showPostJobModal, setShowPostJobModal] = useState(false);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
+  const [selectedJobForEdit, setSelectedJobForEdit] = useState<any | null>(null);
+  const [jobForm, setJobForm] = useState({
+    title: "",
+    subjectsTaught: "",
+    studentAgeGroupMin: undefined as number | undefined,
+    studentAgeGroupMax: undefined as number | undefined,
+    startDate: "",
+    contractLength: "",
+    contractMonths: undefined as number | string | undefined,
+    contractYears: undefined as number | string | undefined,
+    city: "",
+    country: "",
+    employmentType: "",
+    salary: "",
+    deadline: "",
+    teachingHoursPerWeek: "",
+    description: "",
+    qualifications: "",
+    benefits: "",
+    useSchoolProfile: true,
+    schoolDescription: "",
+    useSchoolBenefits: true,
+    teachingLicenseRequired: false,
+    kazakhLanguageRequired: false,
+    localCertificationRequired: false,
+    // Financial benefits
+    housingProvided: false,
+    flightReimbursement: false,
+    visaWorkPermitSupport: false,
+    contractCompletionBonus: false,
+    paidHolidays: false,
+    overtimePay: false,
+    // Lifestyle & Wellbeing
+    paidAnnualLeave: false,
+    nationalHolidays: false,
+    sickLeave: false,
+    healthInsurance: false,
+    relocationSupport: false,
+    // Professional Support
+    teachingMaterialsProvided: false,
+    curriculumGuidance: false,
+    teacherTraining: false,
+    promotionOpportunities: false,
+    contractRenewalOptions: false,
+    // Requirements - Essential
+    nativeEnglishLevel: false,
+    bachelorsDegree: false,
+    bachelorsDegreeSubject: "",
+    tefl: false,
+    celta: false,
+    tesol: false,
+    delta: false,
+    minimumTeachingExperience: "",
+    // Requirements - Preferred
+    ieltsExperience: false,
+    cambridgeExperience: false,
+    satExperience: false,
+    classroomExperience: false,
+    onlineExperience: false,
+    centralAsiaExperience: false,
+    // Requirements - Legal
+    visaSupport: "",
+    backgroundCheckRequired: false,
+  });
 
   useEffect(() => {
     if (!user || user.userType !== "SCHOOL") {
