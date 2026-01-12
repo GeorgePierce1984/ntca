@@ -532,6 +532,7 @@ export const SchoolDashboardPage: React.FC = () => {
       tefl: parsedRequirements.tefl || false,
       celta: parsedRequirements.celta || false,
       tesol: parsedRequirements.tesol || false,
+      delta: parsedRequirements.delta || false,
       minimumTeachingExperience: parsedRequirements.minimumTeachingExperience || "",
       // Requirements - Preferred
       ieltsExperience: parsedRequirements.ieltsExperience || false,
@@ -633,6 +634,7 @@ export const SchoolDashboardPage: React.FC = () => {
             tefl: jobForm.tefl,
             celta: jobForm.celta,
             tesol: jobForm.tesol,
+            delta: jobForm.delta,
             minimumTeachingExperience: jobForm.minimumTeachingExperience,
             // Preferred
             ieltsExperience: jobForm.ieltsExperience,
@@ -1643,6 +1645,7 @@ export const SchoolDashboardPage: React.FC = () => {
             tefl: false,
             celta: false,
             tesol: false,
+            delta: false,
             minimumTeachingExperience: "",
             // Requirements - Preferred
             ieltsExperience: false,

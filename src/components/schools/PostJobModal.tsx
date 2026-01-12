@@ -645,7 +645,7 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({
                           
                           <div className="space-y-2">
                             <label className="text-xs text-neutral-500 mb-2 block">Certification:</label>
-                            <div className="grid md:grid-cols-3 gap-3">
+                            <div className="grid md:grid-cols-4 gap-3">
                               <label className="flex items-center gap-2">
                                 <input 
                                   type="checkbox" 
@@ -681,6 +681,18 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({
                                   className="rounded" 
                                 />
                                 <span className="text-sm">TESOL</span>
+                              </label>
+                              <label className="flex items-center gap-2">
+                                <input 
+                                  type="checkbox" 
+                                  checked={jobForm.delta}
+                                  onChange={(e) => setJobForm({
+                                    ...jobForm,
+                                    delta: e.target.checked,
+                                  })}
+                                  className="rounded" 
+                                />
+                                <span className="text-sm">DELTA</span>
                               </label>
                             </div>
                           </div>
