@@ -28,6 +28,7 @@ import { InfoIcon } from "@/components/ui/Tooltip";
 import { CountrySelector } from "@/components/forms/CountrySelector";
 import { countries, type Country, getCountryByCode } from "@/data/countries";
 import { SCHOOL_TYPES, CURRICULUM_OPTIONS, CENTRAL_ASIA_COUNTRIES } from "@/constants/options";
+import { PostJobModal } from "@/components/schools/PostJobModal";
 import toast from "react-hot-toast";
 
 interface School {
@@ -101,7 +102,197 @@ export const SchoolProfilePage: React.FC = () => {
       return;
     }
     fetchProfile();
+    fetchSubscriptionStatus();
   }, [user, navigate]);
+
+  // Fetch subscription status
+  const fetchSubscriptionStatus = async () => {
+    try {
+      const response = await fetch("/api/subscription-details", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setSubscriptionStatus(data.subscriptionStatus);
+      }
+    } catch (error) {
+      console.error("Error fetching subscription status:", error);
+    }
+  };
+
+  // Handle job submit
+  const handleJobSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      const url = selectedJobForEdit 
+        ? `/api/jobs/${selectedJobForEdit.id}/update`
+        : '/api/jobs';
+      
+      const method = selectedJobForEdit ? 'PUT' : 'POST';
+      
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        },
+        body: JSON.stringify({
+          title: jobForm.title,
+          subjectsTaught: jobForm.subjectsTaught,
+          studentAgeGroupMin: jobForm.studentAgeGroupMin,
+          studentAgeGroupMax: jobForm.studentAgeGroupMax,
+          startDate: jobForm.startDate,
+          contractLength: jobForm.contractLength,
+          description: jobForm.description,
+          city: jobForm.city,
+          country: jobForm.country,
+          salary: jobForm.salary,
+          type: jobForm.employmentType,
+          deadline: jobForm.deadline,
+          teachingHoursPerWeek: jobForm.teachingHoursPerWeek,
+          qualification: jobForm.qualifications,
+          benefits: JSON.stringify({
+            // Financial
+            housingProvided: jobForm.housingProvided,
+            flightReimbursement: jobForm.flightReimbursement,
+            visaWorkPermitSupport: jobForm.visaWorkPermitSupport,
+            contractCompletionBonus: jobForm.contractCompletionBonus,
+            paidHolidays: jobForm.paidHolidays,
+            overtimePay: jobForm.overtimePay,
+            // Lifestyle & Wellbeing
+            paidAnnualLeave: jobForm.paidAnnualLeave,
+            nationalHolidays: jobForm.nationalHolidays,
+            sickLeave: jobForm.sickLeave,
+            healthInsurance: jobForm.healthInsurance,
+            relocationSupport: jobForm.relocationSupport,
+            // Professional Support
+            teachingMaterialsProvided: jobForm.teachingMaterialsProvided,
+            curriculumGuidance: jobForm.curriculumGuidance,
+            teacherTraining: jobForm.teacherTraining,
+            promotionOpportunities: jobForm.promotionOpportunities,
+            contractRenewalOptions: jobForm.contractRenewalOptions,
+          }),
+          requirements: JSON.stringify({
+            // Essential
+            nativeEnglishLevel: jobForm.nativeEnglishLevel,
+            bachelorsDegree: jobForm.bachelorsDegree,
+            bachelorsDegreeSubject: jobForm.bachelorsDegreeSubject,
+            tefl: jobForm.tefl,
+            celta: jobForm.celta,
+            tesol: jobForm.tesol,
+            delta: jobForm.delta,
+            minimumTeachingExperience: jobForm.minimumTeachingExperience,
+            // Preferred
+            ieltsExperience: jobForm.ieltsExperience,
+            cambridgeExperience: jobForm.cambridgeExperience,
+            satExperience: jobForm.satExperience,
+            classroomExperience: jobForm.classroomExperience,
+            onlineExperience: jobForm.onlineExperience,
+            centralAsiaExperience: jobForm.centralAsiaExperience,
+            // Legal
+            visaSupport: jobForm.visaSupport,
+            backgroundCheckRequired: jobForm.backgroundCheckRequired,
+          }),
+          useSchoolProfile: jobForm.useSchoolProfile,
+          schoolDescription: jobForm.schoolDescription,
+          useSchoolBenefits: jobForm.useSchoolBenefits,
+          teachingLicenseRequired: jobForm.teachingLicenseRequired,
+          kazakhLanguageRequired: jobForm.kazakhLanguageRequired,
+          localCertificationRequired: jobForm.localCertificationRequired,
+          status: 'ACTIVE',
+        }),
+      });
+
+      if (response.ok) {
+        toast.success(
+          selectedJobForEdit 
+            ? 'Job updated successfully!' 
+            : 'Job posted successfully!'
+        );
+        // Reset form
+        setJobForm({
+          title: "",
+          subjectsTaught: "",
+          studentAgeGroupMin: school?.studentAgeRangeMin,
+          studentAgeGroupMax: school?.studentAgeRangeMax,
+          startDate: "",
+          contractLength: "",
+          contractMonths: undefined,
+          contractYears: undefined,
+          city: "",
+          country: "",
+          employmentType: "",
+          salary: "",
+          deadline: "",
+          teachingHoursPerWeek: "",
+          description: "",
+          qualifications: "",
+          benefits: "",
+          useSchoolProfile: true,
+          schoolDescription: "",
+          useSchoolBenefits: true,
+          teachingLicenseRequired: false,
+          kazakhLanguageRequired: false,
+          localCertificationRequired: false,
+          // Financial benefits
+          housingProvided: false,
+          flightReimbursement: false,
+          visaWorkPermitSupport: false,
+          contractCompletionBonus: false,
+          paidHolidays: false,
+          overtimePay: false,
+          // Lifestyle & Wellbeing
+          paidAnnualLeave: false,
+          nationalHolidays: false,
+          sickLeave: false,
+          healthInsurance: false,
+          relocationSupport: false,
+          // Professional Support
+          teachingMaterialsProvided: false,
+          curriculumGuidance: false,
+          teacherTraining: false,
+          promotionOpportunities: false,
+          contractRenewalOptions: false,
+          // Requirements - Essential
+          nativeEnglishLevel: false,
+          bachelorsDegree: false,
+          bachelorsDegreeSubject: "",
+          tefl: false,
+          celta: false,
+          tesol: false,
+          delta: false,
+          minimumTeachingExperience: "",
+          // Requirements - Preferred
+          ieltsExperience: false,
+          cambridgeExperience: false,
+          satExperience: false,
+          classroomExperience: false,
+          onlineExperience: false,
+          centralAsiaExperience: false,
+          // Requirements - Legal
+          visaSupport: "",
+          backgroundCheckRequired: false,
+        });
+        setShowPostJobModal(false);
+        setSelectedJobForEdit(null);
+      } else {
+        const error = await response.json();
+        // Suppress "Missing required fields" toast
+        if (error.error && typeof error.error === 'string' && error.error.toLowerCase().includes('missing required fields')) {
+          // Do nothing, suppress the toast
+        } else {
+          toast.error(error.error || 'Failed to save job');
+        }
+      }
+    } catch (error) {
+      console.error('Error saving job:', error);
+      toast.error('Failed to save job');
+    }
+  };
 
   const fetchProfile = async () => {
     setLoading(true); // Ensure loading is true at start
@@ -1379,7 +1570,13 @@ export const SchoolProfilePage: React.FC = () => {
                   View Dashboard
                 </Button>
                 <Button
-                  onClick={() => navigate("/schools/dashboard?tab=post-job")}
+                  onClick={() => {
+                    setShowPostJobModal(true);
+                    toast.success("Let's create a new job posting!", {
+                      icon: "📝",
+                      duration: 2000,
+                    });
+                  }}
                   variant="primary"
                   className="w-full justify-start"
                   leftIcon={<Building className="w-4 h-4" />}
