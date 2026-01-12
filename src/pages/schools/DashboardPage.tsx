@@ -604,10 +604,6 @@ export const SchoolDashboardPage: React.FC = () => {
     }
   };
 
-
-
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
   const handleJobSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
