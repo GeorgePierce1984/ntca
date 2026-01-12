@@ -186,7 +186,7 @@ export const SchoolProfilePopup: React.FC<SchoolProfilePopupProps> = ({
                       <BookOpen className="w-5 h-5" />
                       About
                     </h3>
-                    <p className="text-neutral-600 dark:text-neutral-400 whitespace-pre-wrap">
+                    <p className="text-neutral-600 dark:text-neutral-400 whitespace-pre-wrap break-words">
                       {school.description}
                     </p>
                   </div>
@@ -199,7 +199,7 @@ export const SchoolProfilePopup: React.FC<SchoolProfilePopupProps> = ({
                       <Award className="w-5 h-5" />
                       Teaching Philosophy
                     </h3>
-                    <p className="text-neutral-600 dark:text-neutral-400 whitespace-pre-wrap">
+                    <p className="text-neutral-600 dark:text-neutral-400 whitespace-pre-wrap break-words">
                       {school.teachingPhilosophy}
                     </p>
                   </div>
