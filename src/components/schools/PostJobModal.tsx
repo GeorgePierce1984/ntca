@@ -17,12 +17,12 @@ import { countries, type Country } from "@/data/countries";
 interface JobForm {
   title: string;
   subjectsTaught: string;
-  studentAgeGroupMin?: number;
-  studentAgeGroupMax?: number;
+  studentAgeGroupMin: number | undefined;
+  studentAgeGroupMax: number | undefined;
   startDate: string;
   contractLength: string;
-  contractMonths?: number | string;
-  contractYears?: number | string;
+  contractMonths: number | string | undefined;
+  contractYears: number | string | undefined;
   city: string;
   country: string;
   employmentType: string;
