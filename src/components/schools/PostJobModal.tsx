@@ -177,12 +177,12 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white dark:bg-neutral-800 rounded-2xl shadow-2xl max-w-6xl w-full h-[85vh] flex flex-col overflow-hidden"
+              className="bg-white dark:bg-neutral-800 rounded-2xl shadow-2xl max-w-6xl w-full h-[95vh] flex flex-col overflow-hidden"
             >
               {/* Header with Close Button */}
               <div className="flex-shrink-0 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700 px-6 py-4 flex items-center justify-between z-10">
                 <h2 className="heading-2">
-                  {selectedJobForEdit ? "Edit Job Posting" : "Post a New Teaching Position"}
+                  {selectedJobForEdit ? "Edit Job Posting" : "Post New Job"}
                 </h2>
                 <button
                   onClick={onClose}
