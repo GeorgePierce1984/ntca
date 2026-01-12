@@ -14,12 +14,11 @@ const prisma = new PrismaClient({
 async function retryOperation(operation, maxRetries = 3, delay = 1000) {
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      // Ensure connection is active
-      await prisma.$connect();
       return await operation();
     } catch (error) {
       const isConnectionError = 
         error.message?.includes("Engine was empty") ||
+        error.message?.includes("Engine is not yet connected") ||
         error.message?.includes("connection") ||
         error.code === "P1001" ||
         error.code === "P1017" ||
@@ -28,8 +27,6 @@ async function retryOperation(operation, maxRetries = 3, delay = 1000) {
 
       if (isConnectionError && attempt < maxRetries) {
         console.log(`Connection error on attempt ${attempt}, retrying in ${delay}ms...`);
-        // Disconnect and wait before retrying
-        await prisma.$disconnect().catch(() => {});
         await new Promise(resolve => setTimeout(resolve, delay));
         delay *= 2; // Exponential backoff
         continue;
@@ -477,6 +474,7 @@ export default async function handler(req, res) {
     // Handle Prisma connection errors
     const isPrismaConnectionError = 
       error.message?.includes("Engine was empty") ||
+      error.message?.includes("Engine is not yet connected") ||
       error.message?.includes("connection") ||
       error.code === "P1001" ||
       error.code === "P1017" ||
@@ -484,14 +482,7 @@ export default async function handler(req, res) {
       error.name === "PrismaClientUnknownRequestError";
 
     if (isPrismaConnectionError) {
-      console.error("Prisma connection error - attempting to reconnect...");
-      try {
-        await prisma.$disconnect();
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        await prisma.$connect();
-      } catch (reconnectError) {
-        console.error("Failed to reconnect:", reconnectError);
-      }
+      console.error("Prisma connection error");
       
       return res.status(503).json({
         error: "Database connection error",
@@ -506,7 +497,5 @@ export default async function handler(req, res) {
       details: process.env.NODE_ENV === "development" ? error.message : undefined,
       errorType: error.name || "UnknownError",
     });
-  } finally {
-    await prisma.$disconnect();
   }
 }
