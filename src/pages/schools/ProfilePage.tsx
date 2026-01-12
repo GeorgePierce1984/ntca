@@ -699,7 +699,7 @@ export const SchoolProfilePage: React.FC = () => {
                       placeholder="Describe your school, its mission, values, and what makes it special..."
                     />
                   ) : (
-                    <p className="text-neutral-600 dark:text-neutral-400">
+                    <p className="text-neutral-600 dark:text-neutral-400 break-words whitespace-pre-wrap">
                       {school.description || "No description provided. You can add one here or when creating a job posting."}
                     </p>
                   )}
@@ -721,7 +721,7 @@ export const SchoolProfilePage: React.FC = () => {
                       placeholder="Describe your school's teaching philosophy, educational values, and approach to teaching..."
                     />
                   ) : (
-                    <p className="text-neutral-600 dark:text-neutral-400">
+                    <p className="text-neutral-600 dark:text-neutral-400 break-words whitespace-pre-wrap">
                       {school.teachingPhilosophy || "No teaching philosophy provided."}
                     </p>
                   )}
