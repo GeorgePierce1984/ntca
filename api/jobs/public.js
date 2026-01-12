@@ -273,9 +273,8 @@ export default async function handler(req, res) {
     // Only when salary values are non-default or online_experience is explicitly set or qualifications/experience/teaching context are selected
     const experienceMin = req.query.experience_min ? parseInt(req.query.experience_min) : 0;
     const teachingContexts = Array.isArray(teaching_context) ? teaching_context : teaching_context ? [teaching_context] : [];
-    // contractLengths already declared above, reuse it
+    // contractLengths and studentAges already declared above, reuse them
     const hasGreaterThan12Months = contractLengths.includes("Greater than 12 months");
-    const studentAges = Array.isArray(student_age) ? student_age : student_age ? [student_age] : [];
     const needsPostFiltering = (salary_min && parseInt(salary_min) > 0) || 
                                (salary_max && parseInt(salary_max) < 10000) || 
                                req.query.online_experience === "true" ||
