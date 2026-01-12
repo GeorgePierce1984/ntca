@@ -1171,6 +1171,9 @@ const JobDetail: React.FC = () => {
                   if (requirementsData?.tesol) {
                     qualifications.push({ name: "TESOL", icon: Award });
                   }
+                  if (requirementsData?.delta) {
+                    qualifications.push({ name: "DELTA", icon: Award });
+                  }
                   if (requirementsData?.bachelorsDegree) {
                     qualifications.push({
                       name: "Degree",
