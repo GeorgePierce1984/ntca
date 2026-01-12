@@ -1609,6 +1609,92 @@ export const SchoolProfilePage: React.FC = () => {
         </div>
       </div>
       </div>
+
+      {/* Post Job Modal */}
+      <PostJobModal
+        isOpen={showPostJobModal}
+        onClose={() => {
+          setShowPostJobModal(false);
+          setSelectedJobForEdit(null);
+          // Reset form when closing
+          setJobForm({
+            title: "",
+            subjectsTaught: "",
+            studentAgeGroupMin: school?.studentAgeRangeMin,
+            studentAgeGroupMax: school?.studentAgeRangeMax,
+            startDate: "",
+            contractLength: "",
+            contractMonths: undefined,
+            contractYears: undefined,
+            city: "",
+            country: "",
+            employmentType: "",
+            salary: "",
+            deadline: "",
+            teachingHoursPerWeek: "",
+            description: "",
+            qualifications: "",
+            benefits: "",
+            useSchoolProfile: true,
+            schoolDescription: "",
+            useSchoolBenefits: true,
+            teachingLicenseRequired: false,
+            kazakhLanguageRequired: false,
+            localCertificationRequired: false,
+            // Financial benefits
+            housingProvided: false,
+            flightReimbursement: false,
+            visaWorkPermitSupport: false,
+            contractCompletionBonus: false,
+            paidHolidays: false,
+            overtimePay: false,
+            // Lifestyle & Wellbeing
+            paidAnnualLeave: false,
+            nationalHolidays: false,
+            sickLeave: false,
+            healthInsurance: false,
+            relocationSupport: false,
+            // Professional Support
+            teachingMaterialsProvided: false,
+            curriculumGuidance: false,
+            teacherTraining: false,
+            promotionOpportunities: false,
+            contractRenewalOptions: false,
+            // Requirements - Essential
+            nativeEnglishLevel: false,
+            bachelorsDegree: false,
+            bachelorsDegreeSubject: "",
+            tefl: false,
+            celta: false,
+            tesol: false,
+            delta: false,
+            minimumTeachingExperience: "",
+            // Requirements - Preferred
+            ieltsExperience: false,
+            cambridgeExperience: false,
+            satExperience: false,
+            classroomExperience: false,
+            onlineExperience: false,
+            centralAsiaExperience: false,
+            // Requirements - Legal
+            visaSupport: "",
+            backgroundCheckRequired: false,
+          });
+        }}
+        jobForm={jobForm}
+        setJobForm={setJobForm}
+        handleJobSubmit={handleJobSubmit}
+        subscriptionStatus={subscriptionStatus}
+        schoolProfile={{
+          description: school?.description,
+          studentAgeRangeMin: school?.studentAgeRangeMin,
+          studentAgeRangeMax: school?.studentAgeRangeMax,
+          benefits: school?.benefits,
+          profileComplete: school?.profileComplete,
+          completionPercentage: school?.completionPercentage,
+        }}
+        selectedJobForEdit={selectedJobForEdit}
+      />
     </div>
   );
 }; 
