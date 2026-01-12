@@ -1132,8 +1132,6 @@ export const SchoolDashboardPage: React.FC = () => {
                 </nav>
               </div>
             </div>
-              </div>
-            </div>
 
             {/* Mobile Navigation Grid - Shown only on mobile */}
             <div className="md:hidden">
