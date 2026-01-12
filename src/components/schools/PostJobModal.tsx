@@ -461,8 +461,7 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({
                                     contractLength: contractLengthStr,
                                   });
                                 }}
-                                className={`input ${jobForm.contractMonths === "N/A" ? "bg-neutral-100 dark:bg-neutral-700 text-neutral-400 cursor-not-allowed" : ""}`}
-                                disabled={jobForm.contractMonths === "N/A"}
+                                className={`input ${jobForm.contractMonths === "N/A" ? "bg-neutral-100 dark:bg-neutral-700 text-neutral-400" : ""}`}
                               >
                                 <option value="">Select...</option>
                                 <option value="N/A">N/A</option>
@@ -502,8 +501,7 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({
                                     contractLength: contractLengthStr,
                                   });
                                 }}
-                                className={`input ${jobForm.contractYears === "N/A" ? "bg-neutral-100 dark:bg-neutral-700 text-neutral-400 cursor-not-allowed" : ""}`}
-                                disabled={jobForm.contractYears === "N/A"}
+                                className={`input ${jobForm.contractYears === "N/A" ? "bg-neutral-100 dark:bg-neutral-700 text-neutral-400" : ""}`}
                               >
                                 <option value="">Select...</option>
                                 <option value="N/A">N/A</option>
