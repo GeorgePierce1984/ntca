@@ -818,14 +818,6 @@ export const SchoolDashboardPage: React.FC = () => {
     }
   };
 
-  const handlePostNewJobClick = () => {
-    setShowPostJobModal(true);
-    toast.success("Let's create a new job posting!", {
-      icon: "📝",
-      duration: 2000,
-    });
-  };
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case "ACTIVE":
