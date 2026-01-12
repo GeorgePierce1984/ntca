@@ -1651,7 +1651,7 @@ export const SchoolDashboardPage: React.FC = () => {
             onlineExperience: false,
             centralAsiaExperience: false,
             // Requirements - Legal
-            eligibleNationalities: false,
+            visaSupport: "",
             backgroundCheckRequired: false,
           });
         }}
