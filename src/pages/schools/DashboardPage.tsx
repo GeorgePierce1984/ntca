@@ -1715,16 +1715,7 @@ export const SchoolDashboardPage: React.FC = () => {
         />
       )}
 
-      {/* Job Edit Modal - Removed, now using PostJobModal */}
-      {false && showJobModal && selectedJobForEdit && (
-        <motion.div
-          key="job-edit-modal"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 p-4"
-        >
-          <div className="bg-white dark:bg-neutral-900 rounded-lg p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      {/* Job Edit Modal - Now using PostJobModal (removed old modal) */}
             <h2 className="heading-2 mb-6">
               {selectedJobForEdit ? "Edit Job Posting" : "Post a New Job"}
             </h2>
