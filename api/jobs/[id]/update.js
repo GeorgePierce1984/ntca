@@ -127,21 +127,26 @@ export default async function handler(req, res) {
       },
     });
 
-    // Log activity
-    await prisma.activityLog.create({
-      data: {
-        userId: decoded.userId,
-        action: "JOB_UPDATED",
-        details: {
-          jobId: jobId,
-          title: updatedJob.title,
-          changes: Object.keys(updateData),
+    // Log activity (non-blocking - don't fail the request if this fails)
+    try {
+      await prisma.activityLog.create({
+        data: {
+          userId: decoded.userId,
+          action: "JOB_UPDATED",
+          details: {
+            jobId: jobId,
+            title: updatedJob.title,
+            changes: Object.keys(updateData),
+          },
+          ipAddress:
+            req.headers["x-forwarded-for"] || req.connection.remoteAddress,
+          userAgent: req.headers["user-agent"],
         },
-        ipAddress:
-          req.headers["x-forwarded-for"] || req.connection.remoteAddress,
-        userAgent: req.headers["user-agent"],
-      },
-    });
+      });
+    } catch (logError) {
+      // Log the error but don't fail the request
+      console.error("Failed to create activity log:", logError);
+    }
 
     return res.status(200).json({
       message: "Job updated successfully",

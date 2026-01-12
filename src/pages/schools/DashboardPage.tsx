@@ -733,7 +733,7 @@ export const SchoolDashboardPage: React.FC = () => {
           contractYears: undefined,
         });
         setSelectedJobForEdit(null);
-        setShowJobModal(false);
+        setShowPostJobModal(false);
         // Refresh jobs list and school profile (in case description was updated)
         fetchJobs();
         fetchSchoolProfile();
