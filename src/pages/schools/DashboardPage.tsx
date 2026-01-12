@@ -2226,7 +2226,7 @@ export const SchoolDashboardPage: React.FC = () => {
                     <div className="space-y-3">
                       <div>
                         <h5 className="text-xs font-medium text-neutral-700 dark:text-neutral-300 mb-2">Visa Support</h5>
-                        <div className="space-y-2">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                           <label className="flex items-center gap-2">
                             <input 
                               type="radio" 
