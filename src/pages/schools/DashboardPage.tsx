@@ -2224,18 +2224,67 @@ export const SchoolDashboardPage: React.FC = () => {
                   <div>
                     <h4 className="text-sm font-semibold text-green-900 dark:text-green-100 mb-3">Legal</h4>
                     <div className="space-y-3">
-                      <label className="flex items-center gap-2">
-                        <input 
-                          type="checkbox" 
-                          checked={jobForm.eligibleNationalities}
-                          onChange={(e) => setJobForm({
-                            ...jobForm,
-                            eligibleNationalities: e.target.checked,
-                          })}
-                          className="rounded" 
-                        />
-                        <span className="text-sm">Nationalities Eligible for Work Visa</span>
-                      </label>
+                      <div>
+                        <h5 className="text-xs font-medium text-neutral-700 dark:text-neutral-300 mb-2">Visa Support</h5>
+                        <div className="space-y-2">
+                          <label className="flex items-center gap-2">
+                            <input 
+                              type="radio" 
+                              name="visaSupport"
+                              value="Visa Sponsored"
+                              checked={jobForm.visaSupport === "Visa Sponsored"}
+                              onChange={(e) => setJobForm({
+                                ...jobForm,
+                                visaSupport: e.target.value,
+                              })}
+                              className="rounded" 
+                            />
+                            <span className="text-sm">Visa Sponsored</span>
+                          </label>
+                          <label className="flex items-center gap-2">
+                            <input 
+                              type="radio" 
+                              name="visaSupport"
+                              value="Visa Assistance"
+                              checked={jobForm.visaSupport === "Visa Assistance"}
+                              onChange={(e) => setJobForm({
+                                ...jobForm,
+                                visaSupport: e.target.value,
+                              })}
+                              className="rounded" 
+                            />
+                            <span className="text-sm">Visa Assistance</span>
+                          </label>
+                          <label className="flex items-center gap-2">
+                            <input 
+                              type="radio" 
+                              name="visaSupport"
+                              value="No Visa Support"
+                              checked={jobForm.visaSupport === "No Visa Support"}
+                              onChange={(e) => setJobForm({
+                                ...jobForm,
+                                visaSupport: e.target.value,
+                              })}
+                              className="rounded" 
+                            />
+                            <span className="text-sm">No Visa Support</span>
+                          </label>
+                          <label className="flex items-center gap-2">
+                            <input 
+                              type="radio" 
+                              name="visaSupport"
+                              value="Must Already Have Right to Work"
+                              checked={jobForm.visaSupport === "Must Already Have Right to Work"}
+                              onChange={(e) => setJobForm({
+                                ...jobForm,
+                                visaSupport: e.target.value,
+                              })}
+                              className="rounded" 
+                            />
+                            <span className="text-sm">Must Already Have Right to Work</span>
+                          </label>
+                        </div>
+                      </div>
                       <label className="flex items-center gap-2">
                         <input 
                           type="checkbox" 
