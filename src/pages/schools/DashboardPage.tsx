@@ -1072,7 +1072,7 @@ export const SchoolDashboardPage: React.FC = () => {
             {/* Desktop Tabs - Hidden on mobile */}
             <div className="hidden md:block">
               <div className="border-b border-neutral-200 dark:border-neutral-800">
-                <nav className="flex space-x-8 items-center justify-between">
+                <nav className="flex space-x-8 items-center">
                   <div className="flex space-x-8">
                     {tabs.map((tab) => {
                     const Icon = tab.icon;
@@ -1113,21 +1113,25 @@ export const SchoolDashboardPage: React.FC = () => {
                     );
                   })}
                   </div>
-                  <Button
-                    variant="gradient"
-                    leftIcon={<Plus className="w-4 h-4" />}
-                    onClick={() => {
-                      setShowPostJobModal(true);
-                      toast.success("Let's create a new job posting!", {
-                        icon: "📝",
-                        duration: 2000,
-                      });
-                    }}
-                    className="h-10"
-                  >
-                    Post New Job
-                  </Button>
+                  <div className="ml-auto">
+                    <Button
+                      variant="gradient"
+                      leftIcon={<Plus className="w-4 h-4" />}
+                      onClick={() => {
+                        setShowPostJobModal(true);
+                        toast.success("Let's create a new job posting!", {
+                          icon: "📝",
+                          duration: 2000,
+                        });
+                      }}
+                      className="h-10"
+                    >
+                      Post New Job
+                    </Button>
+                  </div>
                 </nav>
+              </div>
+            </div>
               </div>
             </div>
 
