@@ -355,7 +355,13 @@ export default function Jobs() {
     setAppliedFilters(emptyFilters);
     setSearchTerm("");
     setSearchParams({}, { replace: true });
-    setShowFilters(false); // Close filters when filters are cleared
+    // Don't close filters modal - let user continue filtering
+  };
+
+  const clearAllFiltersAndSearch = () => {
+    clearFilters();
+    // This function is called from the main search area, so we also want to close the modal if it's open
+    setShowFilters(false);
   };
 
   const handleJobClick = (jobId: string) => {
