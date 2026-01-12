@@ -489,6 +489,15 @@ export const SchoolDashboardPage: React.FC = () => {
     return { months, years };
   };
 
+  // Function to open Post Job Modal
+  const handlePostNewJobClick = () => {
+    setShowPostJobModal(true);
+    toast.success("Let's create a new job posting!", {
+      icon: "📝",
+      duration: 2000,
+    });
+  };
+
   // Job editing functions
   const openEditModal = (job: JobPosting) => {
     setSelectedJobForEdit(job);
@@ -1071,8 +1080,9 @@ export const SchoolDashboardPage: React.FC = () => {
             {/* Desktop Tabs - Hidden on mobile */}
             <div className="hidden md:block">
               <div className="border-b border-neutral-200 dark:border-neutral-800">
-                <nav className="flex space-x-8">
-                  {tabs.map((tab) => {
+                <nav className="flex space-x-8 items-center justify-between">
+                  <div className="flex space-x-8">
+                    {tabs.map((tab) => {
                     const Icon = tab.icon;
                     const isActive = activeTab === tab.key;
                     return (
@@ -1110,6 +1120,21 @@ export const SchoolDashboardPage: React.FC = () => {
                       </button>
                     );
                   })}
+                  </div>
+                  <Button
+                    variant="gradient"
+                    leftIcon={<Plus className="w-4 h-4" />}
+                    onClick={() => {
+                      setShowPostJobModal(true);
+                      toast.success("Let's create a new job posting!", {
+                        icon: "📝",
+                        duration: 2000,
+                      });
+                    }}
+                    className="h-10"
+                  >
+                    Post New Job
+                  </Button>
                 </nav>
               </div>
             </div>
