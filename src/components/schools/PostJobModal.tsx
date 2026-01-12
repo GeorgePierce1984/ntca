@@ -150,10 +150,10 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white dark:bg-neutral-800 rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto"
+              className="bg-white dark:bg-neutral-800 rounded-xl shadow-2xl max-w-6xl w-full h-[85vh] flex flex-col"
             >
               {/* Header with Close Button */}
-              <div className="sticky top-0 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700 px-6 py-4 flex items-center justify-between z-10">
+              <div className="flex-shrink-0 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700 px-6 py-4 flex items-center justify-between z-10">
                 <h2 className="heading-2">
                   {selectedJobForEdit ? "Edit Job Posting" : "Post a New Teaching Position"}
                 </h2>
@@ -166,7 +166,7 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({
               </div>
 
               {/* Content */}
-              <div className="p-8">
+              <div className="flex-1 overflow-y-auto p-8">
                 <p className="text-neutral-600 dark:text-neutral-400 mb-8">
                   Create a detailed job posting to attract qualified English
                   teachers to your school.
@@ -240,7 +240,7 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({
                   </nav>
                 </div>
 
-                <form className="space-y-6" onSubmit={handleJobSubmit}>
+                <form id="job-form" className="space-y-6" onSubmit={handleJobSubmit}>
                   {/* Role Information Tab */}
                   {activeTab === "role" && (
                     <div className="space-y-6">
@@ -1093,18 +1093,43 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({
                       )}
                     </div>
                   )}
-
-                  <div className="flex gap-4 pt-6">
-                    <Button 
-                      type="submit" 
-                      variant="gradient" 
-                      size="lg"
-                      disabled={subscriptionStatus?.toLowerCase() === "cancelled" || subscriptionStatus?.toLowerCase() === "past_due"}
-                    >
-                      {selectedJobForEdit ? "Update Job Posting" : "Publish Job Posting"}
-                    </Button>
-                  </div>
                 </form>
+              </div>
+
+              {/* Footer with Navigation */}
+              <div className="flex-shrink-0 border-t border-neutral-200 dark:border-neutral-700 px-6 py-4 bg-white dark:bg-neutral-800 flex items-center justify-between">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={handlePreviousTab}
+                  disabled={isFirstTab}
+                  className="flex items-center gap-2"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  Previous
+                </Button>
+
+                {isLastTab ? (
+                  <Button 
+                    type="submit" 
+                    form="job-form"
+                    variant="gradient" 
+                    size="lg"
+                    disabled={subscriptionStatus?.toLowerCase() === "cancelled" || subscriptionStatus?.toLowerCase() === "past_due"}
+                  >
+                    {selectedJobForEdit ? "Update Job Posting" : "Publish Job Posting"}
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="gradient"
+                    onClick={handleNextTab}
+                    className="flex items-center gap-2"
+                  >
+                    Next
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                )}
               </div>
             </motion.div>
           </motion.div>
