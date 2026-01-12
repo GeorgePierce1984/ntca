@@ -112,6 +112,7 @@ export default function Jobs() {
       onlineExperience: searchParams.get("online_experience") === "true",
       salaryMin: searchParams.get("salary_min") ? parseInt(searchParams.get("salary_min")!) : 0,
       salaryMax: searchParams.get("salary_max") ? parseInt(searchParams.get("salary_max")!) : 10000,
+      showUndisclosedSalaries: false,
       contractLengths: searchParams.getAll("contract_length") || [],
       experienceMin: searchParams.get("experience_min") ? parseInt(searchParams.get("experience_min")!) : 0,
       qualifications: searchParams.getAll("qualification") || [],
@@ -235,8 +236,8 @@ export default function Jobs() {
     filterState.jobTypes.forEach(t => params.append("job_type", t));
     if (filterState.onlineExperience) params.append("online_experience", "true");
     // Only add salary filters if they're not at default values
-    if (filterState.salaryMin > 0) params.append("salary_min", filterState.salaryMin.toString());
-    if (filterState.salaryMax < 10000) params.append("salary_max", filterState.salaryMax.toString());
+    if (typeof filterState.salaryMin === "number" && filterState.salaryMin > 0) params.append("salary_min", filterState.salaryMin.toString());
+    if (typeof filterState.salaryMax === "number" && filterState.salaryMax < 10000) params.append("salary_max", filterState.salaryMax.toString());
     filterState.contractLengths.forEach(c => params.append("contract_length", c));
     
     // Expandable filters
@@ -380,7 +381,7 @@ export default function Jobs() {
     (appliedFilters.experienceMin > 0 ? 1 : 0) +
     appliedFilters.qualifications.length +
     appliedFilters.teachingContext.length +
-    (appliedFilters.visaEligible !== "" ? 1 : 0) +
+    (appliedFilters.visaRequirement !== "" ? 1 : 0) +
     appliedFilters.schoolTypes.length +
     appliedFilters.studentAgeGroups.length +
     (appliedFilters.startDate ? 1 : 0) +
@@ -658,13 +659,13 @@ export default function Jobs() {
                             <div className="flex items-center justify-between mb-4">
                               <div className="text-center">
                                 <div className="text-sm font-medium text-primary-600 dark:text-primary-400">
-                                  ${stagedFilters.salaryMin.toLocaleString()}
+                                  ${typeof stagedFilters.salaryMin === "number" ? stagedFilters.salaryMin.toLocaleString() : "0"}
                                 </div>
                                 <div className="text-xs text-neutral-500">Min</div>
                               </div>
                               <div className="text-center">
                                 <div className="text-sm font-medium text-primary-600 dark:text-primary-400">
-                                  ${stagedFilters.salaryMax === 10000 ? "10,000+" : stagedFilters.salaryMax.toLocaleString()}
+                                  ${typeof stagedFilters.salaryMax === "number" && stagedFilters.salaryMax === 10000 ? "10,000+" : (typeof stagedFilters.salaryMax === "number" ? stagedFilters.salaryMax.toLocaleString() : "10,000")}
                                 </div>
                                 <div className="text-xs text-neutral-500">Max</div>
                               </div>
@@ -676,19 +677,20 @@ export default function Jobs() {
                               <div
                                 className="absolute top-2 h-2 bg-primary-600 rounded-full"
                                 style={{
-                                  left: `${(stagedFilters.salaryMin / 10000) * 100}%`,
-                                  width: `${((stagedFilters.salaryMax - stagedFilters.salaryMin) / 10000) * 100}%`,
+                                  left: `${((typeof stagedFilters.salaryMin === "number" ? stagedFilters.salaryMin : 0) / 10000) * 100}%`,
+                                  width: `${((typeof stagedFilters.salaryMax === "number" ? stagedFilters.salaryMax : 10000) - (typeof stagedFilters.salaryMin === "number" ? stagedFilters.salaryMin : 0)) / 10000 * 100}%`,
                                 }}
                               ></div>
                               {/* Min slider */}
                               <input
                                 type="range"
                                 min="0"
-                                max={stagedFilters.salaryMax}
+                                max={typeof stagedFilters.salaryMax === "number" ? stagedFilters.salaryMax : 10000}
                                 step="100"
-                                value={stagedFilters.salaryMin}
+                                value={typeof stagedFilters.salaryMin === "number" ? stagedFilters.salaryMin : 0}
                                 onChange={(e) => {
-                                  const newMin = Math.min(parseInt(e.target.value), stagedFilters.salaryMax);
+                                  const maxVal = typeof stagedFilters.salaryMax === "number" ? stagedFilters.salaryMax : 10000;
+                                  const newMin = Math.min(parseInt(e.target.value), maxVal);
                                   handleFilterChange("salaryMin", newMin);
                                 }}
                                 className="absolute top-0 left-0 w-full h-6 bg-transparent appearance-none cursor-pointer z-10"
@@ -700,12 +702,13 @@ export default function Jobs() {
                               {/* Max slider */}
                               <input
                                 type="range"
-                                min={stagedFilters.salaryMin}
+                                min={typeof stagedFilters.salaryMin === "number" ? stagedFilters.salaryMin : 0}
                                 max="10000"
                                 step="100"
-                                value={stagedFilters.salaryMax}
+                                value={typeof stagedFilters.salaryMax === "number" ? stagedFilters.salaryMax : 10000}
                                 onChange={(e) => {
-                                  const newMax = Math.max(parseInt(e.target.value), stagedFilters.salaryMin);
+                                  const minVal = typeof stagedFilters.salaryMin === "number" ? stagedFilters.salaryMin : 0;
+                                  const newMax = Math.max(parseInt(e.target.value), minVal);
                                   handleFilterChange("salaryMax", newMax);
                                 }}
                                 className="absolute top-0 left-0 w-full h-6 bg-transparent appearance-none cursor-pointer z-10"
@@ -714,7 +717,7 @@ export default function Jobs() {
                                   appearance: "none",
                                 }}
                               />
-                              <style jsx>{`
+                              <style>{`
                                 input[type="range"]::-webkit-slider-thumb {
                                   appearance: none;
                                   width: 18px;
@@ -877,7 +880,7 @@ export default function Jobs() {
                                         appearance: "none",
                                       }}
                                     />
-                                    <style jsx>{`
+                                    <style>{`
                                       input[type="range"]::-webkit-slider-thumb {
                                         appearance: none;
                                         width: 18px;
@@ -1174,7 +1177,7 @@ export default function Jobs() {
                                 <option value="">All</option>
                                 <option value="immediate">Immediate</option>
                                 <option value="1-3_months">Next 1–3 months</option>
-                                <option value="greater_than_3_months">> 3 Months</option>
+                                <option value="greater_than_3_months">{'>'} 3 Months</option>
                               </select>
                             </motion.div>
                           )}
