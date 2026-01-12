@@ -78,7 +78,7 @@ interface FilterState {
   teachingContext: string[];
   
   // Eligibility & Visa
-  visaEligible: boolean | "";
+  visaRequirement: string;
   
   // School & Role Characteristics
   schoolTypes: string[];
@@ -115,7 +115,7 @@ export default function Jobs() {
       experienceMin: searchParams.get("experience_min") ? parseInt(searchParams.get("experience_min")!) : 0,
       qualifications: searchParams.getAll("qualification") || [],
       teachingContext: searchParams.getAll("teaching_context") || [],
-      visaEligible: searchParams.get("visa_eligible") === "true" ? true : searchParams.get("visa_eligible") === "false" ? false : "",
+      visaRequirement: searchParams.get("visa_requirement") || "",
       schoolTypes: searchParams.getAll("school_type") || [],
       studentAgeGroups: searchParams.getAll("student_age") || [],
       startDate: searchParams.get("start_date") || "",
@@ -143,7 +143,7 @@ export default function Jobs() {
     experienceLevel: false,
     qualifications: false,
     teachingContext: false,
-    visaEligible: false,
+    visaRequirement: false,
     schoolType: false,
     studentAgeGroup: false,
     startDate: false,
@@ -208,7 +208,7 @@ export default function Jobs() {
       filterState.experienceMin > 0 ||
       filterState.qualifications.length > 0 ||
       filterState.teachingContext.length > 0 ||
-      filterState.visaEligible !== "" ||
+      filterState.visaRequirement !== "" ||
       filterState.schoolTypes.length > 0 ||
       filterState.studentAgeGroups.length > 0 ||
       filterState.startDate !== "" ||
@@ -244,7 +244,7 @@ export default function Jobs() {
     filterState.teachingContext.forEach(t => params.append("teaching_context", t));
     
     // Eligibility
-    if (filterState.visaEligible !== "") params.append("visa_eligible", filterState.visaEligible.toString());
+    if (filterState.visaRequirement) params.append("visa_requirement", filterState.visaRequirement);
     
     // School & Role
     filterState.schoolTypes.forEach(s => params.append("school_type", s));
@@ -1002,25 +1002,25 @@ export default function Jobs() {
                         </AnimatePresence>
                       </div>
 
-                      {/* Visa Eligible */}
+                      {/* Visa Requirement */}
                       <div>
                         <button
                           type="button"
-                          onClick={() => toggleSection('visaEligible')}
+                          onClick={() => toggleSection('visaRequirement')}
                           className="flex items-center justify-between w-full text-sm font-semibold mb-3 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
                         >
                           <div className="flex items-center gap-2">
                             <Globe className="w-4 h-4 text-primary-600" />
-                            Visa Eligible
+                            Visa Requirement
                           </div>
-                          {expandedSections.visaEligible ? (
+                          {expandedSections.visaRequirement ? (
                             <ChevronUp className="w-4 h-4 text-neutral-500" />
                           ) : (
                             <ChevronDown className="w-4 h-4 text-neutral-500" />
                           )}
                         </button>
                         <AnimatePresence>
-                          {expandedSections.visaEligible && (
+                          {expandedSections.visaRequirement && (
                             <motion.div
                               initial={{ height: 0, opacity: 0 }}
                               animate={{ height: "auto", opacity: 1 }}
@@ -1029,13 +1029,15 @@ export default function Jobs() {
                               className="overflow-hidden"
                             >
                               <select
-                          value={stagedFilters.visaEligible === true ? "true" : stagedFilters.visaEligible === false ? "false" : ""}
-                          onChange={(e) => handleFilterChange("visaEligible", e.target.value === "" ? "" : e.target.value === "true")}
-                          className="input"
-                        >
-                          <option value="">All</option>
-                          <option value="true">Must already have right to work</option>
-                                <option value="false">Visa sponsorship available</option>
+                                value={stagedFilters.visaRequirement}
+                                onChange={(e) => handleFilterChange("visaRequirement", e.target.value)}
+                                className="input"
+                              >
+                                <option value="">All</option>
+                                <option value="Visa Sponsored">Visa Sponsored</option>
+                                <option value="Visa Assistance">Visa Assistance</option>
+                                <option value="No Visa Support">No Visa Support</option>
+                                <option value="Must Already Have Right to Work">Must Already Have Right to Work</option>
                               </select>
                             </motion.div>
                           )}
@@ -1116,7 +1118,7 @@ export default function Jobs() {
                               className="overflow-hidden"
                             >
                               <div className="flex flex-wrap gap-3">
-                                {["Young learners", "Teens", "Adults", "Mixed"].map((age) => (
+                                {["0-5", "6-11", "12-14", "15-18", "19-30", "30+"].map((age) => (
                                   <label
                                     key={age}
                                     className="flex items-center gap-2 px-4 py-2 bg-neutral-50 dark:bg-neutral-700 rounded cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-600"
@@ -1127,7 +1129,7 @@ export default function Jobs() {
                                       onChange={() => handleMultiSelect("studentAgeGroups", age)}
                                       className="rounded"
                                     />
-                                    <span className="text-sm">{age}</span>
+                                    <span className="text-sm">{age} {age === "30+" ? "years" : "years"}</span>
                                   </label>
                                 ))}
                               </div>
@@ -1163,14 +1165,14 @@ export default function Jobs() {
                               className="overflow-hidden"
                             >
                               <select
-                          value={stagedFilters.startDate}
-                          onChange={(e) => handleFilterChange("startDate", e.target.value)}
-                          className="input"
-                        >
-                          <option value="">All</option>
-                          <option value="immediate">Immediate</option>
-                          <option value="1-3_months">Next 1–3 months</option>
-                                <option value="academic_year">Next academic year</option>
+                                value={stagedFilters.startDate}
+                                onChange={(e) => handleFilterChange("startDate", e.target.value)}
+                                className="input"
+                              >
+                                <option value="">All</option>
+                                <option value="immediate">Immediate</option>
+                                <option value="1-3_months">Next 1–3 months</option>
+                                <option value="greater_than_3_months">> 3 Months</option>
                               </select>
                             </motion.div>
                           )}

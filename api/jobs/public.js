@@ -23,7 +23,7 @@ export default async function handler(req, res) {
       experience, // Can be array
       qualification, // Can be array
       teaching_context, // Can be array
-      visa_eligible,
+      visa_requirement,
       school_type, // Can be array
       student_age, // Can be array
       start_date,
@@ -172,23 +172,15 @@ export default async function handler(req, res) {
 
     // Teaching Context filter - handled in post-filtering section below
 
-    // Visa Eligible filter
-    if (visa_eligible !== undefined) {
-      if (visa_eligible === "true") {
-        // Jobs that require visa eligibility (right to work)
-        // This might need to check a specific field or requirements
-      } else if (visa_eligible === "false") {
-        // Jobs that offer visa sponsorship
-        where.visaRequired = true;
-      }
-    }
+    // Visa Requirement filter - handled in post-filtering since it's in requirements JSON
+    // This will be checked in the post-filtering section below
 
     // School Type filter
     const schoolTypes = Array.isArray(school_type) ? school_type : school_type ? [school_type] : [];
     if (schoolTypes.length > 0) {
       where.school = {
         ...(where.school || {}),
-        type: {
+        schoolType: {
           in: schoolTypes.map(st => {
             // Map to database values
             const typeMap = {
@@ -225,11 +217,10 @@ export default async function handler(req, res) {
           gte: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000),
           lte: new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000),
         };
-      } else if (start_date === "academic_year") {
-        // Next academic year (typically August/September)
-        const nextYear = new Date(now.getFullYear() + 1, 7, 1); // August 1st
+      } else if (start_date === "greater_than_3_months") {
+        // Greater than 3 months (> 90 days)
         where.startDate = {
-          gte: nextYear,
+          gte: new Date(now.getTime() + 91 * 24 * 60 * 60 * 1000), // More than 90 days
         };
       }
     }
@@ -496,6 +487,118 @@ export default async function handler(req, res) {
           // If total months is not > 12, exclude this job
           if (totalMonths <= 12) {
             console.log('Contract length filter excluded job:', job.id, 'contractLength:', job.contractLength, 'totalMonths:', totalMonths);
+            return false;
+          }
+        }
+
+        // Visa Requirement filter
+        if (visa_requirement && visa_requirement !== "") {
+          try {
+            if (job.requirements) {
+              const requirements = JSON.parse(job.requirements);
+              const jobVisaSupport = requirements.visaSupport;
+              
+              // Check if job's visa support matches the filter
+              if (jobVisaSupport !== visa_requirement) {
+                return false;
+              }
+            } else {
+              // If no requirements JSON, exclude if filter is set
+              return false;
+            }
+          } catch (e) {
+            // If parsing fails, exclude the job
+            return false;
+          }
+        }
+
+        // Student Age Group filter
+        if (studentAges && studentAges.length > 0) {
+          // Map age group strings to min/max ranges
+          const ageGroupMap = {
+            "0-5": { min: 0, max: 5 },
+            "6-11": { min: 6, max: 11 },
+            "12-14": { min: 12, max: 14 },
+            "15-18": { min: 15, max: 18 },
+            "19-30": { min: 19, max: 30 },
+            "30+": { min: 30, max: null }, // 30+ means 30 or older
+          };
+          
+          // Check if job's age range overlaps with any selected age group
+          const jobMinAge = job.studentAgeGroupMin ?? 0;
+          const jobMaxAge = job.studentAgeGroupMax ?? 30; // Default to 30 if not set
+          
+          const matchesAgeGroup = studentAges.some(ageGroup => {
+            const range = ageGroupMap[ageGroup];
+            if (!range) return false;
+            
+            // For "30+", check if job max is >= 30
+            if (ageGroup === "30+") {
+              return jobMaxAge >= 30;
+            }
+            
+            // Check for overlap: job range overlaps with filter range if:
+            // jobMin <= range.max AND jobMax >= range.min
+            return jobMinAge <= range.max && jobMaxAge >= range.min;
+          });
+          
+          if (!matchesAgeGroup) {
+            return false;
+          }
+        }
+
+        // Visa Requirement filter
+        if (visa_requirement && visa_requirement !== "") {
+          try {
+            if (job.requirements) {
+              const requirements = JSON.parse(job.requirements);
+              const jobVisaSupport = requirements.visaSupport;
+              
+              // Check if job's visa support matches the filter
+              if (jobVisaSupport !== visa_requirement) {
+                return false;
+              }
+            } else {
+              // If no requirements JSON, exclude if filter is set
+              return false;
+            }
+          } catch (e) {
+            // If parsing fails, exclude the job
+            return false;
+          }
+        }
+
+        // Student Age Group filter
+        if (studentAges && studentAges.length > 0) {
+          // Map age group strings to min/max ranges
+          const ageGroupMap = {
+            "0-5": { min: 0, max: 5 },
+            "6-11": { min: 6, max: 11 },
+            "12-14": { min: 12, max: 14 },
+            "15-18": { min: 15, max: 18 },
+            "19-30": { min: 19, max: 30 },
+            "30+": { min: 30, max: null }, // 30+ means 30 or older
+          };
+          
+          // Check if job's age range overlaps with any selected age group
+          const jobMinAge = job.studentAgeGroupMin ?? 0;
+          const jobMaxAge = job.studentAgeGroupMax ?? 30; // Default to 30 if not set
+          
+          const matchesAgeGroup = studentAges.some(ageGroup => {
+            const range = ageGroupMap[ageGroup];
+            if (!range) return false;
+            
+            // For "30+", check if job max is >= 30
+            if (ageGroup === "30+") {
+              return jobMaxAge >= 30;
+            }
+            
+            // Check for overlap: job range overlaps with filter range if:
+            // jobMin <= range.max AND jobMax >= range.min
+            return jobMinAge <= range.max && jobMaxAge >= range.min;
+          });
+          
+          if (!matchesAgeGroup) {
             return false;
           }
         }
