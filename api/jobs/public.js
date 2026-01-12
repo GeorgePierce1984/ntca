@@ -126,28 +126,23 @@ export default async function handler(req, res) {
             ],
           };
         } else if (cl === "Greater than 12 months") {
-          // Match contracts longer than 12 months
+          // This will be handled in post-filtering to calculate total months correctly
+          // For now, include all contracts that might be > 12 months (have "year" in them or are > 12 months)
           return {
-            AND: [
-              { contractLength: { not: null } },
-              {
-                NOT: {
-                  OR: [
-                    { contractLength: { contains: "1 month", mode: "insensitive" } },
-                    { contractLength: { contains: "2 month", mode: "insensitive" } },
-                    { contractLength: { contains: "3 month", mode: "insensitive" } },
-                    { contractLength: { contains: "4 month", mode: "insensitive" } },
-                    { contractLength: { contains: "5 month", mode: "insensitive" } },
-                    { contractLength: { contains: "6 month", mode: "insensitive" } },
-                    { contractLength: { contains: "7 month", mode: "insensitive" } },
-                    { contractLength: { contains: "8 month", mode: "insensitive" } },
-                    { contractLength: { contains: "9 month", mode: "insensitive" } },
-                    { contractLength: { contains: "10 month", mode: "insensitive" } },
-                    { contractLength: { contains: "11 month", mode: "insensitive" } },
-                    { contractLength: { contains: "12 month", mode: "insensitive" } },
-                  ],
-                },
-              },
+            OR: [
+              { contractLength: { contains: "year", mode: "insensitive" } },
+              { contractLength: { contains: "13 month", mode: "insensitive" } },
+              { contractLength: { contains: "14 month", mode: "insensitive" } },
+              { contractLength: { contains: "15 month", mode: "insensitive" } },
+              { contractLength: { contains: "16 month", mode: "insensitive" } },
+              { contractLength: { contains: "17 month", mode: "insensitive" } },
+              { contractLength: { contains: "18 month", mode: "insensitive" } },
+              { contractLength: { contains: "19 month", mode: "insensitive" } },
+              { contractLength: { contains: "20 month", mode: "insensitive" } },
+              { contractLength: { contains: "21 month", mode: "insensitive" } },
+              { contractLength: { contains: "22 month", mode: "insensitive" } },
+              { contractLength: { contains: "23 month", mode: "insensitive" } },
+              { contractLength: { contains: "24 month", mode: "insensitive" } },
             ],
           };
         }
