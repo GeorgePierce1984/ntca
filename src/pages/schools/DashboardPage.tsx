@@ -605,8 +605,17 @@ export const SchoolDashboardPage: React.FC = () => {
 
 
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleJobSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Prevent duplicate submissions
+    if (isSubmitting) {
+      return;
+    }
+    
+    setIsSubmitting(true);
     
     try {
       const url = selectedJobForEdit 
@@ -798,6 +807,8 @@ export const SchoolDashboardPage: React.FC = () => {
     } catch (error) {
       console.error('Error saving job:', error);
       toast.error('Failed to save job. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
