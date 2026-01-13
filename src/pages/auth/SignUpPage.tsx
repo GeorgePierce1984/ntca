@@ -802,29 +802,6 @@ export const SignUpPage: React.FC = () => {
                           )}
                         </div>
 
-                        <div>
-                          <label className="block text-sm font-medium mb-2">
-                            School Type *
-                          </label>
-                          <select
-                            value={schoolForm.schoolType}
-                            onChange={(e) =>
-                              setSchoolForm({
-                                ...schoolForm,
-                                schoolType: e.target.value,
-                              })
-                            }
-                            className="w-full p-3 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-800"
-                            required
-                          >
-                            <option value="">Select...</option>
-                            {SCHOOL_TYPES.map((type) => (
-                              <option key={type.value} value={type.value}>
-                                {type.label}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
                       </div>
 
                       <div className="grid md:grid-cols-2 gap-6">
