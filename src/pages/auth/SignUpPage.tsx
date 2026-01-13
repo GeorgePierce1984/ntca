@@ -489,6 +489,126 @@ export const SignUpPage: React.FC = () => {
     }
   };
 
+  const handleSendVerificationCode = async () => {
+    const email = userType === "school" ? schoolForm.email : teacherForm.email;
+    
+    if (!email) {
+      setErrors({ email: "Email is required" });
+      return;
+    }
+
+    setSendingCode(true);
+    setErrors({});
+
+    try {
+      const response = await fetch("/api/auth/send-verification", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setVerificationCodeSent(true);
+        setStoredVerificationCode(data.code);
+        setVerificationCodeExpiry(new Date(data.expiresAt));
+        // Store in sessionStorage
+        sessionStorage.setItem("verificationCode", data.code);
+        sessionStorage.setItem("verificationCodeExpiry", data.expiresAt);
+        toast.success("Verification code sent to your email!", {
+          icon: "📧",
+          duration: 3000,
+        });
+      } else {
+        setErrors({ verification: data.error || "Failed to send verification code" });
+      }
+    } catch (error) {
+      console.error("Error sending verification code:", error);
+      setErrors({ verification: "Failed to send verification code. Please try again." });
+    } finally {
+      setSendingCode(false);
+    }
+  };
+
+  const handleVerifyCode = async () => {
+    if (!verificationCode || verificationCode.length !== 6) {
+      setErrors({ verification: "Please enter a valid 6-digit code" });
+      return;
+    }
+
+    const email = userType === "school" ? schoolForm.email : teacherForm.email;
+    const storedCode = storedVerificationCode || sessionStorage.getItem("verificationCode");
+    const expiry = verificationCodeExpiry || sessionStorage.getItem("verificationCodeExpiry");
+
+    // Check if code matches and is not expired
+    if (storedCode && expiry) {
+      const expiryDate = new Date(expiry);
+      if (verificationCode === storedCode && expiryDate > new Date()) {
+        setEmailVerified(true);
+        sessionStorage.setItem("emailVerified", "true");
+        toast.success("Email verified successfully!", {
+          icon: "✅",
+          duration: 2000,
+        });
+        // For schools, proceed to plan selection (step 4)
+        // For teachers, proceed directly to registration
+        if (userType === "school") {
+          // Move to plan selection - we'll use the modal later
+          // For now, just mark as verified
+        } else {
+          // Teachers can proceed directly
+          handleRegistration();
+        }
+        return;
+      } else if (expiryDate <= new Date()) {
+        setErrors({ verification: "Verification code has expired. Please request a new one." });
+        setVerificationCodeSent(false);
+        setStoredVerificationCode(null);
+        return;
+      }
+    }
+
+    // If stored code doesn't match, try API verification (for existing users)
+    setVerifyingCode(true);
+    setErrors({});
+
+    try {
+      const response = await fetch("/api/auth/verify-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, code: verificationCode }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setEmailVerified(true);
+        sessionStorage.setItem("emailVerified", "true");
+        toast.success("Email verified successfully!", {
+          icon: "✅",
+          duration: 2000,
+        });
+        // For schools, proceed to plan selection
+        // For teachers, proceed directly to registration
+        if (userType === "teacher") {
+          handleRegistration();
+        }
+      } else {
+        setErrors({ verification: data.error || "Invalid verification code" });
+      }
+    } catch (error) {
+      console.error("Error verifying code:", error);
+      setErrors({ verification: "Failed to verify code. Please try again." });
+    } finally {
+      setVerifyingCode(false);
+    }
+  };
+
   const clearStoredData = () => {
     sessionStorage.removeItem("signupSchoolForm");
     sessionStorage.removeItem("signupTeacherForm");
