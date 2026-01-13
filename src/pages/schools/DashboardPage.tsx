@@ -1114,7 +1114,7 @@ export const SchoolDashboardPage: React.FC = () => {
                 </nav>
               </div>
             </div>
-            <div className="hidden md:flex md:justify-end mt-4">
+            <div className="hidden md:flex md:justify-end mt-4 -mr-[50px]">
               <Button
                 variant="gradient"
                 leftIcon={<Plus className="w-4 h-4" />}
