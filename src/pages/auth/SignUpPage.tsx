@@ -30,7 +30,7 @@ import {
   getPasswordStrengthLabel,
   getPasswordStrengthBarColor,
 } from "@/utils/validation";
-import { SCHOOL_TYPES, CENTRAL_ASIA_COUNTRIES } from "@/constants/options";
+import { CENTRAL_ASIA_COUNTRIES } from "@/constants/options";
 
 type UserType = "school" | "teacher";
 
