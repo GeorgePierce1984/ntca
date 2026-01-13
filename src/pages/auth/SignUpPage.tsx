@@ -746,7 +746,6 @@ export const SignUpPage: React.FC = () => {
             ...schoolForm,
             confirmPassword: undefined, // Don't send confirmPassword to backend
             userType: "school", // API expects lowercase
-            estimateJobs: schoolForm.estimateJobs || "0", // Default if missing
           }),
         });
 

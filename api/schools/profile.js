@@ -341,17 +341,17 @@ export default async function handler(req, res) {
       } = req.body;
 
       // Validate required fields
-      if (!name || !contactName || !telephone || !streetAddress || !city || !country || !schoolType) {
+      if (!name || !contactName || !city || !country) {
         return res.status(400).json({ 
           error: "Missing required fields",
-          required: ["name", "contactName", "telephone", "streetAddress", "city", "country", "schoolType"]
+          required: ["name", "contactName", "city", "country"]
         });
       }
 
       // Calculate profile completeness
-      // Description is now optional - can be set from job posting
+      // Description, telephone, streetAddress, and schoolType are now optional
       const requiredFields = [
-        name, contactName, telephone, streetAddress, city, country, schoolType
+        name, contactName, city, country
       ];
       const optionalButImportantFields = [
         description, // Moved from required to optional

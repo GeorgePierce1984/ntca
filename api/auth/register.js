@@ -50,7 +50,6 @@ export default async function handler(req, res) {
         "contactName",
         "city",
         "country",
-        "estimateJobs",
       ];
       const missingFields = requiredFields.filter(
         (field) => !profileData[field],
@@ -124,8 +123,8 @@ export default async function handler(req, res) {
             state: profileData.state || null,
             postalCode: profileData.postalCode,
             country: profileData.country,
-            schoolType: profileData.schoolType || "private",
-            estimateJobs: profileData.estimateJobs,
+            schoolType: profileData.schoolType || null,
+            estimateJobs: profileData.estimateJobs || null,
             website: profileData.website || null,
             description: profileData.description || null,
             established: profileData.established

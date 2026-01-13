@@ -28,17 +28,34 @@ export default async function handler(req, res) {
       return res.status(403).json({ error: "School access required" });
     }
 
-    // Get school with subscription info
-    const school = await prisma.school.findUnique({
-      where: { userId: decoded.userId },
-      include: {
-        user: {
-          select: {
-            stripeCustomerId: true,
+    // Get school with subscription info (wrap in try-catch for Prisma connection errors)
+    let school;
+    try {
+      school = await prisma.school.findUnique({
+        where: { userId: decoded.userId },
+        include: {
+          user: {
+            select: {
+              stripeCustomerId: true,
+            },
           },
         },
-      },
-    });
+      });
+    } catch (prismaError) {
+      // Handle Prisma connection errors gracefully
+      if (
+        prismaError.message?.includes("Response from the Engine was empty") ||
+        prismaError.message?.includes("Engine is not yet connected") ||
+        prismaError.name === "PrismaClientUnknownRequestError"
+      ) {
+        console.error("Prisma connection error in subscription-details:", prismaError);
+        return res.status(503).json({
+          error: "Database connection error",
+          message: "Unable to fetch subscription details. Please try again.",
+        });
+      }
+      throw prismaError;
+    }
 
     if (!school) {
       return res.status(404).json({ error: "School profile not found" });
@@ -122,8 +139,7 @@ export default async function handler(req, res) {
       error: "Internal server error",
       details: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
-  } finally {
-    await prisma.$disconnect();
   }
+  // Don't manually disconnect - Prisma handles connections in serverless environments
 }
 

@@ -892,14 +892,13 @@ export const SchoolProfilePage: React.FC = () => {
 
                   <div>
                     <label className="block text-sm font-medium mb-2">
-                      School Type *
+                      School Type
                     </label>
                     {editMode ? (
                       <select
                         value={formData.schoolType || ""}
                         onChange={(e) => setFormData({ ...formData, schoolType: e.target.value })}
                         className="input"
-                        required
                       >
                         <option value="">Select...</option>
                         {schoolTypeOptions.map((type) => (
@@ -910,7 +909,7 @@ export const SchoolProfilePage: React.FC = () => {
                       </select>
                     ) : (
                       <p className="text-neutral-900 dark:text-neutral-100">
-                        {schoolTypeOptions.find(type => type.value === school.schoolType)?.label || school.schoolType}
+                        {school.schoolType ? (schoolTypeOptions.find(type => type.value === school.schoolType)?.label || school.schoolType) : "Not specified"}
                       </p>
                     )}
                   </div>
@@ -1423,7 +1422,7 @@ export const SchoolProfilePage: React.FC = () => {
 
                 <div>
                   <label className="block text-sm font-medium mb-2">
-                    Phone Number *
+                    Phone Number
                   </label>
                   {editMode ? (
                     <div className="grid md:grid-cols-2 gap-4">
@@ -1451,13 +1450,12 @@ export const SchoolProfilePage: React.FC = () => {
                           onChange={(e) => setFormData({ ...formData, telephone: e.target.value })}
                           className="input"
                           placeholder="123-456-7890"
-                          required
                         />
                       </div>
                     </div>
                   ) : (
                     <p className="text-neutral-900 dark:text-neutral-100">
-                      {school.phoneCountryCode} {school.telephone}
+                      {school.telephone && school.phoneCountryCode ? `${school.phoneCountryCode} ${school.telephone}` : "Not specified"}
                     </p>
                   )}
                 </div>
@@ -1474,19 +1472,23 @@ export const SchoolProfilePage: React.FC = () => {
               <div className="space-y-6">
                 <div>
                   <label className="block text-sm font-medium mb-2">
-                    Street Address *
+                    Street Address
                   </label>
                   {editMode ? (
                     <input
                       type="text"
                       value={formData.streetAddress || ""}
-                      onChange={(e) => setFormData({ ...formData, streetAddress: e.target.value })}
+                      onChange={(e) => setFormData({ ...formData, streetAddress: e.target.value || "not specified" })}
                       className="input"
                       placeholder="123 Main Street"
-                      required
+                      onBlur={(e) => {
+                        if (!e.target.value.trim()) {
+                          setFormData({ ...formData, streetAddress: "not specified" });
+                        }
+                      }}
                     />
                   ) : (
-                    <p className="text-neutral-900 dark:text-neutral-100">{school.streetAddress}</p>
+                    <p className="text-neutral-900 dark:text-neutral-100">{school.streetAddress || "Not specified"}</p>
                   )}
                 </div>
 
