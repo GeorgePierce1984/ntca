@@ -52,11 +52,20 @@ export default async function handler(req, res) {
     }
 
     // Send verification email
-    try {
-      await emailHelpers.sendVerificationEmail(email, verificationCode);
-    } catch (emailError) {
-      console.error("Error sending verification email:", emailError);
-      // Don't fail the request if email fails, but log it
+    const emailResult = await emailHelpers.sendVerificationEmail(email, verificationCode);
+    
+    if (!emailResult.success) {
+      console.error("Error sending verification email:", emailResult.error);
+      // Still return the code for development/testing, but warn the user
+      // In production, you might want to fail here if email is critical
+      return res.status(200).json({
+        success: true,
+        message: "Verification code generated (email sending failed - check RESEND_API_KEY)",
+        code: verificationCode, // Frontend will store this in sessionStorage
+        expiresAt: codeExpiry.toISOString(),
+        emailSent: false,
+        emailError: emailResult.error,
+      });
     }
 
     // Store verification code in session (for new users who don't exist in DB yet)
@@ -67,6 +76,7 @@ export default async function handler(req, res) {
       message: "Verification code sent to your email",
       code: verificationCode, // Frontend will store this in sessionStorage
       expiresAt: codeExpiry.toISOString(),
+      emailSent: true,
     });
   } catch (error) {
     console.error("Send verification error:", error);

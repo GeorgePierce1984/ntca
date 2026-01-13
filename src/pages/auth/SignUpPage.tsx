@@ -518,12 +518,29 @@ export const SignUpPage: React.FC = () => {
         // Store in sessionStorage
         sessionStorage.setItem("verificationCode", data.code);
         sessionStorage.setItem("verificationCodeExpiry", data.expiresAt);
-        toast.success("Verification code sent to your email!", {
-          icon: "📧",
-          duration: 3000,
-        });
+        
+        // Check if email was actually sent
+        if (data.emailSent === false) {
+          toast.error(
+            `Email sending failed: ${data.emailError || "RESEND_API_KEY not configured"}. Code: ${data.code}`,
+            {
+              icon: "⚠️",
+              duration: 5000,
+            }
+          );
+          // Still allow them to use the code for testing
+        } else {
+          toast.success("Verification code sent to your email!", {
+            icon: "📧",
+            duration: 3000,
+          });
+        }
       } else {
         setErrors({ verification: data.error || "Failed to send verification code" });
+        toast.error(data.error || "Failed to send verification code", {
+          icon: "❌",
+          duration: 3000,
+        });
       }
     } catch (error) {
       console.error("Error sending verification code:", error);
