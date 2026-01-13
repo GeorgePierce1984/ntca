@@ -195,11 +195,8 @@ export default async function handler(req, res) {
           const requiredFields = [
             newSchool.name,
             newSchool.contactName,
-            newSchool.telephone,
-            newSchool.streetAddress,
             newSchool.city,
             newSchool.country,
-            newSchool.schoolType,
           ];
 
           const optionalButImportantFields = [
