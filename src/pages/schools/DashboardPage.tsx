@@ -1072,63 +1072,63 @@ export const SchoolDashboardPage: React.FC = () => {
             {/* Desktop Tabs - Hidden on mobile */}
             <div className="hidden md:block">
               <div className="border-b border-neutral-200 dark:border-neutral-800">
-                <nav className="flex space-x-8 items-center">
-                  {tabs.map((tab) => {
-                    const Icon = tab.icon;
-                    const isActive = activeTab === tab.key;
-                    return (
-                      <button
-                        key={tab.key}
-                        onClick={() => {
-                          if (tab.key === "profile") {
-                            window.location.href = "/schools/profile";
-                          } else if (tab.key === "messages") {
-                            setShowMessagesModal(true);
-                          } else {
-                            setActiveTab(tab.key as "overview" | "jobs" | "applicants");
-                          }
-                        }}
-                        className={`flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                          isActive
-                            ? "border-primary-500 text-primary-600 dark:text-primary-400"
-                            : "border-transparent text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 hover:border-neutral-300"
-                        }`}
-                      >
-                        <div className="relative">
-                          <Icon className="w-5 h-5" />
-                          {tab.key === "messages" && unreadMessageCount > 0 && (
-                            <span className="absolute -top-2 -right-2 min-w-[18px] h-[18px] px-1 flex items-center justify-center text-[10px] font-bold text-white bg-gradient-to-r from-blue-500 to-purple-600 rounded-full">
-                              {unreadMessageCount > 99 ? "99+" : unreadMessageCount}
+                <nav className="flex space-x-8 items-center justify-between">
+                  <div className="flex space-x-8">
+                    {tabs.map((tab) => {
+                      const Icon = tab.icon;
+                      const isActive = activeTab === tab.key;
+                      return (
+                        <button
+                          key={tab.key}
+                          onClick={() => {
+                            if (tab.key === "profile") {
+                              window.location.href = "/schools/profile";
+                            } else if (tab.key === "messages") {
+                              setShowMessagesModal(true);
+                            } else {
+                              setActiveTab(tab.key as "overview" | "jobs" | "applicants");
+                            }
+                          }}
+                          className={`flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                            isActive
+                              ? "border-primary-500 text-primary-600 dark:text-primary-400"
+                              : "border-transparent text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 hover:border-neutral-300"
+                          }`}
+                        >
+                          <div className="relative">
+                            <Icon className="w-5 h-5" />
+                            {tab.key === "messages" && unreadMessageCount > 0 && (
+                              <span className="absolute -top-2 -right-2 min-w-[18px] h-[18px] px-1 flex items-center justify-center text-[10px] font-bold text-white bg-gradient-to-r from-blue-500 to-purple-600 rounded-full">
+                                {unreadMessageCount > 99 ? "99+" : unreadMessageCount}
+                              </span>
+                            )}
+                          </div>
+                          {tab.label}
+                          {tab.badge && (
+                            <span className="ml-1 px-2 py-0.5 text-xs bg-primary-100 dark:bg-primary-900/50 text-primary-600 dark:text-primary-400 rounded-full">
+                              {tab.badge}
                             </span>
                           )}
-                        </div>
-                        {tab.label}
-                        {tab.badge && (
-                          <span className="ml-1 px-2 py-0.5 text-xs bg-primary-100 dark:bg-primary-900/50 text-primary-600 dark:text-primary-400 rounded-full">
-                            {tab.badge}
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <Button
+                    variant="gradient"
+                    leftIcon={<Plus className="w-4 h-4" />}
+                    onClick={() => {
+                      setShowPostJobModal(true);
+                      toast.success("Let's create a new job posting!", {
+                        icon: "📝",
+                        duration: 2000,
+                      });
+                    }}
+                    className="h-10 -ml-[50px]"
+                  >
+                    Post New Job
+                  </Button>
                 </nav>
               </div>
-            </div>
-            <div className="hidden md:flex md:justify-end mt-4 -mr-[50px]">
-              <Button
-                variant="gradient"
-                leftIcon={<Plus className="w-4 h-4" />}
-                onClick={() => {
-                  setShowPostJobModal(true);
-                  toast.success("Let's create a new job posting!", {
-                    icon: "📝",
-                    duration: 2000,
-                  });
-                }}
-                className="h-10"
-              >
-                Post New Job
-              </Button>
             </div>
 
             {/* Mobile Navigation Grid - Shown only on mobile */}
