@@ -48,7 +48,6 @@ export default async function handler(req, res) {
       const requiredFields = [
         "name",
         "contactName",
-        "telephone",
         "city",
         "country",
         "estimateJobs",
