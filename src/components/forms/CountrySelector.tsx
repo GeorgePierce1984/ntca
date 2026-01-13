@@ -1,6 +1,7 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { ChevronDown, Search, Check } from 'lucide-react';
 import { countries, type Country } from '@/data/countries';
+import { CENTRAL_ASIA_COUNTRIES } from '@/constants/options';
 
 interface CountrySelectorProps {
   selectedCountry?: Country;
@@ -8,6 +9,7 @@ interface CountrySelectorProps {
   placeholder?: string;
   className?: string;
   showPhoneCode?: boolean;
+  filterToCentralAsia?: boolean;
 }
 
 export const CountrySelector: React.FC<CountrySelectorProps> = ({
@@ -15,24 +17,37 @@ export const CountrySelector: React.FC<CountrySelectorProps> = ({
   onSelect,
   placeholder = "Select a country",
   className = "",
-  showPhoneCode = false
+  showPhoneCode = false,
+  filterToCentralAsia = false
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filteredCountries, setFilteredCountries] = useState(countries);
+  
+  const availableCountries = useMemo(() => {
+    if (!filterToCentralAsia) {
+      return countries;
+    }
+    return countries.filter(country => 
+      CENTRAL_ASIA_COUNTRIES.some(ca => 
+        ca.value.toLowerCase() === country.name.toLowerCase()
+      )
+    );
+  }, [filterToCentralAsia]);
+  
+  const [filteredCountries, setFilteredCountries] = useState(availableCountries);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (searchQuery) {
-      const filtered = countries.filter(country =>
+      const filtered = availableCountries.filter(country =>
         country.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         country.code.toLowerCase().includes(searchQuery.toLowerCase())
       );
       setFilteredCountries(filtered);
     } else {
-      setFilteredCountries(countries);
+      setFilteredCountries(availableCountries);
     }
-  }, [searchQuery]);
+  }, [searchQuery, availableCountries]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -75,7 +90,7 @@ export const CountrySelector: React.FC<CountrySelectorProps> = ({
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 w-full mt-1 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg shadow-lg max-h-60 overflow-hidden">
+        <div className="absolute z-50 w-full mt-1 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg shadow-lg overflow-hidden">
           <div className="p-3 border-b border-neutral-200 dark:border-neutral-700">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 w-4 h-4" />
@@ -89,7 +104,7 @@ export const CountrySelector: React.FC<CountrySelectorProps> = ({
             </div>
           </div>
           
-          <div className="overflow-y-auto max-h-48">
+          <div className="overflow-y-auto max-h-[200px] pb-2">
             {filteredCountries.map((country) => (
               <button
                 key={country.code}
