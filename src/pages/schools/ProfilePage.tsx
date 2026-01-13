@@ -1477,8 +1477,8 @@ export const SchoolProfilePage: React.FC = () => {
                   {editMode ? (
                     <input
                       type="text"
-                      value={formData.streetAddress || ""}
-                      onChange={(e) => setFormData({ ...formData, streetAddress: e.target.value || "not specified" })}
+                      value={formData.streetAddress === "not specified" ? "" : (formData.streetAddress || "")}
+                      onChange={(e) => setFormData({ ...formData, streetAddress: e.target.value })}
                       className="input"
                       placeholder="123 Main Street"
                       onBlur={(e) => {
