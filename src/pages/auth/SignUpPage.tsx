@@ -47,10 +47,6 @@ interface SchoolForm {
   state: string;
   postalCode: string;
   country: string;
-  schoolType: string;
-  estimateJobs: string;
-  website: string;
-  description: string;
   established: string;
   studentCount: string;
 }
@@ -141,10 +137,6 @@ export const SignUpPage: React.FC = () => {
     state: "",
     postalCode: "",
     country: "",
-    schoolType: "",
-    estimateJobs: "",
-    website: "",
-    description: "",
     established: "",
     studentCount: "",
   });
@@ -398,13 +390,9 @@ export const SignUpPage: React.FC = () => {
         const sf = form as SchoolForm;
         if (!sf.name) newErrors.name = "School name is required";
         if (!sf.contactName) newErrors.contactName = "Contact name is required";
-        if (!sf.streetAddress)
-          newErrors.streetAddress = "Street address is required";
         if (!sf.city) newErrors.city = "City is required";
         // Postal code is optional for international compatibility
         if (!sf.country) newErrors.country = "Country is required";
-        if (!sf.estimateJobs)
-          newErrors.estimateJobs = "Please select an estimate";
       } else {
         const tf = form as TeacherForm;
         if (!tf.firstName) newErrors.firstName = "First name is required";
@@ -1006,7 +994,7 @@ export const SignUpPage: React.FC = () => {
 
                         <div>
                           <label className="block text-sm font-medium mb-2">
-                            Phone Number *
+                            Phone Number
                           </label>
                           <div className="relative">
                             <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 w-5 h-5" />
@@ -1033,7 +1021,7 @@ export const SignUpPage: React.FC = () => {
 
                       <div>
                         <label className="block text-sm font-medium mb-2">
-                          Street Address *
+                          Street Address
                         </label>
                         <div className="relative">
                           <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 w-5 h-5" />
@@ -1143,72 +1131,6 @@ export const SignUpPage: React.FC = () => {
                         )}
                       </div>
 
-                      <div className="grid md:grid-cols-2 gap-6">
-                        <div>
-                          <label className="block text-sm font-medium mb-2">
-                            Website
-                          </label>
-                          <div className="relative">
-                            <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 w-5 h-5" />
-                            <input
-                              type="url"
-                              value={schoolForm.website}
-                              onChange={(e) =>
-                                setSchoolForm({
-                                  ...schoolForm,
-                                  website: e.target.value,
-                                })
-                              }
-                              className="input pl-10"
-                              placeholder="https://www.yourschool.com"
-                            />
-                          </div>
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium mb-2">
-                            Expected Hires/Year *
-                          </label>
-                          <select
-                            value={schoolForm.estimateJobs}
-                            onChange={(e) =>
-                              setSchoolForm({
-                                ...schoolForm,
-                                estimateJobs: e.target.value,
-                              })
-                            }
-                            className={`input ${errors.estimateJobs ? "border-red-500" : ""}`}
-                          >
-                            <option value="">Select estimate</option>
-                            <option value="1-5">1-5 teachers</option>
-                            <option value="6-15">6-15 teachers</option>
-                            <option value="16-30">16-30 teachers</option>
-                            <option value="31+">31+ teachers</option>
-                          </select>
-                          {errors.estimateJobs && (
-                            <p className="text-red-500 text-sm mt-1">
-                              {errors.estimateJobs}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium mb-2">
-                          School Description
-                        </label>
-                        <textarea
-                          value={schoolForm.description}
-                          onChange={(e) =>
-                            setSchoolForm({
-                              ...schoolForm,
-                              description: e.target.value,
-                            })
-                          }
-                          className="input min-h-[100px]"
-                          placeholder="Tell us about your school..."
-                        />
-                      </div>
                     </>
                   ) : (
                     <>

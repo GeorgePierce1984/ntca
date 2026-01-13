@@ -14,8 +14,6 @@ interface SchoolForm {
   contactName: string;
   telephone: string;
   country: string;
-  estimateJobs: string;
-  schoolType: string;
   city: string;
   state: string;
   postalCode: string;
@@ -29,8 +27,6 @@ const initialForm: SchoolForm = {
   contactName: "",
   telephone: "",
   country: "",
-  estimateJobs: "",
-  schoolType: "",
   city: "",
   state: "",
   postalCode: "",
@@ -119,9 +115,7 @@ const SignupPage: React.FC = () => {
       newErrors.passwordConfirm = "Passwords do not match";
     }
     if (!form.contactName) newErrors.contactName = "Contact name is required";
-    if (!form.telephone) newErrors.telephone = "Telephone is required";
     if (!form.country) newErrors.country = "Country is required";
-    if (!form.schoolType) newErrors.schoolType = "School type is required";
     if (!form.city) newErrors.city = "City is required";
 
     setErrors(newErrors);
@@ -241,34 +235,12 @@ const SignupPage: React.FC = () => {
               )}
             </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                School Type *
-              </label>
-              <select
-                name="schoolType"
-                value={form.schoolType}
-                onChange={handleChange}
-                className={`w-full p-3 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-800 ${errors.schoolType ? "border-red-500" : ""}`}
-                required
-              >
-                <option value="">Select...</option>
-                {SCHOOL_TYPES.map((type) => (
-                  <option key={type.value} value={type.value}>
-                    {type.label}
-                  </option>
-                ))}
-              </select>
-              {errors.schoolType && (
-                <p className="text-red-500 text-sm mt-1">{errors.schoolType}</p>
-              )}
-            </div>
           </div>
 
           {/* Address */}
           <div>
             <label className="block text-sm font-medium mb-2">
-              Street Address *
+              Street Address
             </label>
             <input
               className="input"
