@@ -13,6 +13,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Plan {
   name: string;
@@ -101,6 +102,13 @@ const Pricing: React.FC = () => {
   );
   const [showPlanInfo, setShowPlanInfo] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { user } = useAuth();
+  
+  // Determine which pricing to show based on user type
+  const isSchool = user?.userType === "SCHOOL";
+  const isTeacher = user?.userType === "TEACHER";
+  const showSchoolPricing = !isTeacher; // Show school pricing if not a teacher (includes logged out)
+  const showTeacherPricing = !isSchool; // Show teacher pricing if not a school (includes logged out)
 
   const planDetails = {
     Basic: {
@@ -140,37 +148,42 @@ const Pricing: React.FC = () => {
           </p>
 
           {/* Two-column layout for different user types */}
-          <div className="grid lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
+          <div className={`grid gap-12 max-w-6xl mx-auto ${showSchoolPricing && showTeacherPricing ? 'lg:grid-cols-2' : 'lg:grid-cols-1'}`}>
             {/* For Schools */}
-            <div className="text-left">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 mb-6">
-                <Building2 className="w-5 h-5" />
-                <span className="font-medium">For Schools & Institutions</span>
+            {showSchoolPricing && (
+              <div className="text-left">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 mb-6">
+                  <Building2 className="w-5 h-5" />
+                  <span className="font-medium">For Schools & Institutions</span>
+                </div>
+                <h2 className="heading-2 mb-4">Post Jobs & Find Teachers</h2>
+                <p className="text-neutral-600 dark:text-neutral-400 mb-6">
+                  Subscription plans to post job listings and connect with
+                  qualified teachers across Central Asia.
+                </p>
               </div>
-              <h2 className="heading-2 mb-4">Post Jobs & Find Teachers</h2>
-              <p className="text-neutral-600 dark:text-neutral-400 mb-6">
-                Subscription plans to post job listings and connect with
-                qualified teachers across Central Asia.
-              </p>
-            </div>
+            )}
 
             {/* For Teachers */}
-            <div className="text-left">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 mb-6">
-                <GraduationCap className="w-5 h-5" />
-                <span className="font-medium">For Teachers</span>
+            {showTeacherPricing && (
+              <div className="text-left">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 mb-6">
+                  <GraduationCap className="w-5 h-5" />
+                  <span className="font-medium">For Teachers</span>
+                </div>
+                <h2 className="heading-2 mb-4">Always Free to Join</h2>
+                <p className="text-neutral-600 dark:text-neutral-400 mb-6">
+                  Create your profile, browse jobs, and apply - completely free.
+                  Premium matching available.
+                </p>
               </div>
-              <h2 className="heading-2 mb-4">Always Free to Join</h2>
-              <p className="text-neutral-600 dark:text-neutral-400 mb-6">
-                Create your profile, browse jobs, and apply - completely free.
-                Premium matching available.
-              </p>
-            </div>
+            )}
           </div>
         </div>
       </section>
 
       {/* School Subscription Plans */}
+      {showSchoolPricing && (
       <section className="section">
         <div className="container-custom">
           <div className="text-center mb-16">
@@ -286,8 +299,10 @@ const Pricing: React.FC = () => {
           </div>
         </div>
       </section>
+      )}
 
       {/* Teacher Free Section */}
+      {showTeacherPricing && (
       <section className="section bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20">
         <div className="container-custom">
           <div className="max-w-4xl mx-auto">
@@ -427,6 +442,7 @@ const Pricing: React.FC = () => {
           </div>
         </div>
       </section>
+      )}
 
       {/* FAQ or Additional Info */}
       <section className="section">
