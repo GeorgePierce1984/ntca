@@ -19,7 +19,10 @@ import {
   AlertCircle,
   Eye,
   EyeOff,
+  MailCheck,
+  RefreshCw,
 } from "lucide-react";
+import toast from "react-hot-toast";
 import { Button } from "@/components/ui/Button";
 import { CountrySelector } from "@/components/forms/CountrySelector";
 import { countries, type Country, getCountryByCode, getCountryByName } from "@/data/countries";
@@ -458,9 +461,9 @@ export const SignUpPage: React.FC = () => {
 
   const handleNext = () => {
     if (validateCurrentStep()) {
-      if (currentStep < 3 && userType === "school") {
+      if (currentStep < 4 && userType === "school") {
         setCurrentStep(currentStep + 1);
-      } else if (currentStep < 2 && userType === "teacher") {
+      } else if (currentStep < 3 && userType === "teacher") {
         setCurrentStep(currentStep + 1);
       }
     }
@@ -1570,8 +1573,146 @@ export const SignUpPage: React.FC = () => {
               </motion.div>
             )}
 
-            {/* Step 3: School Plan Selection */}
-            {isInitialized && currentStep === 3 && userType === "school" && (
+            {/* Step 3: Email Verification */}
+            {isInitialized && currentStep === 3 && (
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+              >
+                <h2 className="heading-2 text-center mb-8">Verify Your Email</h2>
+
+                {!emailVerified ? (
+                  <>
+                    <div className="max-w-md mx-auto mb-6">
+                      <div className="text-center mb-6">
+                        <div className="w-20 h-20 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                          <Mail className="w-10 h-10 text-blue-600 dark:text-blue-400" />
+                        </div>
+                        <p className="text-neutral-600 dark:text-neutral-400 mb-2">
+                          {verificationCodeSent
+                            ? "We've sent a verification code to"
+                            : "We'll send a verification code to"}
+                        </p>
+                        <p className="font-semibold text-lg">
+                          {userType === "school" ? schoolForm.email : teacherForm.email}
+                        </p>
+                      </div>
+
+                      {!verificationCodeSent ? (
+                        <div className="text-center">
+                          <p className="text-neutral-600 dark:text-neutral-400 mb-6">
+                            Click the button below to receive a verification code via email.
+                          </p>
+                          <Button
+                            onClick={handleSendVerificationCode}
+                            variant="gradient"
+                            disabled={sendingCode}
+                            leftIcon={sendingCode ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Mail className="w-5 h-5" />}
+                          >
+                            {sendingCode ? "Sending..." : "Send Verification Code"}
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="space-y-6">
+                          <div>
+                            <label className="block text-sm font-medium mb-2">
+                              Enter Verification Code
+                            </label>
+                            <input
+                              type="text"
+                              value={verificationCode}
+                              onChange={(e) => {
+                                const value = e.target.value.replace(/\D/g, "").slice(0, 6);
+                                setVerificationCode(value);
+                                if (errors.verification) {
+                                  setErrors({ ...errors, verification: "" });
+                                }
+                              }}
+                              placeholder="000000"
+                              className="input text-center text-2xl font-mono tracking-widest"
+                              maxLength={6}
+                            />
+                            <p className="text-sm text-neutral-500 mt-2 text-center">
+                              Enter the 6-digit code sent to your email
+                            </p>
+                          </div>
+
+                          <div className="flex gap-4">
+                            <Button
+                              onClick={handleSendVerificationCode}
+                              variant="secondary"
+                              disabled={sendingCode}
+                              leftIcon={<RefreshCw className={`w-4 h-4 ${sendingCode ? "animate-spin" : ""}`} />}
+                              className="flex-1"
+                            >
+                              {sendingCode ? "Resending..." : "Resend Code"}
+                            </Button>
+                            <Button
+                              onClick={handleVerifyCode}
+                              variant="gradient"
+                              disabled={verificationCode.length !== 6 || verifyingCode}
+                              className="flex-1"
+                            >
+                              {verifyingCode ? "Verifying..." : "Verify Email"}
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+
+                      {errors.verification && (
+                        <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                          <div className="flex items-center gap-2">
+                            <AlertCircle className="w-5 h-5 text-red-500" />
+                            <p className="text-red-600 dark:text-red-400">
+                              {errors.verification}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <div className="max-w-md mx-auto text-center">
+                    <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <MailCheck className="w-10 h-10 text-green-600 dark:text-green-400" />
+                    </div>
+                    <h3 className="text-xl font-semibold mb-2">Email Verified!</h3>
+                    <p className="text-neutral-600 dark:text-neutral-400 mb-6">
+                      Your email has been successfully verified. You can now continue.
+                    </p>
+                  </div>
+                )}
+
+                <div className="flex justify-between items-center gap-4 mt-8">
+                  <Button
+                    onClick={handleBack}
+                    variant="secondary"
+                    leftIcon={<ArrowLeft className="w-5 h-5" />}
+                  >
+                    Back
+                  </Button>
+                  {emailVerified && (
+                    <Button
+                      onClick={() => {
+                        if (userType === "school") {
+                          setCurrentStep(4); // Move to plan selection
+                        } else {
+                          handleRegistration(); // Teachers proceed directly
+                        }
+                      }}
+                      variant="gradient"
+                      rightIcon={<ArrowRight className="w-5 h-5" />}
+                    >
+                      Continue
+                    </Button>
+                  )}
+                </div>
+              </motion.div>
+            )}
+
+            {/* Step 4: Choose Your Plan (for schools only) */}
+            {isInitialized && currentStep === 4 && userType === "school" && (
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
