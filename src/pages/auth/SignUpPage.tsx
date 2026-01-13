@@ -199,7 +199,15 @@ export const SignUpPage: React.FC = () => {
 
       if (savedSchoolForm) {
         try {
-          setSchoolForm(JSON.parse(savedSchoolForm));
+          const parsed = JSON.parse(savedSchoolForm);
+          setSchoolForm(parsed);
+          // Restore selected country if country name exists
+          if (parsed.country) {
+            const country = getCountryByName(parsed.country);
+            if (country) {
+              setSelectedSchoolCountry(country);
+            }
+          }
         } catch (e) {
           console.error("Error parsing saved school form:", e);
         }
