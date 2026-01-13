@@ -619,6 +619,14 @@ export const SignUpPage: React.FC = () => {
     }
   };
 
+  const handleSchoolCountrySelect = (country: Country) => {
+    setSelectedSchoolCountry(country);
+    setSchoolForm({
+      ...schoolForm,
+      country: country.name,
+    });
+  };
+
   const currentForm = userType === "school" ? schoolForm : teacherForm;
   const passwordValidation = validatePassword(currentForm.password);
   const strengthInfo = getPasswordStrengthLabel(passwordValidation.score);
