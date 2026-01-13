@@ -1073,8 +1073,7 @@ export const SchoolDashboardPage: React.FC = () => {
             <div className="hidden md:block">
               <div className="border-b border-neutral-200 dark:border-neutral-800">
                 <nav className="flex space-x-8 items-center">
-                  <div className="flex space-x-8">
-                    {tabs.map((tab) => {
+                  {tabs.map((tab) => {
                     const Icon = tab.icon;
                     const isActive = activeTab === tab.key;
                     return (
@@ -1112,25 +1111,24 @@ export const SchoolDashboardPage: React.FC = () => {
                       </button>
                     );
                   })}
-                  </div>
-                  <div className="ml-auto">
-                    <Button
-                      variant="gradient"
-                      leftIcon={<Plus className="w-4 h-4" />}
-                      onClick={() => {
-                        setShowPostJobModal(true);
-                        toast.success("Let's create a new job posting!", {
-                          icon: "📝",
-                          duration: 2000,
-                        });
-                      }}
-                      className="h-10"
-                    >
-                      Post New Job
-                    </Button>
-                  </div>
                 </nav>
               </div>
+            </div>
+            <div className="hidden md:flex md:justify-end mt-4">
+              <Button
+                variant="gradient"
+                leftIcon={<Plus className="w-4 h-4" />}
+                onClick={() => {
+                  setShowPostJobModal(true);
+                  toast.success("Let's create a new job posting!", {
+                    icon: "📝",
+                    duration: 2000,
+                  });
+                }}
+                className="h-10"
+              >
+                Post New Job
+              </Button>
             </div>
 
             {/* Mobile Navigation Grid - Shown only on mobile */}
