@@ -855,7 +855,7 @@ export const SignUpPage: React.FC = () => {
                   >
                     {step < currentStep ? <Check className="w-4 h-4" /> : step}
                   </div>
-                  {step < (userType === "school" ? 3 : 2) && (
+                  {step < 3 && (
                     <div
                       className={`w-12 h-0.5 ${
                         step < currentStep
