@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { CountrySelector } from "@/components/forms/CountrySelector";
-import { countries, type Country, getCountryByCode } from "@/data/countries";
+import { countries, type Country, getCountryByCode, getCountryByName } from "@/data/countries";
 import {
   validatePassword,
   validateEmail,
