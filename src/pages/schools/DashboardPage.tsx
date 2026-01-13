@@ -1123,7 +1123,7 @@ export const SchoolDashboardPage: React.FC = () => {
                         duration: 2000,
                       });
                     }}
-                    className="h-10 -ml-[50px]"
+                    className="h-10 -ml-[100px]"
                   >
                     Post New Job
                   </Button>
