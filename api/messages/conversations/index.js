@@ -420,12 +420,13 @@ export default async function handler(req, res) {
     res.setHeader("Allow", ["GET", "POST"]);
     return res.status(405).json({ error: "Method Not Allowed" });
   } catch (error) {
-    console.error("Messages API error:", error);
-
     // Handle specific error types
     if (error.name === "NoTokenError") {
+      // Don't log expected authentication failures - they're handled gracefully
       return res.status(401).json({ error: "Authentication required" });
     }
+    
+    console.error("Messages API error:", error);
 
     if (error.name === "JsonWebTokenError" || error.name === "TokenExpiredError") {
       return res.status(401).json({ error: "Invalid or expired token" });
