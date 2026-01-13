@@ -3,6 +3,8 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/Button";
 import { ArrowLeft, ArrowRight, CreditCard, Building2 } from "lucide-react";
 import { CENTRAL_ASIA_COUNTRIES, SCHOOL_TYPES } from "@/constants/options";
+import { CountrySelector } from "@/components/forms/CountrySelector";
+import { type Country, getCountryByName } from "@/data/countries";
 
 interface SchoolForm {
   name: string;
@@ -66,6 +68,7 @@ const SignupPage: React.FC = () => {
   const [billing, setBilling] = useState<"monthly" | "annual">("monthly");
   const [passwordConfirm, setPasswordConfirm] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [selectedCountry, setSelectedCountry] = useState<Country | undefined>(undefined);
   const planKey = (params.get("plan") || "basic").toLowerCase();
   const plan = planEnvMap[planKey] || planEnvMap.basic;
 
@@ -73,6 +76,25 @@ const SignupPage: React.FC = () => {
   useEffect(() => {
     sessionStorage.setItem("schoolSignupForm", JSON.stringify(form));
   }, [form]);
+
+  // Initialize selected country from form data
+  useEffect(() => {
+    if (form.country && !selectedCountry) {
+      const country = getCountryByName(form.country);
+      if (country) {
+        setSelectedCountry(country);
+      }
+    }
+  }, [form.country, selectedCountry]);
+
+  const handleCountrySelect = (country: Country) => {
+    setSelectedCountry(country);
+    setForm({ ...form, country: country.name });
+    // Clear error for this field
+    if (errors.country) {
+      setErrors({ ...errors, country: "" });
+    }
+  };
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
@@ -308,20 +330,12 @@ const SignupPage: React.FC = () => {
           {/* Country */}
           <div>
             <label className="block text-sm font-medium mb-2">Country *</label>
-            <select
-              name="country"
-              value={form.country}
-              onChange={handleChange}
-              className={`w-full p-3 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-800 ${errors.country ? "border-red-500" : ""}`}
-              required
-            >
-              <option value="">Select country</option>
-              {CENTRAL_ASIA_COUNTRIES.map((country) => (
-                <option key={country.value} value={country.value}>
-                  {country.label}
-                </option>
-              ))}
-            </select>
+            <CountrySelector
+              selectedCountry={selectedCountry}
+              onSelect={handleCountrySelect}
+              placeholder="Select country"
+              filterToCentralAsia={true}
+            />
             {errors.country && (
               <p className="text-red-500 text-sm mt-1">{errors.country}</p>
             )}

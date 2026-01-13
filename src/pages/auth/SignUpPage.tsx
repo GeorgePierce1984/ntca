@@ -124,6 +124,9 @@ export const SignUpPage: React.FC = () => {
   >(
     undefined, // No default - user must select
   );
+  const [selectedSchoolCountry, setSelectedSchoolCountry] = useState<Country | undefined>(
+    undefined, // For school form country selection
+  );
 
   const [schoolForm, setSchoolForm] = useState<SchoolForm>({
     name: "",
@@ -1111,24 +1114,12 @@ export const SignUpPage: React.FC = () => {
                         <label className="block text-sm font-medium mb-2">
                           Country *
                         </label>
-                        <select
-                          value={schoolForm.country}
-                          onChange={(e) =>
-                            setSchoolForm({
-                              ...schoolForm,
-                              country: e.target.value,
-                            })
-                          }
-                          className={`w-full p-3 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-800 ${errors.country ? "border-red-500" : ""}`}
-                          required
-                        >
-                          <option value="">Select country</option>
-                          {CENTRAL_ASIA_COUNTRIES.map((country) => (
-                            <option key={country.value} value={country.value}>
-                              {country.label}
-                            </option>
-                          ))}
-                        </select>
+                        <CountrySelector
+                          selectedCountry={selectedSchoolCountry}
+                          onSelect={handleSchoolCountrySelect}
+                          placeholder="Select country"
+                          filterToCentralAsia={true}
+                        />
                         {errors.country && (
                           <p className="text-red-500 text-sm mt-1">
                             {errors.country}
