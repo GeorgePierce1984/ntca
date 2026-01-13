@@ -830,6 +830,34 @@ export const SignUpPage: React.FC = () => {
 
                         <div>
                           <label className="block text-sm font-medium mb-2">
+                            Contact Person *
+                          </label>
+                          <div className="relative">
+                            <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 w-5 h-5" />
+                            <input
+                              type="text"
+                              value={schoolForm.contactName}
+                              onChange={(e) =>
+                                setSchoolForm({
+                                  ...schoolForm,
+                                  contactName: e.target.value,
+                                })
+                              }
+                              className={`input pl-10 ${errors.contactName ? "border-red-500" : ""}`}
+                              placeholder="Contact person name"
+                            />
+                          </div>
+                          {errors.contactName && (
+                            <p className="text-red-500 text-sm mt-1">
+                              {errors.contactName}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="grid md:grid-cols-2 gap-6">
+                        <div>
+                          <label className="block text-sm font-medium mb-2">
                             Password *
                           </label>
                           <div className="relative">
