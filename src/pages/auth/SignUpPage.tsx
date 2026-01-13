@@ -394,6 +394,13 @@ export const SignUpPage: React.FC = () => {
   const validateCurrentStep = (): boolean => {
     const newErrors: Record<string, string> = {};
 
+    if (currentStep === 3) {
+      // Validate email verification
+      if (!emailVerified) {
+        newErrors.verification = "Please verify your email before continuing";
+      }
+    }
+
     if (currentStep === 2) {
       const form = userType === "school" ? schoolForm : teacherForm;
 
