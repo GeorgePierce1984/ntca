@@ -1109,7 +1109,7 @@ export const SignUpPage: React.FC = () => {
                       </div>
 
                     </>
-                  ) : {
+                  ) : (
                     <>
                       {/* Teacher Form */}
                       <div className="grid md:grid-cols-2 gap-6">
