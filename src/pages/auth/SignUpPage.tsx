@@ -637,10 +637,6 @@ export const SignUpPage: React.FC = () => {
     // Validate email verification first
     if (!emailVerified) {
       setErrors({ verification: "Please verify your email before creating your account" });
-      toast.error("Please verify your email first", {
-        icon: "⚠️",
-        duration: 3000,
-      });
       return;
     }
 
