@@ -12,7 +12,8 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { countries, type Country } from "@/data/countries";
+import { countries, type Country, getCountryByName } from "@/data/countries";
+import { CountrySelector } from "@/components/forms/CountrySelector";
 
 interface JobForm {
   title: string;
@@ -113,6 +114,7 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({
   selectedJobForEdit,
 }) => {
   const [activeTab, setActiveTab] = useState("role");
+  const [selectedCountry, setSelectedCountry] = useState<Country | undefined>(undefined);
 
   const tabs = [
     { key: "role", label: "Role Information", icon: Briefcase },
@@ -129,19 +131,17 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({
     }
   }, [isOpen]);
 
-  // Central Asian countries only
-  const centralAsianCountries = countries.filter(country => {
-    const countryName = country.name.toLowerCase();
-    return countryName === "kazakhstan" || 
-           countryName === "uzbekistan" || 
-           countryName === "kyrgyzstan" || 
-           countryName === "tajikistan" || 
-           countryName === "turkmenistan" || 
-           countryName === "afghanistan";
-  });
-
-  // Get selected country object for display
-  const selectedCountry = centralAsianCountries.find(c => c.name === jobForm.country);
+  // Initialize selected country from jobForm.country
+  useEffect(() => {
+    if (jobForm.country) {
+      const country = getCountryByName(jobForm.country);
+      if (country) {
+        setSelectedCountry(country);
+      }
+    } else {
+      setSelectedCountry(undefined);
+    }
+  }, [jobForm.country]);
 
   const currentTabIndex = tabs.findIndex(tab => tab.key === activeTab);
   const isFirstTab = currentTabIndex === 0;
