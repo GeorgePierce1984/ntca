@@ -979,46 +979,6 @@ export const SignUpPage: React.FC = () => {
                         </div>
                       </div>
 
-                      <div className="grid md:grid-cols-2 gap-6">
-                        <div>
-                          <label className="block text-sm font-medium mb-2">
-                            Phone Country
-                          </label>
-                          <CountrySelector
-                            selectedCountry={selectedPhoneCountry}
-                            onSelect={handlePhoneCountrySelect}
-                            showPhoneCode={true}
-                            placeholder="Search countries..."
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium mb-2">
-                            Phone Number
-                          </label>
-                          <div className="relative">
-                            <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 w-5 h-5" />
-                            <input
-                              type="tel"
-                              value={schoolForm.telephone}
-                              onChange={(e) =>
-                                setSchoolForm({
-                                  ...schoolForm,
-                                  telephone: e.target.value,
-                                })
-                              }
-                              className={`input pl-10 ${errors.phone ? "border-red-500" : ""}`}
-                              placeholder="Phone number"
-                            />
-                          </div>
-                          {errors.phone && (
-                            <p className="text-red-500 text-sm mt-1">
-                              {errors.phone}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-
                       <div>
                         <label className="block text-sm font-medium mb-2">
                           Street Address
@@ -1131,8 +1091,48 @@ export const SignUpPage: React.FC = () => {
                         )}
                       </div>
 
+                      <div className="grid md:grid-cols-2 gap-6">
+                        <div>
+                          <label className="block text-sm font-medium mb-2">
+                            Phone Country
+                          </label>
+                          <CountrySelector
+                            selectedCountry={selectedPhoneCountry}
+                            onSelect={handlePhoneCountrySelect}
+                            showPhoneCode={true}
+                            placeholder="Search countries..."
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium mb-2">
+                            Phone Number
+                          </label>
+                          <div className="relative">
+                            <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 w-5 h-5" />
+                            <input
+                              type="tel"
+                              value={schoolForm.telephone}
+                              onChange={(e) =>
+                                setSchoolForm({
+                                  ...schoolForm,
+                                  telephone: e.target.value,
+                                })
+                              }
+                              className={`input pl-10 ${errors.phone ? "border-red-500" : ""}`}
+                              placeholder="Phone number"
+                            />
+                          </div>
+                          {errors.phone && (
+                            <p className="text-red-500 text-sm mt-1">
+                              {errors.phone}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
                     </>
-                  ) : (
+                  ) : {
                     <>
                       {/* Teacher Form */}
                       <div className="grid md:grid-cols-2 gap-6">
