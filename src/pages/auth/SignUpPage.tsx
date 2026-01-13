@@ -632,9 +632,27 @@ export const SignUpPage: React.FC = () => {
   };
 
   const handleRegistration = async () => {
-    if (!validateCurrentStep()) return;
+    // Validate email verification first
+    if (!emailVerified) {
+      setErrors({ verification: "Please verify your email before creating your account" });
+      toast.error("Please verify your email first", {
+        icon: "⚠️",
+        duration: 3000,
+      });
+      return;
+    }
+
+    // Validate form data
+    if (!validateCurrentStep()) {
+      toast.error("Please fill in all required fields", {
+        icon: "⚠️",
+        duration: 3000,
+      });
+      return;
+    }
 
     setLoading(true);
+    setErrors({});
 
     try {
       if (userType === "teacher") {
