@@ -844,7 +844,7 @@ export const SignUpPage: React.FC = () => {
           {/* Progress Steps */}
           <div className="flex justify-center mb-12">
             <div className="flex items-center space-x-4">
-              {[1, 2, ...(userType === "school" ? [3] : [])].map((step) => (
+              {[1, 2, 3].map((step) => (
                 <div key={step} className="flex items-center">
                   <div
                     className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
