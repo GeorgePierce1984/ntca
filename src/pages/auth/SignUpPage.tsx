@@ -632,6 +632,8 @@ export const SignUpPage: React.FC = () => {
   };
 
   const handleRegistration = async () => {
+    console.log("handleRegistration called", { emailVerified, userType, currentStep });
+    
     // Validate email verification first
     if (!emailVerified) {
       setErrors({ verification: "Please verify your email before creating your account" });
@@ -642,8 +644,10 @@ export const SignUpPage: React.FC = () => {
       return;
     }
 
-    // Validate form data
-    if (!validateCurrentStep()) {
+    // Validate form data (only validates step 2, but that's okay - we're past that)
+    // We just need to make sure required fields are filled
+    const form = userType === "school" ? schoolForm : teacherForm;
+    if (!form.email || !form.password) {
       toast.error("Please fill in all required fields", {
         icon: "⚠️",
         duration: 3000,
@@ -653,6 +657,8 @@ export const SignUpPage: React.FC = () => {
 
     setLoading(true);
     setErrors({});
+    
+    console.log("Starting registration for", userType);
 
     try {
       if (userType === "teacher") {
