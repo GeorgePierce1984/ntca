@@ -461,9 +461,8 @@ export const SignUpPage: React.FC = () => {
 
   const handleNext = () => {
     if (validateCurrentStep()) {
-      if (currentStep < 4 && userType === "school") {
-        setCurrentStep(currentStep + 1);
-      } else if (currentStep < 3 && userType === "teacher") {
+      // Both schools and teachers have 3 steps now (email verification replaces plan selection)
+      if (currentStep < 3) {
         setCurrentStep(currentStep + 1);
       }
     }
@@ -570,15 +569,9 @@ export const SignUpPage: React.FC = () => {
           icon: "✅",
           duration: 2000,
         });
-        // For schools, proceed to plan selection (step 4)
-        // For teachers, proceed directly to registration
-        if (userType === "school") {
-          // Move to plan selection - we'll use the modal later
-          // For now, just mark as verified
-        } else {
-          // Teachers can proceed directly
-          handleRegistration();
-        }
+        // Both schools and teachers proceed directly to registration
+        // Plan selection will be handled via modal later as a paywall
+        handleRegistration();
         return;
       } else if (expiryDate <= new Date()) {
         setErrors({ verification: "Verification code has expired. Please request a new one." });
@@ -610,11 +603,9 @@ export const SignUpPage: React.FC = () => {
           icon: "✅",
           duration: 2000,
         });
-        // For schools, proceed to plan selection
-        // For teachers, proceed directly to registration
-        if (userType === "teacher") {
-          handleRegistration();
-        }
+        // Both schools and teachers proceed directly to registration
+        // Plan selection will be handled via modal later as a paywall
+        handleRegistration();
       } else {
         setErrors({ verification: data.error || "Invalid verification code" });
       }
@@ -1831,17 +1822,12 @@ export const SignUpPage: React.FC = () => {
                   </Button>
                   {emailVerified && (
                     <Button
-                      onClick={() => {
-                        if (userType === "school") {
-                          setCurrentStep(4); // Move to plan selection
-                        } else {
-                          handleRegistration(); // Teachers proceed directly
-                        }
-                      }}
+                      onClick={handleRegistration}
                       variant="gradient"
-                      rightIcon={<ArrowRight className="w-5 h-5" />}
+                      disabled={loading}
+                      rightIcon={<Check className="w-5 h-5" />}
                     >
-                      Continue
+                      {loading ? "Creating Account..." : "Create Account"}
                     </Button>
                   )}
                 </div>
