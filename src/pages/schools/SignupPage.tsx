@@ -338,14 +338,13 @@ const SignupPage: React.FC = () => {
 
             <div>
               <label className="block text-sm font-medium mb-2">
-                Telephone *
+                Telephone
               </label>
               <input
                 className={`input ${errors.telephone ? "border-red-500" : ""}`}
                 placeholder="+1 234 567 8900"
                 name="telephone"
                 value={form.telephone}
-                required
                 onChange={handleChange}
               />
               {errors.telephone && (
