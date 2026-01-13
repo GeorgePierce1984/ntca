@@ -670,7 +670,7 @@ export const SignUpPage: React.FC = () => {
           },
           body: JSON.stringify({
             ...teacherForm,
-            userType: "TEACHER",
+            userType: "teacher", // API expects lowercase
           }),
         });
 
@@ -745,7 +745,8 @@ export const SignUpPage: React.FC = () => {
           body: JSON.stringify({
             ...schoolForm,
             confirmPassword: undefined, // Don't send confirmPassword to backend
-            userType: "SCHOOL",
+            userType: "school", // API expects lowercase
+            estimateJobs: schoolForm.estimateJobs || "0", // Default if missing
           }),
         });
 
