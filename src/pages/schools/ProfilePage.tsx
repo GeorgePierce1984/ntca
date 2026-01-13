@@ -1569,6 +1569,7 @@ export const SchoolProfilePage: React.FC = () => {
                           setFormData({ ...formData, country: country.name });
                         }}
                         placeholder="Search countries..."
+                        filterToCentralAsia={true}
                       />
                     ) : (
                       <p className="text-neutral-900 dark:text-neutral-100">{school.country}</p>

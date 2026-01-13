@@ -392,22 +392,18 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({
                           <label className="block text-sm font-medium mb-2">
                             Country *
                           </label>
-                          <select
-                            value={jobForm.country}
-                            onChange={(e) => setJobForm({
-                              ...jobForm,
-                              country: e.target.value,
-                            })}
-                            className="input"
-                            required
-                          >
-                            <option value="">Select a country</option>
-                            {centralAsianCountries.map((country) => (
-                              <option key={country.code} value={country.name}>
-                                {country.flag} {country.name}
-                              </option>
-                            ))}
-                          </select>
+                          <CountrySelector
+                            selectedCountry={selectedCountry}
+                            onSelect={(country) => {
+                              setSelectedCountry(country);
+                              setJobForm({
+                                ...jobForm,
+                                country: country.name,
+                              });
+                            }}
+                            placeholder="Select a country"
+                            filterToCentralAsia={true}
+                          />
                         </div>
                       </div>
 

@@ -25,11 +25,14 @@ import {
 import { Button } from "@/components/ui/Button";
 import { motion, AnimatePresence } from "framer-motion";
 import { format } from "date-fns";
-import { countries, CENTRAL_ASIA_COUNTRIES } from "@/data/countries";
+import { countries } from "@/data/countries";
+import { CENTRAL_ASIA_COUNTRIES } from "@/constants/options";
 
-// Filter to only Central Asian countries
+// Filter to only Central Asian countries (using the same list as registration)
 const centralAsiaCountries = countries.filter(c => 
-  CENTRAL_ASIA_COUNTRIES.includes(c.name)
+  CENTRAL_ASIA_COUNTRIES.some(ca => 
+    ca.label.toLowerCase() === c.name.toLowerCase()
+  )
 );
 
 interface School {
