@@ -251,10 +251,8 @@ export const SignUpPage: React.FC = () => {
         setBillingType(savedBillingType as "monthly" | "annual");
       }
 
-      // If returning from payment, restore to step 3 (plan selection)
-      if (savedUserType === "school") {
-        setCurrentStep(3);
-      } else if (savedStep) {
+      // If returning from payment, restore to step 3 (email verification)
+      if (savedStep) {
         const step = parseInt(savedStep, 10);
         if (!isNaN(step) && step >= 1 && step <= 3) {
           setCurrentStep(step);
@@ -706,42 +704,67 @@ export const SignUpPage: React.FC = () => {
           }
         }
       } else {
-        // School registration - redirect to Stripe
-        if (!selectedPlan) {
-          setErrors({ plan: "Please select a plan" });
-          return;
-        }
-
-        const priceId =
-          billingType === "monthly"
-            ? selectedPlan.priceIdMonthly
-            : selectedPlan.priceIdAnnual;
-
-        if (!priceId) {
-          setErrors({ plan: "Selected plan is not available" });
-          return;
-        }
-
-        const response = await fetch("/api/create-checkout-session", {
+        // School registration - directly create account (no plan selection)
+        // Plan selection will be handled via modal later as a paywall
+        const response = await fetch("/api/auth/register", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            priceId: priceId,
-            userType: "school",
-            formData: {
-              ...schoolForm,
-              confirmPassword: undefined, // Don't send confirmPassword to backend
-            },
-            planName: selectedPlan.name,
-            billingType,
-            cancelUrl: `${window.location.origin}/signup?from=payment`,
+            ...schoolForm,
+            confirmPassword: undefined, // Don't send confirmPassword to backend
+            userType: "SCHOOL",
           }),
         });
 
-        const { url } = await response.json();
-        window.location.href = url;
+        const data = await response.json();
+
+        if (response.ok) {
+          // Validate token before storing
+          if (!data.token || typeof data.token !== "string") {
+            setErrors({
+              submit:
+                "Registration successful but authentication failed. Please try logging in.",
+            });
+            return;
+          }
+
+          // Check if token has proper JWT format
+          const tokenParts = data.token.split(".");
+          if (tokenParts.length !== 3) {
+            setErrors({
+              submit: "Authentication error. Please contact support.",
+            });
+            return;
+          }
+
+          // Store auth token and redirect
+          localStorage.setItem("authToken", data.token);
+          clearStoredData();
+
+          // Redirect to school dashboard
+          navigate("/schools/dashboard");
+        } else {
+          // Handle specific error cases
+          const errorMessage = data.error || "Registration failed";
+          if (errorMessage.includes("already exists")) {
+            setErrors({
+              submit:
+                "An account with this email already exists. Please try logging in instead.",
+            });
+          } else if (errorMessage.includes("required")) {
+            setErrors({ submit: "Please fill in all required fields." });
+          } else if (errorMessage.includes("password")) {
+            setErrors({
+              submit: "Password must be at least 8 characters long.",
+            });
+          } else if (errorMessage.includes("email")) {
+            setErrors({ submit: "Please provide a valid email address." });
+          } else {
+            setErrors({ submit: errorMessage });
+          }
+        }
       }
     } catch (error) {
       console.error("Registration error:", error);
@@ -1834,8 +1857,8 @@ export const SignUpPage: React.FC = () => {
               </motion.div>
             )}
 
-            {/* Step 4: Choose Your Plan (for schools only) */}
-            {isInitialized && currentStep === 4 && userType === "school" && (
+            {/* Step 4: Removed - Plan selection moved to modal/paywall */}
+            {false && isInitialized && currentStep === 4 && userType === "school" && (
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
