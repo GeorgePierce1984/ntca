@@ -1113,7 +1113,7 @@ export const SchoolDashboardPage: React.FC = () => {
                       );
                     })}
                   </div>
-                  <div className="-translate-x-[100px]">
+                  <div className="-translate-x-[50px]">
                     <Button
                       variant="gradient"
                       leftIcon={<Plus className="w-4 h-4" />}
