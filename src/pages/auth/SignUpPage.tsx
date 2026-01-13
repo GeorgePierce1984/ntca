@@ -374,14 +374,12 @@ export const SignUpPage: React.FC = () => {
         }
       }
 
-      // Phone validation
+      // Phone validation (optional - only validate format if provided)
       const phoneField =
         userType === "school"
           ? (form as SchoolForm).telephone
           : (form as TeacherForm).phone;
-      if (!phoneField) {
-        newErrors.phone = "Phone number is required";
-      } else if (!validatePhoneNumber(phoneField)) {
+      if (phoneField && !validatePhoneNumber(phoneField)) {
         newErrors.phone = "Please enter a valid phone number";
       }
 
@@ -1263,7 +1261,7 @@ export const SignUpPage: React.FC = () => {
 
                         <div>
                           <label className="block text-sm font-medium mb-2">
-                            Phone Number *
+                            Phone Number
                           </label>
                           <div className="relative">
                             <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 w-5 h-5" />
