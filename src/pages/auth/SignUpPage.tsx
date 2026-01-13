@@ -123,6 +123,13 @@ export const SignUpPage: React.FC = () => {
   const [selectedSchoolCountry, setSelectedSchoolCountry] = useState<Country | undefined>(
     undefined, // For school form country selection
   );
+  const [verificationCode, setVerificationCode] = useState("");
+  const [verificationCodeSent, setVerificationCodeSent] = useState(false);
+  const [emailVerified, setEmailVerified] = useState(false);
+  const [storedVerificationCode, setStoredVerificationCode] = useState<string | null>(null);
+  const [verificationCodeExpiry, setVerificationCodeExpiry] = useState<Date | null>(null);
+  const [sendingCode, setSendingCode] = useState(false);
+  const [verifyingCode, setVerifyingCode] = useState(false);
 
   const [schoolForm, setSchoolForm] = useState<SchoolForm>({
     name: "",
@@ -204,6 +211,22 @@ export const SignUpPage: React.FC = () => {
           console.error("Error parsing saved school form:", e);
         }
       }
+
+      // Restore verification state
+      const savedCode = sessionStorage.getItem("verificationCode");
+      const savedExpiry = sessionStorage.getItem("verificationCodeExpiry");
+      const savedVerified = sessionStorage.getItem("emailVerified");
+      
+      if (savedCode) {
+        setStoredVerificationCode(savedCode);
+        setVerificationCodeSent(true);
+      }
+      if (savedExpiry) {
+        setVerificationCodeExpiry(new Date(savedExpiry));
+      }
+      if (savedVerified === "true") {
+        setEmailVerified(true);
+      }
       if (savedTeacherForm) {
         try {
           setTeacherForm(JSON.parse(savedTeacherForm));
@@ -266,6 +289,15 @@ export const SignUpPage: React.FC = () => {
       );
     }
     sessionStorage.setItem("signupBillingType", billingType);
+    if (storedVerificationCode) {
+      sessionStorage.setItem("verificationCode", storedVerificationCode);
+    }
+    if (verificationCodeExpiry) {
+      sessionStorage.setItem("verificationCodeExpiry", verificationCodeExpiry.toISOString());
+    }
+    if (emailVerified) {
+      sessionStorage.setItem("emailVerified", "true");
+    }
   }, [
     userType,
     currentStep,
@@ -273,7 +305,24 @@ export const SignUpPage: React.FC = () => {
     teacherForm,
     selectedPlan,
     billingType,
+    storedVerificationCode,
+    verificationCodeExpiry,
+    emailVerified,
   ]);
+
+  // Auto-send verification code when reaching step 3
+  useEffect(() => {
+    if (currentStep === 3 && !verificationCodeSent && !emailVerified) {
+      const email = userType === "school" ? schoolForm.email : teacherForm.email;
+      if (email) {
+        // Auto-send code after a short delay
+        const timer = setTimeout(() => {
+          handleSendVerificationCode();
+        }, 500);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [currentStep, verificationCodeSent, emailVerified]);
 
   const schoolPlans: SchoolPlan[] = [
     {
