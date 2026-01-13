@@ -775,61 +775,30 @@ export const SignUpPage: React.FC = () => {
                   {userType === "school" ? (
                     <>
                       {/* School Form */}
-                      <div className="grid md:grid-cols-2 gap-6">
-                        <div>
-                          <label className="block text-sm font-medium mb-2">
-                            School Name *
-                          </label>
-                          <div className="relative">
-                            <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 w-5 h-5" />
-                            <input
-                              type="text"
-                              value={schoolForm.name}
-                              onChange={(e) =>
-                                setSchoolForm({
-                                  ...schoolForm,
-                                  name: e.target.value,
-                                })
-                              }
-                              className={`input pl-10 ${errors.name ? "border-red-500" : ""}`}
-                              placeholder="Enter school name"
-                            />
-                          </div>
-                          {errors.name && (
-                            <p className="text-red-500 text-sm mt-1">
-                              {errors.name}
-                            </p>
-                          )}
+                      <div>
+                        <label className="block text-sm font-medium mb-2">
+                          School Name *
+                        </label>
+                        <div className="relative">
+                          <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 w-5 h-5" />
+                          <input
+                            type="text"
+                            value={schoolForm.name}
+                            onChange={(e) =>
+                              setSchoolForm({
+                                ...schoolForm,
+                                name: e.target.value,
+                              })
+                            }
+                            className={`input pl-10 ${errors.name ? "border-red-500" : ""}`}
+                            placeholder="Enter school name"
+                          />
                         </div>
-
-                      </div>
-
-                      <div className="grid md:grid-cols-2 gap-6">
-                        <div>
-                          <label className="block text-sm font-medium mb-2">
-                            Contact Person *
-                          </label>
-                          <div className="relative">
-                            <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 w-5 h-5" />
-                            <input
-                              type="text"
-                              value={schoolForm.contactName}
-                              onChange={(e) =>
-                                setSchoolForm({
-                                  ...schoolForm,
-                                  contactName: e.target.value,
-                                })
-                              }
-                              className={`input pl-10 ${errors.contactName ? "border-red-500" : ""}`}
-                              placeholder="Contact person name"
-                            />
-                          </div>
-                          {errors.contactName && (
-                            <p className="text-red-500 text-sm mt-1">
-                              {errors.contactName}
-                            </p>
-                          )}
-                        </div>
+                        {errors.name && (
+                          <p className="text-red-500 text-sm mt-1">
+                            {errors.name}
+                          </p>
+                        )}
                       </div>
 
                       <div className="grid md:grid-cols-2 gap-6">
