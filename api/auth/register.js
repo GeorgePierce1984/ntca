@@ -87,7 +87,11 @@ export default async function handler(req, res) {
     if (existingUser) {
       return res
         .status(400)
-        .json({ error: "User already exists with this email" });
+        .json({ 
+          error: "An account with this email already exists",
+          email: email,
+          message: `An account with the email ${email} is already in use. Please try logging in instead.`
+        });
     }
 
     // Hash password if provided
