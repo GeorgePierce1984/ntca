@@ -564,9 +564,9 @@ export const SchoolDashboardPage: React.FC = () => {
   // Function to open Post Job Modal
   const handlePostNewJobClick = () => {
     // Check if user has subscription and job limit
+    // For non-subscribed schools: limit is 1 job TOTAL (ever), not just active
     if (!canAccessPremiumFeatures(subscriptionStatus, subscriptionLoading)) {
-      const activeJobCount = jobs.filter((job) => getEffectiveStatus(job) === "ACTIVE").length;
-      if (activeJobCount >= 1) {
+      if (jobs.length >= 1) {
         // Show paywall/Choose Plan modal instead of opening job posting modal
         setShowChoosePlanModal(true);
         toast.error("Free accounts can post up to 1 job. Subscribe to post unlimited jobs and access premium features.", {
@@ -587,6 +587,16 @@ export const SchoolDashboardPage: React.FC = () => {
 
   // Job editing functions
   const openEditModal = (job: JobPosting) => {
+    // Block editing for non-subscribed schools - editing is behind paywall
+    if (!canAccessPremiumFeatures(subscriptionStatus, subscriptionLoading)) {
+      setShowChoosePlanModal(true);
+      toast.error("Editing job postings requires a subscription. Subscribe to access premium features.", {
+        duration: 6000,
+        icon: "🔒",
+      });
+      return;
+    }
+    
     setSelectedJobForEdit(job);
     // Parse benefits JSON if it exists
     let parsedBenefits: any = {};
@@ -1342,8 +1352,22 @@ export const SchoolDashboardPage: React.FC = () => {
                       {jobs.slice(0, 3).map((job) => (
                         <div
                           key={job.id}
-                          className="border border-neutral-200 dark:border-neutral-800 rounded-lg p-4 cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors"
-                          onClick={() => openEditModal(job)}
+                          className={`border border-neutral-200 dark:border-neutral-800 rounded-lg p-4 transition-colors ${
+                            canAccessPremiumFeatures(subscriptionStatus, subscriptionLoading)
+                              ? "cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800/50"
+                              : "cursor-not-allowed opacity-60"
+                          }`}
+                          onClick={() => {
+                            if (canAccessPremiumFeatures(subscriptionStatus, subscriptionLoading)) {
+                              openEditModal(job);
+                            } else {
+                              setShowChoosePlanModal(true);
+                              toast.error("Editing job postings requires a subscription. Subscribe to access premium features.", {
+                                duration: 6000,
+                                icon: "🔒",
+                              });
+                            }
+                          }}
                         >
                           <div className="flex items-start justify-between mb-2">
                             <div className="flex-1">

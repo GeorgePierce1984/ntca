@@ -1675,28 +1675,9 @@ export const SchoolProfilePage: React.FC = () => {
                 <Button
                   onClick={() => {
                     // Check if user has subscription and job limit
+                    // For non-subscribed schools: limit is 1 job TOTAL (ever), not just active
                     if (!canAccessPremiumFeatures(subscriptionStatus, subscriptionLoading)) {
-                      // Helper function to check if a job deadline has passed
-                      const isDeadlinePassed = (deadline: string): boolean => {
-                        const deadlineDate = new Date(deadline);
-                        deadlineDate.setHours(23, 59, 59, 999);
-                        const now = new Date();
-                        return now > deadlineDate;
-                      };
-                      
-                      // Helper function to get effective job status
-                      const getEffectiveStatus = (job: any): "ACTIVE" | "PAUSED" | "CLOSED" => {
-                        if (job.status === "CLOSED" || job.status === "PAUSED") {
-                          return job.status;
-                        }
-                        if (isDeadlinePassed(job.deadline)) {
-                          return "CLOSED";
-                        }
-                        return "ACTIVE";
-                      };
-                      
-                      const activeJobCount = jobs.filter((job) => getEffectiveStatus(job) === "ACTIVE").length;
-                      if (activeJobCount >= 1) {
+                      if (jobs.length >= 1) {
                         // Show paywall/Choose Plan modal instead of opening job posting modal
                         setShowChoosePlanModal(true);
                         toast.error("Free accounts can post up to 1 job. Subscribe to post unlimited jobs and access premium features.", {
