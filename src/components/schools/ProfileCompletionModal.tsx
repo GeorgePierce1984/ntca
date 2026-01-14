@@ -351,7 +351,38 @@ export const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({
     }
   };
 
-  if (!isOpen || !school) return null;
+  // Don't render if not open, but allow school to be null initially (it will be set)
+  if (!isOpen) return null;
+  
+  // If school is not yet loaded, show a loading state or wait
+  if (!school) {
+    return (
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+              onClick={onClose}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            >
+              <div className="bg-white dark:bg-neutral-800 rounded-2xl shadow-2xl p-8">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+                <p className="mt-4 text-center text-neutral-600 dark:text-neutral-400">Loading profile data...</p>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    );
+  }
 
   return (
     <AnimatePresence>

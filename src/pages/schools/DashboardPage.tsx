@@ -364,6 +364,14 @@ export const SchoolDashboardPage: React.FC = () => {
         const justActivated = sessionStorage.getItem("justActivated") === "true";
         const completionPercentage = data.school?.completionPercentage ?? 0;
         
+        console.log("Profile completion check:", {
+          justActivated,
+          completionDismissed,
+          completionPercentage,
+          hasSchool: !!data.school,
+          shouldShow: data.school && (justActivated || !completionDismissed) && completionPercentage < 100
+        });
+        
         // Show modal if:
         // 1. User just activated AND completion < 100%, OR
         // 2. Modal hasn't been dismissed AND completion < 100%
@@ -372,10 +380,13 @@ export const SchoolDashboardPage: React.FC = () => {
           (justActivated || !completionDismissed) &&
           completionPercentage < 100
         ) {
-          // Use setTimeout to ensure state is set before showing modal
+          // Set both state values and show modal
+          // Use a longer timeout to ensure React has processed the state updates
           setTimeout(() => {
+            setFullSchoolData(data.school); // Ensure it's set
             setShowProfileCompletionModal(true);
-          }, 100);
+            console.log("Showing profile completion modal");
+          }, 300);
           sessionStorage.removeItem("justActivated"); // Clear the flag
         }
       }
@@ -1806,19 +1817,17 @@ export const SchoolDashboardPage: React.FC = () => {
       />
 
       {/* Profile Completion Modal */}
-      {fullSchoolData && (
-        <ProfileCompletionModal
-          isOpen={showProfileCompletionModal}
-          onClose={() => {
-            setShowProfileCompletionModal(false);
-            sessionStorage.setItem("profileCompletionModalDismissed", "true");
-          }}
-          school={fullSchoolData}
-          onUpdate={() => {
-            fetchSchoolProfile();
-          }}
-        />
-      )}
+      <ProfileCompletionModal
+        isOpen={showProfileCompletionModal}
+        onClose={() => {
+          setShowProfileCompletionModal(false);
+          sessionStorage.setItem("profileCompletionModalDismissed", "true");
+        }}
+        school={fullSchoolData}
+        onUpdate={() => {
+          fetchSchoolProfile();
+        }}
+      />
 
       {/* Interview Schedule Modal */}
       {selectedApplicantForInterview && (
