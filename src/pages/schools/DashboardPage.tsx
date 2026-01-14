@@ -40,6 +40,7 @@ import {
 import { SubscriptionWarningBanner } from "@/components/schools/SubscriptionWarningBanner";
 import { MessagesModal } from "@/components/messages/MessagesModal";
 import { PostJobModal } from "@/components/schools/PostJobModal";
+import { ProfileCompletionModal } from "@/components/schools/ProfileCompletionModal";
 import toast from "react-hot-toast";
 
 // Types
@@ -245,6 +246,8 @@ export const SchoolDashboardPage: React.FC = () => {
   const [showMessagesModal, setShowMessagesModal] = useState(false);
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showProfileCompletionModal, setShowProfileCompletionModal] = useState(false);
+  const [fullSchoolData, setFullSchoolData] = useState<any>(null);
 
   // Calculate stats from real data
   const totalJobs = jobs.length;
@@ -353,6 +356,20 @@ export const SchoolDashboardPage: React.FC = () => {
       if (response.ok) {
         const data = await response.json();
         setSchoolProfile(data.school);
+        setFullSchoolData(data.school);
+        
+        // Check if we should show the profile completion modal
+        // Show on first dashboard load if completion < 100% and modal hasn't been dismissed
+        const completionDismissed = sessionStorage.getItem("profileCompletionModalDismissed");
+        const justActivated = sessionStorage.getItem("justActivated") === "true";
+        
+        if (
+          (justActivated || !completionDismissed) &&
+          data.school.completionPercentage < 100
+        ) {
+          setShowProfileCompletionModal(true);
+          sessionStorage.removeItem("justActivated"); // Clear the flag
+        }
       }
     } catch (error) {
       console.error("Error fetching school profile:", error);
@@ -932,6 +949,39 @@ export const SchoolDashboardPage: React.FC = () => {
             dismissed={bannerDismissed}
             onDismiss={() => setBannerDismissed(true)}
           />
+
+          {/* Profile Completion Bar */}
+          {schoolProfile && schoolProfile.completionPercentage !== undefined && schoolProfile.completionPercentage < 100 && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="card p-4 mb-6"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-3">
+                  <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                  <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                    Complete your profile to attract more applicants
+                  </span>
+                </div>
+                <span className="text-sm font-bold text-primary-600">
+                  {schoolProfile.completionPercentage}%
+                </span>
+              </div>
+              <div className="w-full bg-neutral-200 dark:bg-neutral-700 rounded-full h-2 mb-2">
+                <div
+                  className="bg-gradient-to-r from-primary-600 to-secondary-600 h-2 rounded-full transition-all"
+                  style={{ width: `${schoolProfile.completionPercentage}%` }}
+                />
+              </div>
+              <button
+                onClick={() => setShowProfileCompletionModal(true)}
+                className="text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 font-medium"
+              >
+                Complete your profile →
+              </button>
+            </motion.div>
+          )}
 
           {/* Header */}
           <div className="mb-8 relative overflow-hidden rounded-xl">
@@ -1745,6 +1795,19 @@ export const SchoolDashboardPage: React.FC = () => {
             ? jobs.find((j) => j.id === selectedApplicant.jobId)?.title
             : ""
         }
+      />
+
+      {/* Profile Completion Modal */}
+      <ProfileCompletionModal
+        isOpen={showProfileCompletionModal}
+        onClose={() => {
+          setShowProfileCompletionModal(false);
+          sessionStorage.setItem("profileCompletionModalDismissed", "true");
+        }}
+        school={fullSchoolData}
+        onUpdate={() => {
+          fetchSchoolProfile();
+        }}
       />
 
       {/* Interview Schedule Modal */}

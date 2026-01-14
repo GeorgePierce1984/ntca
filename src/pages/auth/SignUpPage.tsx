@@ -699,7 +699,9 @@ export const SignUpPage: React.FC = () => {
           const intendedAction = sessionStorage.getItem("intendedAction");
           sessionStorage.removeItem("intendedAction");
 
-          if (userType === "teacher") {
+          if (userType === "school") {
+            // Set flag to show profile completion modal on first dashboard load
+            sessionStorage.setItem("justActivated", "true");
             if (intendedAction === "post-job") {
               navigate("/schools/dashboard?tab=post-job");
             } else if (intendedAction === "browse") {
@@ -769,6 +771,9 @@ export const SignUpPage: React.FC = () => {
           // Store auth token and redirect
           localStorage.setItem("authToken", data.token);
           clearStoredData();
+
+          // Set flag to show profile completion modal on first dashboard load
+          sessionStorage.setItem("justActivated", "true");
 
           // Redirect to school dashboard
           navigate("/schools/dashboard");

@@ -1,0 +1,641 @@
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  X,
+  Building,
+  Mail,
+  Phone,
+  MapPin,
+  Globe,
+  Calendar,
+  Users,
+  Award,
+  Camera,
+  FileText,
+  CheckCircle,
+  AlertCircle,
+  Info,
+} from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { CountrySelector } from "@/components/forms/CountrySelector";
+import { countries, type Country, getCountryByName } from "@/data/countries";
+import { SCHOOL_TYPES, CURRICULUM_OPTIONS } from "@/constants/options";
+import toast from "react-hot-toast";
+
+interface School {
+  id: string;
+  name: string;
+  contactName: string;
+  contactEmail?: string;
+  telephone: string;
+  phoneCountryCode: string;
+  streetAddress: string;
+  city: string;
+  state?: string;
+  postalCode: string;
+  country: string;
+  schoolType: string;
+  curriculum?: string;
+  estimateJobs: string;
+  website?: string;
+  description?: string;
+  teachingPhilosophy?: string;
+  logoUrl?: string;
+  coverPhotoUrl?: string;
+  established?: string;
+  studentCount?: number;
+  studentAgeRangeMin?: number;
+  studentAgeRangeMax?: number;
+  averageClassSize?: number;
+  benefits?: string;
+  completionPercentage?: number;
+}
+
+interface ProfileCompletionModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  school: School | null;
+  onUpdate: () => void;
+}
+
+const schoolTypeOptions = SCHOOL_TYPES;
+const curriculumOptions = CURRICULUM_OPTIONS;
+
+const estimateJobsOptions = [
+  "1-2 jobs per year",
+  "3-5 jobs per year",
+  "6-10 jobs per year",
+  "10+ jobs per year",
+  "As needed",
+];
+
+export const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({
+  isOpen,
+  onClose,
+  school,
+  onUpdate,
+}) => {
+  const [activeTab, setActiveTab] = useState<string>("basic");
+  const [formData, setFormData] = useState<Partial<School>>({});
+  const [saving, setSaving] = useState(false);
+  const [selectedCountry, setSelectedCountry] = useState<Country | undefined>(undefined);
+
+  useEffect(() => {
+    if (school) {
+      setFormData(school);
+      if (school.country) {
+        setSelectedCountry(getCountryByName(school.country));
+      }
+    }
+  }, [school]);
+
+  // Get incomplete fields and organize by tabs
+  const getIncompleteFields = () => {
+    if (!school) return { basic: [], details: [], media: [] };
+
+    const incomplete: { basic: string[]; details: string[]; media: string[] } = {
+      basic: [],
+      details: [],
+      media: [],
+    };
+
+    // Basic Information (checking for empty strings, null, or undefined)
+    if (!school.name || !school.name.trim() || school.name === "School Name") incomplete.basic.push("School Name");
+    if (!school.contactName || !school.contactName.trim() || school.contactName === "Contact Name") incomplete.basic.push("Contact Person");
+    if (!school.contactEmail || !school.contactEmail.trim()) incomplete.basic.push("Contact Email");
+    if (!school.telephone || !school.telephone.trim() || school.telephone === "N/A") incomplete.basic.push("Phone Number");
+    if (!school.streetAddress || !school.streetAddress.trim() || school.streetAddress === "Address") incomplete.basic.push("Street Address");
+    if (!school.city || !school.city.trim() || school.city === "City") incomplete.basic.push("City");
+    if (!school.country || !school.country.trim()) incomplete.basic.push("Country");
+    if (!school.schoolType || !school.schoolType.trim()) incomplete.basic.push("School Type");
+
+    // Additional Details
+    if (!school.description || !school.description.trim()) incomplete.details.push("School Description");
+    if (!school.website || !school.website.trim()) incomplete.details.push("Website");
+    if (!school.curriculum || !school.curriculum.trim()) incomplete.details.push("Curriculum");
+    if (!school.established) incomplete.details.push("Established Date");
+    if (!school.studentCount) incomplete.details.push("Student Count");
+    if (!school.studentAgeRangeMin || !school.studentAgeRangeMax) incomplete.details.push("Student Age Range");
+    if (!school.averageClassSize) incomplete.details.push("Average Class Size");
+    if (!school.teachingPhilosophy || !school.teachingPhilosophy.trim()) incomplete.details.push("Teaching Philosophy");
+
+    // Media
+    if (!school.logoUrl || !school.logoUrl.trim()) incomplete.media.push("School Logo");
+    if (!school.coverPhotoUrl || !school.coverPhotoUrl.trim()) incomplete.media.push("Cover Photo");
+
+    return incomplete;
+  };
+
+  const incompleteFields = getIncompleteFields();
+  const hasIncompleteFields = 
+    incompleteFields.basic.length > 0 || 
+    incompleteFields.details.length > 0 || 
+    incompleteFields.media.length > 0;
+
+  // Set initial tab to first tab with incomplete fields
+  useEffect(() => {
+    if (incompleteFields.basic.length > 0) {
+      setActiveTab("basic");
+    } else if (incompleteFields.details.length > 0) {
+      setActiveTab("details");
+    } else if (incompleteFields.media.length > 0) {
+      setActiveTab("media");
+    }
+  }, [school]);
+
+  const handleSave = async () => {
+    if (!school) return;
+
+    setSaving(true);
+    try {
+      const response = await fetch("/api/schools/profile", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (response.ok) {
+        toast.success("Profile updated successfully!");
+        onUpdate();
+        // Check if we should close or move to next tab
+        const updatedIncomplete = getIncompleteFields();
+        if (updatedIncomplete.basic.length === 0 && updatedIncomplete.details.length === 0 && updatedIncomplete.media.length === 0) {
+          onClose();
+        } else {
+          // Move to next tab with incomplete fields
+          if (activeTab === "basic" && updatedIncomplete.details.length > 0) {
+            setActiveTab("details");
+          } else if (activeTab === "details" && updatedIncomplete.media.length > 0) {
+            setActiveTab("media");
+          }
+        }
+      } else {
+        const error = await response.json();
+        toast.error(error.error || "Failed to update profile");
+      }
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      toast.error("Failed to update profile");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!isOpen || !school) return null;
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+            onClick={onClose}
+          />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          >
+            <div className="bg-white dark:bg-neutral-800 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+              {/* Header */}
+              <div className="p-6 border-b border-neutral-200 dark:border-neutral-700">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
+                      Complete Your School Profile
+                    </h2>
+                    <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
+                      Adding more details helps attract better applicants to your job postings
+                    </p>
+                  </div>
+                  <button
+                    onClick={onClose}
+                    className="text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
+
+                {/* Completion Bar */}
+                <div className="mt-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                      Profile Completion
+                    </span>
+                    <span className="text-sm font-bold text-primary-600">
+                      {school.completionPercentage || 0}%
+                    </span>
+                  </div>
+                  <div className="w-full bg-neutral-200 dark:bg-neutral-700 rounded-full h-2">
+                    <div
+                      className="bg-gradient-to-r from-primary-600 to-secondary-600 h-2 rounded-full transition-all"
+                      style={{ width: `${school.completionPercentage || 0}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Tabs */}
+              <div className="border-b border-neutral-200 dark:border-neutral-700 px-6">
+                <div className="flex gap-4">
+                  {[
+                    { key: "basic", label: "Basic Information", icon: Building, count: incompleteFields.basic.length },
+                    { key: "details", label: "Additional Details", icon: FileText, count: incompleteFields.details.length },
+                    { key: "media", label: "Media & Images", icon: Camera, count: incompleteFields.media.length },
+                  ].map((tab) => (
+                    <button
+                      key={tab.key}
+                      onClick={() => setActiveTab(tab.key)}
+                      className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors ${
+                        activeTab === tab.key
+                          ? "border-primary-600 text-primary-600"
+                          : "border-transparent text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100"
+                      }`}
+                    >
+                      <tab.icon className="w-4 h-4" />
+                      <span>{tab.label}</span>
+                      {tab.count > 0 && (
+                        <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+                          {tab.count}
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 overflow-y-auto p-6">
+                <AnimatePresence mode="wait">
+                  {activeTab === "basic" && (
+                    <motion.div
+                      key="basic"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 20 }}
+                      className="space-y-6"
+                    >
+                      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
+                        <div className="flex items-start gap-3">
+                          <Info className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
+                          <div>
+                            <p className="text-sm text-blue-800 dark:text-blue-200">
+                              <strong>Why complete your profile?</strong> Schools with complete profiles receive up to 3x more applications. 
+                              Teachers prefer applying to schools that provide clear information about their institution.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="grid md:grid-cols-2 gap-6">
+                        <div>
+                          <label className="block text-sm font-medium mb-2">
+                            School Name
+                          </label>
+                          <input
+                            type="text"
+                            value={formData.name || ""}
+                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                            className="input w-full"
+                            placeholder="Enter school name"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium mb-2">
+                            Contact Person
+                          </label>
+                          <input
+                            type="text"
+                            value={formData.contactName || ""}
+                            onChange={(e) => setFormData({ ...formData, contactName: e.target.value })}
+                            className="input w-full"
+                            placeholder="Full name"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium mb-2">
+                            Contact Email
+                          </label>
+                          <input
+                            type="email"
+                            value={formData.contactEmail || ""}
+                            onChange={(e) => setFormData({ ...formData, contactEmail: e.target.value })}
+                            className="input w-full"
+                            placeholder="contact@school.com"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium mb-2">
+                            Phone Number
+                          </label>
+                          <input
+                            type="tel"
+                            value={formData.telephone || ""}
+                            onChange={(e) => setFormData({ ...formData, telephone: e.target.value })}
+                            className="input w-full"
+                            placeholder="123-456-7890"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium mb-2">
+                            Street Address
+                          </label>
+                          <input
+                            type="text"
+                            value={formData.streetAddress || ""}
+                            onChange={(e) => setFormData({ ...formData, streetAddress: e.target.value })}
+                            className="input w-full"
+                            placeholder="123 Main Street"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium mb-2">
+                            City
+                          </label>
+                          <input
+                            type="text"
+                            value={formData.city || ""}
+                            onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                            className="input w-full"
+                            placeholder="City name"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium mb-2">
+                            Country
+                          </label>
+                          <CountrySelector
+                            selectedCountry={selectedCountry}
+                            onSelect={(country) => {
+                              setSelectedCountry(country);
+                              setFormData({ ...formData, country: country.name });
+                            }}
+                            placeholder="Select country"
+                            filterToCentralAsia={true}
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium mb-2">
+                            School Type
+                          </label>
+                          <select
+                            value={formData.schoolType || ""}
+                            onChange={(e) => setFormData({ ...formData, schoolType: e.target.value })}
+                            className="input w-full"
+                          >
+                            <option value="">Select school type</option>
+                            {schoolTypeOptions.map((type) => (
+                              <option key={type.value} value={type.value}>
+                                {type.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {activeTab === "details" && (
+                    <motion.div
+                      key="details"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 20 }}
+                      className="space-y-6"
+                    >
+                      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
+                        <div className="flex items-start gap-3">
+                          <Info className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
+                          <div>
+                            <p className="text-sm text-blue-800 dark:text-blue-200">
+                              <strong>Stand out from other schools!</strong> Detailed profiles help teachers understand your school's culture, 
+                              values, and what makes you unique. This leads to more qualified applicants who are a better fit.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-6">
+                        <div>
+                          <label className="block text-sm font-medium mb-2">
+                            School Description
+                          </label>
+                          <textarea
+                            value={formData.description || ""}
+                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                            className="input w-full min-h-[120px]"
+                            placeholder="Tell teachers about your school, its mission, values, and what makes it special..."
+                          />
+                          <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                            A compelling description helps attract teachers who align with your school's values
+                          </p>
+                        </div>
+
+                        <div className="grid md:grid-cols-2 gap-6">
+                          <div>
+                            <label className="block text-sm font-medium mb-2">
+                              Website
+                            </label>
+                            <input
+                              type="url"
+                              value={formData.website || ""}
+                              onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                              className="input w-full"
+                              placeholder="https://www.school.com"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium mb-2">
+                              Curriculum
+                            </label>
+                            <select
+                              value={formData.curriculum || ""}
+                              onChange={(e) => setFormData({ ...formData, curriculum: e.target.value })}
+                              className="input w-full"
+                            >
+                              <option value="">Select curriculum</option>
+                              {curriculumOptions.map((cur) => (
+                                <option key={cur.value} value={cur.value}>
+                                  {cur.label}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium mb-2">
+                              Established Year
+                            </label>
+                            <input
+                              type="date"
+                              value={formData.established ? new Date(formData.established).toISOString().split('T')[0] : ""}
+                              onChange={(e) => setFormData({ ...formData, established: e.target.value })}
+                              className="input w-full"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium mb-2">
+                              Student Count
+                            </label>
+                            <input
+                              type="number"
+                              value={formData.studentCount || ""}
+                              onChange={(e) => setFormData({ ...formData, studentCount: parseInt(e.target.value) || undefined })}
+                              className="input w-full"
+                              placeholder="500"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium mb-2">
+                              Student Age Range (Min)
+                            </label>
+                            <input
+                              type="number"
+                              value={formData.studentAgeRangeMin || ""}
+                              onChange={(e) => setFormData({ ...formData, studentAgeRangeMin: parseInt(e.target.value) || undefined })}
+                              className="input w-full"
+                              placeholder="5"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium mb-2">
+                              Student Age Range (Max)
+                            </label>
+                            <input
+                              type="number"
+                              value={formData.studentAgeRangeMax || ""}
+                              onChange={(e) => setFormData({ ...formData, studentAgeRangeMax: parseInt(e.target.value) || undefined })}
+                              className="input w-full"
+                              placeholder="18"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium mb-2">
+                              Average Class Size
+                            </label>
+                            <input
+                              type="number"
+                              value={formData.averageClassSize || ""}
+                              onChange={(e) => setFormData({ ...formData, averageClassSize: parseInt(e.target.value) || undefined })}
+                              className="input w-full"
+                              placeholder="25"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium mb-2">
+                            Teaching Philosophy
+                          </label>
+                          <textarea
+                            value={formData.teachingPhilosophy || ""}
+                            onChange={(e) => setFormData({ ...formData, teachingPhilosophy: e.target.value })}
+                            className="input w-full min-h-[100px]"
+                            placeholder="Describe your school's approach to teaching and learning..."
+                          />
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {activeTab === "media" && (
+                    <motion.div
+                      key="media"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 20 }}
+                      className="space-y-6"
+                    >
+                      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
+                        <div className="flex items-start gap-3">
+                          <Info className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
+                          <div>
+                            <p className="text-sm text-blue-800 dark:text-blue-200">
+                              <strong>Visual appeal matters!</strong> Schools with logos and cover photos receive significantly more profile views. 
+                              Help teachers visualize what it's like to work at your school.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-6">
+                        <div>
+                          <label className="block text-sm font-medium mb-2">
+                            School Logo URL
+                          </label>
+                          <input
+                            type="url"
+                            value={formData.logoUrl || ""}
+                            onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
+                            className="input w-full"
+                            placeholder="https://example.com/logo.png"
+                          />
+                          <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                            Upload your logo to a hosting service and paste the URL here
+                          </p>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium mb-2">
+                            Cover Photo URL
+                          </label>
+                          <input
+                            type="url"
+                            value={formData.coverPhotoUrl || ""}
+                            onChange={(e) => setFormData({ ...formData, coverPhotoUrl: e.target.value })}
+                            className="input w-full"
+                            placeholder="https://example.com/cover.jpg"
+                          />
+                          <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                            A cover photo helps showcase your school's facilities and environment
+                          </p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Footer */}
+              <div className="p-6 border-t border-neutral-200 dark:border-neutral-700 flex justify-between items-center">
+                <button
+                  onClick={onClose}
+                  className="text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100"
+                >
+                  I'll complete this later
+                </button>
+                <Button
+                  onClick={handleSave}
+                  disabled={saving}
+                  variant="gradient"
+                >
+                  {saving ? "Saving..." : "Save & Continue"}
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  );
+};
+
