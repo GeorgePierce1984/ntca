@@ -352,7 +352,8 @@ export default async function handler(req, res) {
       ];
       const optionalButImportantFields = [
         description, // Moved from required to optional
-        website, logoUrl, established, studentCount
+        // website removed - not all schools have websites
+        logoUrl, established, studentCount
       ];
 
       const requiredComplete = requiredFields.every(field => field && field.toString().trim());
