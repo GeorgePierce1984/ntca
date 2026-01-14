@@ -178,24 +178,22 @@ export default async function handler(req, res) {
 
       // Check if school profile is complete before allowing job posting
       // Only check for non-draft jobs
+      // Only require the same fields that are mandatory during account registration
       const isDraft = req.body.status === 'DRAFT';
       
       if (!isDraft) {
-        // Description is now optional - can be set from job posting
+        // Only require the 4 fields that are mandatory during registration:
+        // name, contactName, city, country
         const requiredFields = [
           school.name,
           school.contactName,
-          school.telephone,
-          school.streetAddress,
           school.city,
           school.country,
-          school.schoolType,
-          // school.description - removed from required fields
         ];
 
         const missingFields = requiredFields
           .map((field, index) => {
-            const fieldNames = ["name", "contactName", "telephone", "streetAddress", "city", "country", "schoolType"];
+            const fieldNames = ["name", "contactName", "city", "country"];
             return field && field.toString().trim() ? null : fieldNames[index];
           })
           .filter(Boolean);
