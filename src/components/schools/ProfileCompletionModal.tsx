@@ -108,9 +108,10 @@ export const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({
     };
 
     // Basic Information (checking for empty strings, null, or undefined)
+    // Note: Contact Email is not checked as it's auto-populated from account email
     if (!school.name || !school.name.trim() || school.name === "School Name") incomplete.basic.push("School Name");
     if (!school.contactName || !school.contactName.trim() || school.contactName === "Contact Name") incomplete.basic.push("Contact Person");
-    if (!school.contactEmail || !school.contactEmail.trim()) incomplete.basic.push("Contact Email");
+    // Contact Email is auto-populated from account email, so we don't check it
     if (!school.telephone || !school.telephone.trim() || school.telephone === "N/A") incomplete.basic.push("Phone Number");
     if (!school.streetAddress || !school.streetAddress.trim() || school.streetAddress === "Address") incomplete.basic.push("Street Address");
     if (!school.city || !school.city.trim() || school.city === "City") incomplete.basic.push("City");
@@ -170,19 +171,88 @@ export const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({
 
       if (response.ok) {
         toast.success("Profile updated successfully!");
-        onUpdate();
-        // Check if we should close or move to next tab
-        const updatedIncomplete = getIncompleteFields();
-        if (updatedIncomplete.basic.length === 0 && updatedIncomplete.details.length === 0 && updatedIncomplete.media.length === 0) {
-          onClose();
-        } else {
-          // Move to next tab with incomplete fields
-          if (activeTab === "basic" && updatedIncomplete.details.length > 0) {
-            setActiveTab("details");
-          } else if (activeTab === "details" && updatedIncomplete.media.length > 0) {
-            setActiveTab("media");
-          }
+        const data = await response.json();
+        onUpdate(); // This will refresh the school data
+        
+        // For Media tab, always close after saving
+        if (activeTab === "media") {
+          setTimeout(() => {
+            onClose();
+          }, 500); // Small delay to show success message
+          return;
         }
+        
+        // For other tabs, check if we should move to next tab or close
+        // Wait a bit for the data to update, then check incomplete fields
+        setTimeout(() => {
+          // Re-fetch to get updated completion data
+          fetch("/api/schools/profile", {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+            },
+          })
+            .then(res => res.json())
+            .then(updatedData => {
+              if (updatedData.school) {
+                // Check incomplete fields from updated data
+                const checkIncomplete = (schoolData: School) => {
+                  const incomplete: { basic: string[]; details: string[]; media: string[] } = {
+                    basic: [],
+                    details: [],
+                    media: [],
+                  };
+                  
+                  if (!schoolData.name || !schoolData.name.trim() || schoolData.name === "School Name") incomplete.basic.push("School Name");
+                  if (!schoolData.contactName || !schoolData.contactName.trim() || schoolData.contactName === "Contact Name") incomplete.basic.push("Contact Person");
+                  if (!schoolData.telephone || !schoolData.telephone.trim() || schoolData.telephone === "N/A") incomplete.basic.push("Phone Number");
+                  if (!schoolData.streetAddress || !schoolData.streetAddress.trim() || schoolData.streetAddress === "Address") incomplete.basic.push("Street Address");
+                  if (!schoolData.city || !schoolData.city.trim() || schoolData.city === "City") incomplete.basic.push("City");
+                  if (!schoolData.country || !schoolData.country.trim()) incomplete.basic.push("Country");
+                  if (!schoolData.schoolType || !schoolData.schoolType.trim()) incomplete.basic.push("School Type");
+                  
+                  if (!schoolData.description || !schoolData.description.trim()) incomplete.details.push("School Description");
+                  if (!schoolData.website || !schoolData.website.trim()) incomplete.details.push("Website");
+                  if (!schoolData.curriculum || !schoolData.curriculum.trim()) incomplete.details.push("Curriculum");
+                  if (!schoolData.established) incomplete.details.push("Established Date");
+                  if (!schoolData.studentCount) incomplete.details.push("Student Count");
+                  if (!schoolData.studentAgeRangeMin || !schoolData.studentAgeRangeMax) incomplete.details.push("Student Age Range");
+                  if (!schoolData.averageClassSize) incomplete.details.push("Average Class Size");
+                  if (!schoolData.teachingPhilosophy || !schoolData.teachingPhilosophy.trim()) incomplete.details.push("Teaching Philosophy");
+                  
+                  if (!schoolData.logoUrl || !schoolData.logoUrl.trim()) incomplete.media.push("School Logo");
+                  if (!schoolData.coverPhotoUrl || !schoolData.coverPhotoUrl.trim()) incomplete.media.push("Cover Photo");
+                  
+                  return incomplete;
+                };
+                
+                const updatedIncomplete = checkIncomplete(updatedData.school);
+                
+                // If all complete, close modal
+                if (updatedIncomplete.basic.length === 0 && updatedIncomplete.details.length === 0 && updatedIncomplete.media.length === 0) {
+                  onClose();
+                } else {
+                  // Move to next tab with incomplete fields
+                  if (activeTab === "basic" && updatedIncomplete.details.length > 0) {
+                    setActiveTab("details");
+                  } else if (activeTab === "details" && updatedIncomplete.media.length > 0) {
+                    setActiveTab("media");
+                  } else if (activeTab === "basic" && updatedIncomplete.basic.length === 0 && updatedIncomplete.media.length > 0) {
+                    // If basic is complete but details is also complete, go to media
+                    setActiveTab("media");
+                  }
+                }
+              }
+            })
+            .catch(err => {
+              console.error("Error checking updated profile:", err);
+              // If fetch fails, just move to next tab based on current tab
+              if (activeTab === "basic") {
+                setActiveTab("details");
+              } else if (activeTab === "details") {
+                setActiveTab("media");
+              }
+            });
+        }, 300);
       } else {
         const error = await response.json();
         toast.error(error.error || "Failed to update profile");
@@ -833,7 +903,7 @@ export const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({
                   disabled={saving}
                   variant="gradient"
                 >
-                  {saving ? "Saving..." : "Save & Continue"}
+                  {saving ? "Saving..." : activeTab === "media" ? "Save & Close" : "Save & Continue"}
                 </Button>
               </div>
             </div>
