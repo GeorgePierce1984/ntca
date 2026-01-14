@@ -687,6 +687,7 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
                 </div>
               </div>
             </motion.div>
+            </Paywall>
           </div>
         )}
       </AnimatePresence>
