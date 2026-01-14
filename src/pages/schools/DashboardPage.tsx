@@ -1082,7 +1082,9 @@ export const SchoolDashboardPage: React.FC = () => {
                       className="w-20 h-20 md:w-24 md:h-24 rounded-full object-cover border-4 border-white dark:border-neutral-800 shadow-lg"
                     />
                   ) : (
-                    <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-neutral-200 dark:bg-neutral-700 border-4 border-white dark:border-neutral-800" />
+                    <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-neutral-200 dark:bg-neutral-700 border-4 border-white dark:border-neutral-800 flex items-center justify-center">
+                      <Building2 className="w-10 h-10 md:w-12 md:h-12 text-neutral-400" />
+                    </div>
                   )}
                 </div>
                 
