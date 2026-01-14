@@ -12,6 +12,8 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { Paywall } from "@/components/paywall/Paywall";
+import { canAccessPremiumFeatures } from "@/utils/subscription";
 import { motion } from "framer-motion";
 
 interface Teacher {
@@ -35,6 +37,8 @@ export const BrowseTeachersPage: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [loading, setLoading] = useState(true);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
+  const [subscriptionLoading, setSubscriptionLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState({
     qualification: "",
@@ -55,7 +59,34 @@ export const BrowseTeachersPage: React.FC = () => {
     }
 
     fetchTeachers();
+    fetchSubscriptionStatus();
   }, [isAuthenticated, user, navigate]);
+
+  // Fetch subscription status
+  const fetchSubscriptionStatus = async () => {
+    const token = localStorage.getItem("authToken");
+    if (!token || user?.userType !== "SCHOOL") {
+      setSubscriptionLoading(false);
+      return;
+    }
+    
+    try {
+      const response = await fetch("/api/subscription-details", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setSubscriptionStatus(data.subscriptionStatus);
+      }
+    } catch (error) {
+      console.error("Error fetching subscription status:", error);
+    } finally {
+      setSubscriptionLoading(false);
+    }
+  };
 
   const fetchTeachers = async () => {
     try {
@@ -112,7 +143,14 @@ export const BrowseTeachersPage: React.FC = () => {
     );
   }
 
+  const isBlocked = user?.userType === "SCHOOL" && !canAccessPremiumFeatures(subscriptionStatus, subscriptionLoading);
+
   return (
+    <Paywall
+      isBlocked={isBlocked}
+      featureName="Browse Teachers"
+      description="Subscribe to unlock access to our verified teacher database and find the perfect candidates for your school."
+    >
     <div className="min-h-screen pt-20 bg-neutral-50 dark:bg-neutral-900">
       <div className="section">
         <div className="container-custom">
@@ -240,5 +278,6 @@ export const BrowseTeachersPage: React.FC = () => {
         </div>
       </div>
     </div>
+    </Paywall>
   );
 };
