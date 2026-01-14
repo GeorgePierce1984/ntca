@@ -1406,16 +1406,18 @@ export const SchoolProfilePage: React.FC = () => {
                       <InfoIcon content="A specific contact email for job inquiries. If not provided, your account email will be used." />
                     </div>
                     {editMode ? (
-                      <input
-                        type="email"
-                        value={school?.user?.email || formData.contactEmail || ""}
-                        disabled
-                        className="input bg-neutral-100 dark:bg-neutral-700 cursor-not-allowed"
-                        placeholder="contact@school.com"
-                      />
-                      <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
-                        This is your account email and cannot be changed
-                      </p>
+                      <>
+                        <input
+                          type="email"
+                          value={school?.user?.email || formData.contactEmail || ""}
+                          disabled
+                          className="input bg-neutral-100 dark:bg-neutral-700 cursor-not-allowed"
+                          placeholder="contact@school.com"
+                        />
+                        <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                          This is your account email and cannot be changed
+                        </p>
+                      </>
                     ) : (
                       <p className="text-neutral-900 dark:text-neutral-100">
                         {school.contactEmail || school.user.email}
