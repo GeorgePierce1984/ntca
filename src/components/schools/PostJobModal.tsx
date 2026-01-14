@@ -216,16 +216,24 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({
       
       // Focus on the first error field after a short delay to ensure tab switch completes
       setTimeout(() => {
-        const fieldId = firstError === "country" ? "country-selector" : firstError;
-        const fieldElement = document.getElementById(fieldId) || 
-                            document.querySelector(`[name="${firstError}"]`) ||
-                            document.querySelector(`input[placeholder*="${firstError}"]`);
+        let fieldElement: HTMLElement | null = null;
+        
+        if (firstError === "country") {
+          // For country selector, try to find the button or input
+          fieldElement = document.querySelector("#country-selector button") as HTMLElement ||
+                        document.querySelector("#country-selector input") as HTMLElement ||
+                        document.querySelector("#country-selector") as HTMLElement;
+        } else {
+          fieldElement = document.getElementById(firstError) as HTMLElement || 
+                        document.querySelector(`[name="${firstError}"]`) as HTMLElement ||
+                        document.querySelector(`input[placeholder*="${firstError}"]`) as HTMLElement;
+        }
         
         if (fieldElement) {
-          (fieldElement as HTMLElement).focus();
-          (fieldElement as HTMLElement).scrollIntoView({ behavior: "smooth", block: "center" });
+          fieldElement.focus();
+          fieldElement.scrollIntoView({ behavior: "smooth", block: "center" });
         }
-      }, 100);
+      }, 150);
       
       return false;
     }
