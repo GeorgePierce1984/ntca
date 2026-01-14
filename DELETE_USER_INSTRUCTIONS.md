@@ -1,7 +1,7 @@
 # Delete User Account Instructions
 
 ## Account to Delete
-**Email:** georgepierce@hotmail.co.uk
+**Email (example):** schoolowner@example.com
 
 ## Method 1: Using the API Endpoint (Recommended)
 
@@ -38,11 +38,11 @@ If you have direct database access, you can run:
 -- First, find the user(s)
 SELECT id, email, "userType", "createdAt" 
 FROM users 
-WHERE email = 'georgepierce@hotmail.co.uk';
+WHERE email = 'schoolowner@example.com';
 
 -- Then delete (cascade will handle related data)
 DELETE FROM users 
-WHERE email = 'georgepierce@hotmail.co.uk';
+WHERE email = 'schoolowner@example.com';
 ```
 
 ## What Gets Deleted

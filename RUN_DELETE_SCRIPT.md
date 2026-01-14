@@ -33,7 +33,7 @@ npm run delete-george
 ## What It Does
 
 This script will:
-1. Find all accounts with email: `georgepierce@hotmail.co.uk`
+1. Find all accounts with a target email (for example: `schoolowner@example.com`)
 2. Show you what will be deleted
 3. Delete the account(s) and ALL related data:
    - User account
