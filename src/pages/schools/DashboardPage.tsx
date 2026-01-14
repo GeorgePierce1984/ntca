@@ -1845,6 +1845,16 @@ export const SchoolDashboardPage: React.FC = () => {
           fetchSchoolProfile();
         }}
       />
+      
+      {/* Debug info - remove in production */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="fixed bottom-4 right-4 bg-black/80 text-white p-2 text-xs rounded z-[100] font-mono">
+          <div>Modal Open: {showProfileCompletionModal ? 'Yes' : 'No'}</div>
+          <div>Has School Data: {fullSchoolData ? 'Yes' : 'No'}</div>
+          <div>Just Activated: {typeof window !== 'undefined' && sessionStorage.getItem("justActivated") === "true" ? 'Yes' : 'No'}</div>
+          <div>Completion: {fullSchoolData?.completionPercentage ?? 'N/A'}%</div>
+        </div>
+      )}
 
       {/* Interview Schedule Modal */}
       {selectedApplicantForInterview && (
