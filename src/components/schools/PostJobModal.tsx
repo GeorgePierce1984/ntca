@@ -532,7 +532,7 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({
                           <label className="block text-sm font-medium mb-2">
                             Country *
                           </label>
-                          <div id="country-selector">
+                          <div id="country-selector" className={fieldErrors.country ? "country-selector-error" : ""}>
                             <CountrySelector
                               selectedCountry={selectedCountry}
                               onSelect={(country) => {
@@ -548,6 +548,7 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({
                               }}
                               placeholder="Select a country"
                               filterToCentralAsia={true}
+                              className={fieldErrors.country ? "border-red-500" : ""}
                             />
                           </div>
                           {fieldErrors.country && (

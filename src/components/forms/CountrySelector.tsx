@@ -71,7 +71,7 @@ export const CountrySelector: React.FC<CountrySelectorProps> = ({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="input flex items-center justify-between w-full text-left"
+        className={`input flex items-center justify-between w-full text-left ${className.includes("border-red-500") ? "border-red-500 focus:border-red-500 focus:ring-red-500" : ""}`}
       >
         <span className="flex items-center gap-2">
           {selectedCountry ? (
