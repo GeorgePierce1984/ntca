@@ -30,11 +30,15 @@ export const Paywall: React.FC<PaywallProps> = ({
       </div>
 
       {/* Paywall overlay */}
-      <div className="absolute inset-0 flex items-center justify-center bg-white/80 dark:bg-neutral-900/80 backdrop-blur-sm z-10">
+      <div 
+        className="absolute inset-0 flex items-center justify-center bg-white/80 dark:bg-neutral-900/80 backdrop-blur-sm z-10"
+        onClick={(e) => e.stopPropagation()}
+      >
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center p-8 max-w-md"
+          onClick={(e) => e.stopPropagation()}
         >
           <div className="w-16 h-16 rounded-full bg-primary-100 dark:bg-primary-900/20 flex items-center justify-center mx-auto mb-4">
             <Lock className="w-8 h-8 text-primary-600 dark:text-primary-400" />
@@ -46,7 +50,10 @@ export const Paywall: React.FC<PaywallProps> = ({
             {description}
           </p>
           <button
-            onClick={() => setShowPlanModal(true)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowPlanModal(true);
+            }}
             className="px-6 py-3 bg-gradient-to-r from-primary-500 to-secondary-500 text-white rounded-lg font-medium hover:from-primary-600 hover:to-secondary-600 transition-all shadow-lg"
           >
             Choose Your Plan
