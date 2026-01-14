@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Lock } from "lucide-react";
 import { ChoosePlanModal } from "@/components/modals/ChoosePlanModal";
+import toast from "react-hot-toast";
 
 interface PaywallProps {
   children: React.ReactNode;
@@ -65,9 +66,76 @@ export const Paywall: React.FC<PaywallProps> = ({
       <ChoosePlanModal
         isOpen={showPlanModal}
         onClose={() => setShowPlanModal(false)}
-        onContinue={(plan, billingType) => {
-          // Redirect to pricing/subscription page
-          window.location.href = "/pricing";
+        onContinue={async (plan, billingType) => {
+          try {
+            // Get the price ID based on plan and billing type
+            const priceId = billingType === "monthly" 
+              ? plan.priceIdMonthly 
+              : plan.priceIdAnnual;
+
+            if (!priceId) {
+              // Fallback to pricing page if price ID not found
+              window.location.href = "/pricing";
+              return;
+            }
+
+            // Get user email from auth token
+            const token = localStorage.getItem("authToken");
+            let userEmail = null;
+            
+            // Try to get user email from profile API
+            try {
+              const response = await fetch("/api/schools/profile", {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              });
+              if (response.ok) {
+                const data = await response.json();
+                userEmail = data.school?.user?.email;
+              }
+            } catch (e) {
+              console.error("Error fetching user email:", e);
+            }
+
+            // Create Stripe checkout session
+            const response = await fetch("/api/create-checkout-session", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                priceId,
+                userType: "school",
+                planName: plan.name,
+                billingType,
+                formData: {
+                  email: userEmail,
+                },
+                successUrl: `${window.location.origin}/schools/dashboard?session_id={CHECKOUT_SESSION_ID}`,
+                cancelUrl: window.location.href, // Return to current page
+              }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+              throw new Error(data.error || "Failed to create checkout session");
+            }
+
+            if (data.url) {
+              // Redirect to Stripe checkout
+              window.location.href = data.url;
+            } else {
+              // Fallback to pricing page
+              window.location.href = "/pricing";
+            }
+          } catch (error) {
+            console.error("Error creating checkout session:", error);
+            // Fallback to pricing page on error
+            window.location.href = "/pricing";
+          }
         }}
       />
     </div>

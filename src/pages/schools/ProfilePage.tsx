@@ -1732,9 +1732,58 @@ export const SchoolProfilePage: React.FC = () => {
       <ChoosePlanModal
         isOpen={showChoosePlanModal}
         onClose={() => setShowChoosePlanModal(false)}
-        onContinue={(plan, billingType) => {
-          // Redirect to pricing/subscription page
-          window.location.href = "/pricing";
+        onContinue={async (plan, billingType) => {
+          try {
+            // Get the price ID based on plan and billing type
+            const priceId = billingType === "monthly" 
+              ? plan.priceIdMonthly 
+              : plan.priceIdAnnual;
+
+            if (!priceId) {
+              toast.error("Price ID not found for selected plan. Please try again.");
+              return;
+            }
+
+            // Get user email from school profile
+            const token = localStorage.getItem("authToken");
+            const userEmail = school?.user?.email;
+
+            // Create Stripe checkout session
+            const response = await fetch("/api/create-checkout-session", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                priceId,
+                userType: "school",
+                planName: plan.name,
+                billingType,
+                formData: {
+                  email: userEmail,
+                },
+                successUrl: `${window.location.origin}/schools/dashboard?session_id={CHECKOUT_SESSION_ID}`,
+                cancelUrl: `${window.location.origin}/schools/profile`,
+              }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+              throw new Error(data.error || "Failed to create checkout session");
+            }
+
+            if (data.url) {
+              // Redirect to Stripe checkout
+              window.location.href = data.url;
+            } else {
+              toast.error("Failed to redirect to payment. Please try again.");
+            }
+          } catch (error) {
+            console.error("Error creating checkout session:", error);
+            toast.error(error instanceof Error ? error.message : "Failed to start checkout process. Please try again.");
+          }
         }}
       />
 
