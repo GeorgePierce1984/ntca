@@ -66,12 +66,14 @@ export const CountrySelector: React.FC<CountrySelectorProps> = ({
     setSearchQuery('');
   };
 
+  const hasError = className.includes("border-red-500");
+  
   return (
     <div className={`relative ${className}`} ref={dropdownRef}>
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`input flex items-center justify-between w-full text-left ${className.includes("border-red-500") ? "border-red-500 focus:border-red-500 focus:ring-red-500" : ""}`}
+        className={`input flex items-center justify-between w-full text-left ${hasError ? "border-red-500 focus:border-red-500 focus:ring-red-500" : ""}`}
       >
         <span className="flex items-center gap-2">
           {selectedCountry ? (
