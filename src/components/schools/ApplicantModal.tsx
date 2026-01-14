@@ -22,6 +22,8 @@ import {
   InterviewScheduleModal,
   InterviewData,
 } from "./InterviewScheduleModal";
+import { Paywall } from "@/components/paywall/Paywall";
+import { canAccessPremiumFeatures } from "@/utils/subscription";
 
 interface Applicant {
   id: string;
@@ -56,6 +58,7 @@ interface ApplicantModalProps {
     note?: string,
   ) => void;
   jobTitle?: string;
+  subscriptionStatus?: string | null;
 }
 
 export const ApplicantModal: React.FC<ApplicantModalProps> = ({
@@ -64,6 +67,7 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
   onClose,
   onStatusUpdate,
   jobTitle,
+  subscriptionStatus,
 }) => {
   const [activeTab, setActiveTab] = useState<
     "overview" | "documents" | "notes" | "timeline"
@@ -75,6 +79,8 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
   const [isDownloading, setIsDownloading] = useState<string | null>(null);
 
   if (!applicant) return null;
+
+  const isBlocked = !canAccessPremiumFeatures(subscriptionStatus);
 
   const getStatusColor = (status: string) => {
     switch (status) {

@@ -41,6 +41,8 @@ import { SubscriptionWarningBanner } from "@/components/schools/SubscriptionWarn
 import { MessagesModal } from "@/components/messages/MessagesModal";
 import { PostJobModal } from "@/components/schools/PostJobModal";
 import { ProfileCompletionModal } from "@/components/schools/ProfileCompletionModal";
+import { Paywall } from "@/components/paywall/Paywall";
+import { canAccessPremiumFeatures } from "@/utils/subscription";
 import toast from "react-hot-toast";
 
 // Types
@@ -680,6 +682,21 @@ export const SchoolDashboardPage: React.FC = () => {
 
   const handleJobSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Check job limit for non-subscribed schools (max 1 job)
+    if (!canAccessPremiumFeatures(subscriptionStatus)) {
+      const activeJobCount = jobs.filter((job) => getEffectiveStatus(job) === "ACTIVE").length;
+      if (activeJobCount >= 1 && !selectedJobForEdit) {
+        toast.error("Free accounts can post up to 1 job. Subscribe to post unlimited jobs and access premium features.", {
+          duration: 6000,
+          icon: "🔒",
+        });
+        // Open the choose plan modal
+        setShowPostJobModal(false);
+        // You can add logic here to show ChoosePlanModal
+        return;
+      }
+    }
     
     // Prevent duplicate submissions
     if (isSubmitting) {
@@ -1360,19 +1377,24 @@ export const SchoolDashboardPage: React.FC = () => {
                   </div>
 
                   {/* Recent Applicants */}
-                  <div className="card p-6">
-                    <div className="flex items-center justify-between mb-6">
-                      <h3 className="heading-3">Recent Applicants</h3>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setActiveTab("applicants")}
-                      >
-                        View All
-                      </Button>
-                    </div>
-                    <div className="space-y-4">
-                      {applications.slice(0, 4).map((applicant) => {
+                  <Paywall
+                    isBlocked={!canAccessPremiumFeatures(subscriptionStatus)}
+                    featureName="Recent Applicants"
+                    description="Subscribe to view and manage applicants for your job postings."
+                  >
+                    <div className="card p-6">
+                      <div className="flex items-center justify-between mb-6">
+                        <h3 className="heading-3">Recent Applicants</h3>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setActiveTab("applicants")}
+                        >
+                          View All
+                        </Button>
+                      </div>
+                      <div className="space-y-4">
+                        {applications.slice(0, 4).map((applicant) => {
                         // Handle both teacher applications and guest applications
                         const isGuestApplication = !applicant.teacher;
                         const firstName = isGuestApplication ? applicant.guestFirstName : applicant.teacher?.firstName;
@@ -1411,6 +1433,7 @@ export const SchoolDashboardPage: React.FC = () => {
                       )}
                     </div>
                   </div>
+                  </Paywall>
                 </div>
               </motion.div>
             )}
@@ -1838,6 +1861,7 @@ export const SchoolDashboardPage: React.FC = () => {
           setSelectedApplicant(null);
         }}
         onStatusUpdate={updateApplicantStatus}
+        subscriptionStatus={subscriptionStatus}
         jobTitle={
           selectedApplicant
             ? jobs.find((j) => j.id === selectedApplicant.jobId)?.title

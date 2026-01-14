@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/contexts/AuthContext";
+import { Paywall } from "@/components/paywall/Paywall";
+import { canAccessPremiumFeatures } from "@/utils/subscription";
 import toast from "react-hot-toast";
 
 interface Conversation {
@@ -52,6 +54,7 @@ export const MessagesPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Scroll to bottom of messages
@@ -235,9 +238,30 @@ export const MessagesPage: React.FC = () => {
     }
   }, [selectedConversation]);
 
+  // Fetch subscription status
+  const fetchSubscriptionStatus = async () => {
+    if (!token || user?.userType !== "SCHOOL") return;
+    
+    try {
+      const response = await fetch("/api/subscription-details", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setSubscriptionStatus(data.subscriptionStatus);
+      }
+    } catch (error) {
+      console.error("Error fetching subscription status:", error);
+    }
+  };
+
   // Initial load
   useEffect(() => {
     fetchConversations();
+    fetchSubscriptionStatus();
   }, []);
 
   // Check for conversation ID in URL params and auto-select it
@@ -301,10 +325,17 @@ export const MessagesPage: React.FC = () => {
     );
   }
 
+  const isBlocked = user?.userType === "SCHOOL" && !canAccessPremiumFeatures(subscriptionStatus);
+
   return (
-    <div className="min-h-screen pt-[90px] bg-neutral-50 dark:bg-neutral-900">
-      <div className="container-custom max-w-7xl mx-auto px-4 py-8">
-        <div className="card p-0 overflow-hidden">
+    <Paywall
+      isBlocked={isBlocked}
+      featureName="Message Center"
+      description="Subscribe to unlock messaging functionality and communicate with applicants."
+    >
+      <div className="min-h-screen pt-[90px] bg-neutral-50 dark:bg-neutral-900">
+        <div className="container-custom max-w-7xl mx-auto px-4 py-8">
+          <div className="card p-0 overflow-hidden">
           <div className="flex h-[calc(100vh-200px)]">
             {/* Conversations List */}
             <div className="w-full md:w-1/3 border-r border-neutral-200 dark:border-neutral-800 flex flex-col">
