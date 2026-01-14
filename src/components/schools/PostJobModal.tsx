@@ -153,7 +153,11 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({
     }
   };
 
-  const handleNextTab = () => {
+  const handleNextTab = (e?: React.MouseEvent | React.KeyboardEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     if (!isLastTab) {
       setActiveTab(tabs[currentTabIndex + 1].key);
     }
@@ -265,7 +269,28 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({
               {/* Content */}
               <div className="flex-1 overflow-y-auto p-8">
 
-                <form id="job-form" className="space-y-6" onSubmit={handleJobSubmit}>
+                <form 
+                  id="job-form" 
+                  className="space-y-6" 
+                  onSubmit={(e) => {
+                    // Only allow form submission if we're on the last tab
+                    if (activeTab !== "school") {
+                      e.preventDefault();
+                      return;
+                    }
+                    handleJobSubmit(e);
+                  }}
+                  onKeyDown={(e) => {
+                    // Prevent Enter key from submitting form unless we're on the last tab and submit button is focused
+                    if (e.key === "Enter" && activeTab !== "school") {
+                      e.preventDefault();
+                    }
+                    // If Enter is pressed in a textarea, don't submit
+                    if (e.key === "Enter" && (e.target as HTMLElement).tagName === "TEXTAREA") {
+                      return; // Allow default behavior for textareas
+                    }
+                  }}
+                >
                   {/* Role Information Tab */}
                   {activeTab === "role" && (
                     <div className="space-y-6">
@@ -1216,6 +1241,14 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({
                               ...jobForm,
                               schoolDescription: e.target.value,
                             })}
+                            onKeyDown={(e) => {
+                              // Prevent Enter from submitting form, but allow Shift+Enter for new lines
+                              if (e.key === "Enter" && !e.shiftKey) {
+                                // Don't prevent default - allow normal textarea behavior
+                                // But prevent form submission
+                                e.stopPropagation();
+                              }
+                            }}
                             className="input"
                             placeholder="Provide a custom description about your school for this specific position..."
                           />
@@ -1244,11 +1277,23 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({
 
                 {isLastTab ? (
                   <Button 
-                    type="submit" 
-                    form="job-form"
+                    type="button"
                     variant="gradient" 
                     size="lg"
                     disabled={subscriptionStatus?.toLowerCase() === "cancelled" || subscriptionStatus?.toLowerCase() === "past_due"}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      // Only submit if we're on the last tab
+                      if (activeTab === "school") {
+                        const form = document.getElementById("job-form") as HTMLFormElement;
+                        if (form) {
+                          form.requestSubmit();
+                        } else {
+                          handleJobSubmit(e as any);
+                        }
+                      }
+                    }}
                   >
                     {selectedJobForEdit ? "Update Job Posting" : "Publish Job Posting"}
                   </Button>
