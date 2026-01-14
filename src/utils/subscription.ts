@@ -16,8 +16,18 @@ export function hasActiveSubscription(subscriptionStatus: string | null | undefi
  * - Messaging
  * - Viewing applicants
  * - Posting more than 1 job
+ * 
+ * @param subscriptionStatus - The subscription status from the API
+ * @param isLoading - Whether subscription status is still being fetched (defaults to false)
+ * @returns boolean - true if subscription is active, or if still loading (to prevent flash)
  */
-export function canAccessPremiumFeatures(subscriptionStatus: string | null | undefined): boolean {
+export function canAccessPremiumFeatures(
+  subscriptionStatus: string | null | undefined,
+  isLoading: boolean = false
+): boolean {
+  // If still loading, allow access to prevent paywall flash
+  if (isLoading) return true;
+  
   return hasActiveSubscription(subscriptionStatus);
 }
 

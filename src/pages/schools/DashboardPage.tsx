@@ -229,6 +229,7 @@ export const SchoolDashboardPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
   const [subscriptionEndDate, setSubscriptionEndDate] = useState<string | null>(null);
+  const [subscriptionLoading, setSubscriptionLoading] = useState(true);
   const [bannerDismissed, setBannerDismissed] = useState(false);
   const [schoolProfile, setSchoolProfile] = useState<{ 
     description?: string;
@@ -343,6 +344,8 @@ export const SchoolDashboardPage: React.FC = () => {
       }
     } catch (error) {
       console.error("Error fetching subscription status:", error);
+    } finally {
+      setSubscriptionLoading(false);
     }
   };
 
@@ -684,7 +687,7 @@ export const SchoolDashboardPage: React.FC = () => {
     e.preventDefault();
     
     // Check job limit for non-subscribed schools (max 1 job)
-    if (!canAccessPremiumFeatures(subscriptionStatus)) {
+    if (!canAccessPremiumFeatures(subscriptionStatus, subscriptionLoading)) {
       const activeJobCount = jobs.filter((job) => getEffectiveStatus(job) === "ACTIVE").length;
       if (activeJobCount >= 1 && !selectedJobForEdit) {
         toast.error("Free accounts can post up to 1 job. Subscribe to post unlimited jobs and access premium features.", {
@@ -1362,7 +1365,7 @@ export const SchoolDashboardPage: React.FC = () => {
 
                   {/* Recent Applicants */}
                   <Paywall
-                    isBlocked={!canAccessPremiumFeatures(subscriptionStatus)}
+                    isBlocked={!canAccessPremiumFeatures(subscriptionStatus, subscriptionLoading)}
                     featureName="Recent Applicants"
                     description="Subscribe to view and manage applicants for your job postings."
                   >
@@ -1557,7 +1560,7 @@ export const SchoolDashboardPage: React.FC = () => {
 
             {activeTab === "applicants" && (
               <Paywall
-                isBlocked={!canAccessPremiumFeatures(subscriptionStatus)}
+                isBlocked={!canAccessPremiumFeatures(subscriptionStatus, subscriptionLoading)}
                 featureName="Applicants Management"
                 description="Subscribe to view and manage applicants for your job postings, schedule interviews, and make hiring decisions."
               >

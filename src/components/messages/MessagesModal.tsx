@@ -73,6 +73,7 @@ export const MessagesModal: React.FC<MessagesModalProps> = ({ isOpen, onClose, o
   const [sending, setSending] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
+  const [subscriptionLoading, setSubscriptionLoading] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Scroll to bottom of messages
@@ -406,7 +407,7 @@ export const MessagesModal: React.FC<MessagesModalProps> = ({ isOpen, onClose, o
 
   if (!isOpen) return null;
 
-  const isBlocked = user?.userType === "SCHOOL" && !canAccessPremiumFeatures(subscriptionStatus);
+  const isBlocked = user?.userType === "SCHOOL" && !canAccessPremiumFeatures(subscriptionStatus, subscriptionLoading);
 
   return (
     <AnimatePresence>
