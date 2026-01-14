@@ -291,10 +291,36 @@ export const MessagesModal: React.FC<MessagesModalProps> = ({ isOpen, onClose, o
     }
   }, [selectedConversation, isOpen]);
 
+  // Fetch subscription status
+  const fetchSubscriptionStatus = async () => {
+    if (!token || user?.userType !== "SCHOOL") {
+      setSubscriptionLoading(false);
+      return;
+    }
+    
+    try {
+      const response = await fetch("/api/subscription-details", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setSubscriptionStatus(data.subscriptionStatus);
+      }
+    } catch (error) {
+      console.error("Error fetching subscription status:", error);
+    } finally {
+      setSubscriptionLoading(false);
+    }
+  };
+
   // Initial load when modal opens
   useEffect(() => {
     if (isOpen) {
       fetchConversations();
+      fetchSubscriptionStatus();
     } else {
       // When modal closes, refresh count one more time to ensure it's up to date
       if (onUnreadCountChange) {
