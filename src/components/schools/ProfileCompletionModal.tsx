@@ -120,7 +120,7 @@ export const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({
 
     // Additional Details
     if (!school.description || !school.description.trim()) incomplete.details.push("School Description");
-    if (!school.website || !school.website.trim()) incomplete.details.push("Website");
+    // website removed - not all schools have websites
     if (!school.curriculum || !school.curriculum.trim()) incomplete.details.push("Curriculum");
     if (!school.established) incomplete.details.push("Established Date");
     if (!school.studentCount) incomplete.details.push("Student Count");
@@ -211,7 +211,7 @@ export const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({
                   if (!schoolData.schoolType || !schoolData.schoolType.trim()) incomplete.basic.push("School Type");
                   
                   if (!schoolData.description || !schoolData.description.trim()) incomplete.details.push("School Description");
-                  if (!schoolData.website || !schoolData.website.trim()) incomplete.details.push("Website");
+                  // website removed - not all schools have websites
                   if (!schoolData.curriculum || !schoolData.curriculum.trim()) incomplete.details.push("Curriculum");
                   if (!schoolData.established) incomplete.details.push("Established Date");
                   if (!schoolData.studentCount) incomplete.details.push("Student Count");
