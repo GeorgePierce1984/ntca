@@ -29,6 +29,8 @@ import { CountrySelector } from "@/components/forms/CountrySelector";
 import { countries, type Country, getCountryByCode } from "@/data/countries";
 import { SCHOOL_TYPES, CURRICULUM_OPTIONS, CENTRAL_ASIA_COUNTRIES } from "@/constants/options";
 import { PostJobModal } from "@/components/schools/PostJobModal";
+import { ChoosePlanModal } from "@/components/modals/ChoosePlanModal";
+import { canAccessPremiumFeatures } from "@/utils/subscription";
 import toast from "react-hot-toast";
 
 interface School {
@@ -97,7 +99,10 @@ export const SchoolProfilePage: React.FC = () => {
   const [selectedPhoneCountry, setSelectedPhoneCountry] = useState<Country | undefined>(undefined);
   const [showPostJobModal, setShowPostJobModal] = useState(false);
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
+  const [subscriptionLoading, setSubscriptionLoading] = useState(true);
   const [selectedJobForEdit, setSelectedJobForEdit] = useState<any | null>(null);
+  const [showChoosePlanModal, setShowChoosePlanModal] = useState(false);
+  const [jobs, setJobs] = useState<any[]>([]);
   const [jobForm, setJobForm] = useState({
     title: "",
     subjectsTaught: "",
@@ -186,6 +191,29 @@ export const SchoolProfilePage: React.FC = () => {
       }
     } catch (error) {
       console.error("Error fetching subscription status:", error);
+    } finally {
+      setSubscriptionLoading(false);
+    }
+  };
+
+  // Fetch jobs to check active job count
+  const fetchJobs = async () => {
+    try {
+      const token = localStorage.getItem("authToken");
+      if (!token) return;
+
+      const response = await fetch("/api/jobs", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setJobs(data.jobs || []);
+      }
+    } catch (error) {
+      console.error("Error fetching jobs:", error);
     }
   };
 
@@ -1646,6 +1674,40 @@ export const SchoolProfilePage: React.FC = () => {
                 </Button>
                 <Button
                   onClick={() => {
+                    // Check if user has subscription and job limit
+                    if (!canAccessPremiumFeatures(subscriptionStatus, subscriptionLoading)) {
+                      // Helper function to check if a job deadline has passed
+                      const isDeadlinePassed = (deadline: string): boolean => {
+                        const deadlineDate = new Date(deadline);
+                        deadlineDate.setHours(23, 59, 59, 999);
+                        const now = new Date();
+                        return now > deadlineDate;
+                      };
+                      
+                      // Helper function to get effective job status
+                      const getEffectiveStatus = (job: any): "ACTIVE" | "PAUSED" | "CLOSED" => {
+                        if (job.status === "CLOSED" || job.status === "PAUSED") {
+                          return job.status;
+                        }
+                        if (isDeadlinePassed(job.deadline)) {
+                          return "CLOSED";
+                        }
+                        return "ACTIVE";
+                      };
+                      
+                      const activeJobCount = jobs.filter((job) => getEffectiveStatus(job) === "ACTIVE").length;
+                      if (activeJobCount >= 1) {
+                        // Show paywall/Choose Plan modal instead of opening job posting modal
+                        setShowChoosePlanModal(true);
+                        toast.error("Free accounts can post up to 1 job. Subscribe to post unlimited jobs and access premium features.", {
+                          duration: 6000,
+                          icon: "🔒",
+                        });
+                        return;
+                      }
+                    }
+                    
+                    // If they can post, open the modal
                     setShowPostJobModal(true);
                     toast.success("Let's create a new job posting!", {
                       icon: "📝",
@@ -1684,6 +1746,16 @@ export const SchoolProfilePage: React.FC = () => {
         </div>
       </div>
       </div>
+
+      {/* Choose Plan Modal */}
+      <ChoosePlanModal
+        isOpen={showChoosePlanModal}
+        onClose={() => setShowChoosePlanModal(false)}
+        onContinue={(plan, billingType) => {
+          // Redirect to pricing/subscription page
+          window.location.href = "/pricing";
+        }}
+      />
 
       {/* Post Job Modal */}
       <PostJobModal

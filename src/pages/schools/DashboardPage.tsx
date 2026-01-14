@@ -42,6 +42,7 @@ import { MessagesModal } from "@/components/messages/MessagesModal";
 import { PostJobModal } from "@/components/schools/PostJobModal";
 import { ProfileCompletionModal } from "@/components/schools/ProfileCompletionModal";
 import { Paywall } from "@/components/paywall/Paywall";
+import { ChoosePlanModal } from "@/components/modals/ChoosePlanModal";
 import { canAccessPremiumFeatures } from "@/utils/subscription";
 import toast from "react-hot-toast";
 
@@ -251,6 +252,7 @@ export const SchoolDashboardPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showProfileCompletionModal, setShowProfileCompletionModal] = useState(false);
   const [fullSchoolData, setFullSchoolData] = useState<any>(null);
+  const [showChoosePlanModal, setShowChoosePlanModal] = useState(false);
 
   // Calculate stats from real data
   const totalJobs = jobs.length;
@@ -561,6 +563,21 @@ export const SchoolDashboardPage: React.FC = () => {
 
   // Function to open Post Job Modal
   const handlePostNewJobClick = () => {
+    // Check if user has subscription and job limit
+    if (!canAccessPremiumFeatures(subscriptionStatus, subscriptionLoading)) {
+      const activeJobCount = jobs.filter((job) => getEffectiveStatus(job) === "ACTIVE").length;
+      if (activeJobCount >= 1) {
+        // Show paywall/Choose Plan modal instead of opening job posting modal
+        setShowChoosePlanModal(true);
+        toast.error("Free accounts can post up to 1 job. Subscribe to post unlimited jobs and access premium features.", {
+          duration: 6000,
+          icon: "🔒",
+        });
+        return;
+      }
+    }
+    
+    // If they can post, open the modal
     setShowPostJobModal(true);
     toast.success("Let's create a new job posting!", {
       icon: "📝",
@@ -1767,6 +1784,16 @@ export const SchoolDashboardPage: React.FC = () => {
           </AnimatePresence>
         </div>
       </div>
+
+      {/* Choose Plan Modal */}
+      <ChoosePlanModal
+        isOpen={showChoosePlanModal}
+        onClose={() => setShowChoosePlanModal(false)}
+        onContinue={(plan, billingType) => {
+          // Redirect to pricing/subscription page
+          window.location.href = "/pricing";
+        }}
+      />
 
       {/* Post Job Modal */}
       <PostJobModal
