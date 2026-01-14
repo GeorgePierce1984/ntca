@@ -133,6 +133,7 @@ export const SignUpPage: React.FC = () => {
   const [verificationCodeExpiry, setVerificationCodeExpiry] = useState<Date | null>(null);
   const [sendingCode, setSendingCode] = useState(false);
   const [verifyingCode, setVerifyingCode] = useState(false);
+  const emailInputRef = useRef<HTMLInputElement>(null);
 
   const [schoolForm, setSchoolForm] = useState<SchoolForm>({
     name: "",
