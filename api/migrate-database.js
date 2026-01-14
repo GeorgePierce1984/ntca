@@ -724,6 +724,40 @@ export default async function handler(req, res) {
       console.log("downloadableProfilePDF column already exists");
     }
 
+    // Check if email verification fields exist in users table
+    const emailVerificationCheck = await prisma.$queryRaw`
+      SELECT column_name
+      FROM information_schema.columns
+      WHERE table_name = 'users'
+      AND column_name IN ('emailVerified', 'resetToken', 'resetTokenExpiry')
+    `;
+
+    const existingEmailVerificationColumns = emailVerificationCheck.map((col) => col.column_name);
+
+    if (!existingEmailVerificationColumns.includes("emailVerified")) {
+      console.log("Adding emailVerified to users table...");
+      await prisma.$executeRaw`ALTER TABLE "users" ADD COLUMN "emailVerified" BOOLEAN NOT NULL DEFAULT false`;
+      console.log("✓ Added emailVerified column to users table");
+    } else {
+      console.log("emailVerified column already exists");
+    }
+
+    if (!existingEmailVerificationColumns.includes("resetToken")) {
+      console.log("Adding resetToken to users table...");
+      await prisma.$executeRaw`ALTER TABLE "users" ADD COLUMN "resetToken" TEXT`;
+      console.log("✓ Added resetToken column to users table");
+    } else {
+      console.log("resetToken column already exists");
+    }
+
+    if (!existingEmailVerificationColumns.includes("resetTokenExpiry")) {
+      console.log("Adding resetTokenExpiry to users table...");
+      await prisma.$executeRaw`ALTER TABLE "users" ADD COLUMN "resetTokenExpiry" TIMESTAMP(3)`;
+      console.log("✓ Added resetTokenExpiry column to users table");
+    } else {
+      console.log("resetTokenExpiry column already exists");
+    }
+
     console.log("Migration completed successfully!");
 
     res.status(200).json({
