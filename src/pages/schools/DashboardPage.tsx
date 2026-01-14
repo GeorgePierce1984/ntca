@@ -1228,22 +1228,6 @@ export const SchoolDashboardPage: React.FC = () => {
                       );
                     })}
                   </div>
-                  <div className="-translate-x-[35px]">
-                    <Button
-                      variant="gradient"
-                      leftIcon={<Plus className="w-4 h-4" />}
-                      onClick={() => {
-                        setShowPostJobModal(true);
-                        toast.success("Let's create a new job posting!", {
-                          icon: "📝",
-                          duration: 2000,
-                        });
-                      }}
-                      className="h-10"
-                    >
-                      Post New Job
-                    </Button>
-                  </div>
                 </nav>
               </div>
             </div>
