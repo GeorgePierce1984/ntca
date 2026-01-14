@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { motion } from "framer-motion";
@@ -493,6 +493,19 @@ export const SignUpPage: React.FC = () => {
             email: data.message || "An account with this email already exists. Please try logging in instead.",
           });
           setLoading(false);
+          
+          // Scroll to email field to show the error message
+          setTimeout(() => {
+            emailInputRef.current?.scrollIntoView({
+              behavior: "smooth",
+              block: "center",
+            });
+            // Focus the email input after scrolling
+            setTimeout(() => {
+              emailInputRef.current?.focus();
+            }, 300);
+          }, 100);
+          
           return;
         }
       } catch (error) {
@@ -1103,6 +1116,7 @@ export const SignUpPage: React.FC = () => {
                           <div className="relative">
                             <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 w-5 h-5" />
                             <input
+                              ref={emailInputRef}
                               type="email"
                               value={schoolForm.email}
                               onChange={(e) =>
