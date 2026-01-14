@@ -95,7 +95,7 @@ export const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({
         setSelectedCountry(getCountryByName(school.country));
       }
     }
-  }, [school]);
+  }, [school, isOpen]); // Re-initialize when modal opens
 
   // Get incomplete fields and organize by tabs
   const getIncompleteFields = () => {

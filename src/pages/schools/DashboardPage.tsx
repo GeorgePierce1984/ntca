@@ -362,12 +362,20 @@ export const SchoolDashboardPage: React.FC = () => {
         // Show on first dashboard load if completion < 100% and modal hasn't been dismissed
         const completionDismissed = sessionStorage.getItem("profileCompletionModalDismissed");
         const justActivated = sessionStorage.getItem("justActivated") === "true";
+        const completionPercentage = data.school?.completionPercentage ?? 0;
         
+        // Show modal if:
+        // 1. User just activated AND completion < 100%, OR
+        // 2. Modal hasn't been dismissed AND completion < 100%
         if (
+          data.school && // Ensure school data exists
           (justActivated || !completionDismissed) &&
-          data.school.completionPercentage < 100
+          completionPercentage < 100
         ) {
-          setShowProfileCompletionModal(true);
+          // Use setTimeout to ensure state is set before showing modal
+          setTimeout(() => {
+            setShowProfileCompletionModal(true);
+          }, 100);
           sessionStorage.removeItem("justActivated"); // Clear the flag
         }
       }
