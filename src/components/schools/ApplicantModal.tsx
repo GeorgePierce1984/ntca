@@ -80,7 +80,9 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
 
   if (!applicant) return null;
 
-  const isBlocked = !canAccessPremiumFeatures(subscriptionStatus);
+  // Only block if we have a subscription status and it's not active
+  // If subscriptionStatus is null/undefined, allow access to prevent flash
+  const isBlocked = subscriptionStatus !== null && subscriptionStatus !== undefined && !canAccessPremiumFeatures(subscriptionStatus, false);
 
   const getStatusColor = (status: string) => {
     switch (status) {
