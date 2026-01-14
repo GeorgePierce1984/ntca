@@ -199,13 +199,13 @@ export default async function handler(req, res) {
             newSchool.country,
           ];
 
-          const optionalButImportantFields = [
-            newSchool.description,
-            newSchool.website,
-            newSchool.logoUrl,
-            newSchool.established,
-            newSchool.studentCount,
-          ];
+      const optionalButImportantFields = [
+        newSchool.description,
+        // website removed - not all schools have websites
+        newSchool.logoUrl,
+        newSchool.established,
+        newSchool.studentCount,
+      ];
 
           const requiredComplete = requiredFields.every(field => field && field.toString().trim());
           const optionalComplete = optionalButImportantFields.filter(field =>
@@ -266,7 +266,7 @@ export default async function handler(req, res) {
 
       const optionalButImportantFields = [
         school.description, // Moved from required to optional
-        school.website,
+        // website removed - not all schools have websites
         school.logoUrl,
         school.established,
         school.studentCount,
