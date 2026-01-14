@@ -150,7 +150,10 @@ export const ChoosePlanModal: React.FC<ChoosePlanModalProps> = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
-            onClick={onClose}
+            onClick={(e) => {
+              e.stopPropagation();
+              onClose();
+            }}
           />
 
           {/* Modal */}
@@ -159,8 +162,12 @@ export const ChoosePlanModal: React.FC<ChoosePlanModalProps> = ({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
           >
-            <div className="bg-white dark:bg-neutral-800 rounded-2xl shadow-2xl max-w-6xl w-full p-8 my-8 max-h-[90vh] overflow-y-auto">
+            <div 
+              className="bg-white dark:bg-neutral-800 rounded-2xl shadow-2xl max-w-6xl w-full p-8 my-8 max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
               {/* Close Button */}
               <div className="flex justify-end mb-4">
                 <button

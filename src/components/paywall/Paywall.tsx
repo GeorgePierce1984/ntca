@@ -65,7 +65,12 @@ export const Paywall: React.FC<PaywallProps> = ({
       {/* Choose Plan Modal */}
       <ChoosePlanModal
         isOpen={showPlanModal}
-        onClose={() => setShowPlanModal(false)}
+        onClose={(e?: React.MouseEvent) => {
+          if (e) {
+            e.stopPropagation();
+          }
+          setShowPlanModal(false);
+        }}
         onContinue={async (plan, billingType) => {
           try {
             // Get the price ID based on plan and billing type
