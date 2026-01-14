@@ -369,25 +369,36 @@ export const SchoolDashboardPage: React.FC = () => {
           completionDismissed,
           completionPercentage,
           hasSchool: !!data.school,
+          schoolName: data.school?.name,
           shouldShow: data.school && (justActivated || !completionDismissed) && completionPercentage < 100
         });
         
         // Show modal if:
-        // 1. User just activated AND completion < 100%, OR
+        // 1. User just activated (always show for new accounts, regardless of completion %), OR
         // 2. Modal hasn't been dismissed AND completion < 100%
-        if (
-          data.school && // Ensure school data exists
-          (justActivated || !completionDismissed) &&
-          completionPercentage < 100
-        ) {
-          // Set both state values and show modal
-          // Use a longer timeout to ensure React has processed the state updates
-          setTimeout(() => {
-            setFullSchoolData(data.school); // Ensure it's set
-            setShowProfileCompletionModal(true);
-            console.log("Showing profile completion modal");
-          }, 300);
-          sessionStorage.removeItem("justActivated"); // Clear the flag
+        const shouldShowModal = data.school && (
+          justActivated || // Always show for newly activated accounts
+          (!completionDismissed && completionPercentage < 100) // Or show if not dismissed and incomplete
+        );
+        
+        if (shouldShowModal) {
+          console.log("Setting up modal display...");
+          // Ensure fullSchoolData is set first
+          setFullSchoolData(data.school);
+          
+          // Use requestAnimationFrame to ensure DOM is ready, then setTimeout for state updates
+          requestAnimationFrame(() => {
+            setTimeout(() => {
+              setShowProfileCompletionModal(true);
+              console.log("Profile completion modal should now be visible");
+              // Clear the flag after showing
+              if (justActivated) {
+                sessionStorage.removeItem("justActivated");
+              }
+            }, 500); // Increased timeout to ensure all state is set
+          });
+        } else {
+          console.log("Modal not showing - conditions not met");
         }
       }
     } catch (error) {
@@ -432,6 +443,12 @@ export const SchoolDashboardPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    // Check for justActivated flag immediately on mount
+    const justActivated = sessionStorage.getItem("justActivated") === "true";
+    if (justActivated) {
+      console.log("justActivated flag detected on mount");
+    }
+    
     // Fetch school profile first (critical for header layout)
     fetchSchoolProfile();
     // Then fetch other data in parallel
