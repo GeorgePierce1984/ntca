@@ -115,6 +115,7 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState("role");
   const [selectedCountry, setSelectedCountry] = useState<Country | undefined>(undefined);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const tabs = [
     { key: "role", label: "Role Information", icon: Briefcase },
@@ -128,6 +129,7 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       setActiveTab("role");
+      setFieldErrors({}); // Clear errors when modal opens
     }
   }, [isOpen]);
 
@@ -161,6 +163,74 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({
     if (!isLastTab) {
       setActiveTab(tabs[currentTabIndex + 1].key);
     }
+  };
+
+  // Validate required fields
+  const validateForm = (): boolean => {
+    const errors: Record<string, string> = {};
+    
+    // Required fields based on API validation
+    if (!jobForm.title || !jobForm.title.trim()) {
+      errors.title = "Job title is required";
+    }
+    if (!jobForm.description || !jobForm.description.trim()) {
+      errors.description = "Job description is required";
+    }
+    if (!jobForm.city || !jobForm.city.trim()) {
+      errors.city = "City is required";
+    }
+    if (!jobForm.country || !jobForm.country.trim()) {
+      errors.country = "Country is required";
+    }
+    if (!jobForm.salary || !jobForm.salary.trim()) {
+      errors.salary = "Salary is required";
+    }
+    if (!jobForm.employmentType || !jobForm.employmentType.trim()) {
+      errors.employmentType = "Employment type is required";
+    }
+    if (!jobForm.deadline || !jobForm.deadline.trim()) {
+      errors.deadline = "Application deadline is required";
+    }
+
+    setFieldErrors(errors);
+    
+    // If there are errors, navigate to the first tab with an error and focus on the first field
+    if (Object.keys(errors).length > 0) {
+      // Determine which tab contains the first error
+      const errorFields = Object.keys(errors);
+      const firstError = errorFields[0];
+      
+      // Map fields to tabs
+      const fieldToTab: Record<string, string> = {
+        title: "role",
+        deadline: "role",
+        city: "role",
+        country: "role",
+        employmentType: "role",
+        salary: "role",
+        description: "description",
+      };
+      
+      const targetTab = fieldToTab[firstError] || "role";
+      setActiveTab(targetTab);
+      
+      // Focus on the first error field after a short delay to ensure tab switch completes
+      setTimeout(() => {
+        const fieldId = firstError === "country" ? "country-selector" : firstError;
+        const fieldElement = document.getElementById(fieldId) || 
+                            document.querySelector(`[name="${firstError}"]`) ||
+                            document.querySelector(`input[placeholder*="${firstError}"]`);
+        
+        if (fieldElement) {
+          (fieldElement as HTMLElement).focus();
+          (fieldElement as HTMLElement).scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }, 100);
+      
+      return false;
+    }
+    
+    return true;
   };
 
   return (
@@ -278,6 +348,13 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({
                       e.preventDefault();
                       return;
                     }
+                    
+                    // Validate form before submission
+                    if (!validateForm()) {
+                      e.preventDefault();
+                      return;
+                    }
+                    
                     handleJobSubmit(e);
                   }}
                   onKeyDown={(e) => {
@@ -301,14 +378,24 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({
                           </label>
                           <input 
                             type="date" 
+                            id="deadline"
                             value={jobForm.deadline}
-                            onChange={(e) => setJobForm({
-                              ...jobForm,
-                              deadline: e.target.value,
-                            })}
-                            className="input w-auto" 
+                            onChange={(e) => {
+                              setJobForm({
+                                ...jobForm,
+                                deadline: e.target.value,
+                              });
+                              // Clear error when user starts typing
+                              if (fieldErrors.deadline) {
+                                setFieldErrors({ ...fieldErrors, deadline: "" });
+                              }
+                            }}
+                            className={`input w-auto ${fieldErrors.deadline ? "border-red-500 focus:border-red-500 focus:ring-red-500" : ""}`}
                             required 
                           />
+                          {fieldErrors.deadline && (
+                            <p className="text-red-500 text-sm mt-1">{fieldErrors.deadline}</p>
+                          )}
                         </div>
                       </div>
                       <div>
@@ -317,15 +404,25 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({
                         </label>
                         <input
                           type="text"
+                          id="title"
                           value={jobForm.title}
-                          onChange={(e) => setJobForm({
-                            ...jobForm,
-                            title: e.target.value,
-                          })}
-                          className="input"
+                          onChange={(e) => {
+                            setJobForm({
+                              ...jobForm,
+                              title: e.target.value,
+                            });
+                            // Clear error when user starts typing
+                            if (fieldErrors.title) {
+                              setFieldErrors({ ...fieldErrors, title: "" });
+                            }
+                          }}
+                          className={`input ${fieldErrors.title ? "border-red-500 focus:border-red-500 focus:ring-red-500" : ""}`}
                           placeholder="e.g., Senior English Teacher - CELTA Required"
                           required
                         />
+                        {fieldErrors.title && (
+                          <p className="text-red-500 text-sm mt-1">{fieldErrors.title}</p>
+                        )}
                       </div>
 
                       <div className="grid md:grid-cols-2 gap-6">
@@ -403,32 +500,51 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({
                           </label>
                           <input
                             type="text"
+                            id="city"
                             value={jobForm.city}
-                            onChange={(e) => setJobForm({
-                              ...jobForm,
-                              city: e.target.value,
-                            })}
-                            className="input"
+                            onChange={(e) => {
+                              setJobForm({
+                                ...jobForm,
+                                city: e.target.value,
+                              });
+                              // Clear error when user starts typing
+                              if (fieldErrors.city) {
+                                setFieldErrors({ ...fieldErrors, city: "" });
+                              }
+                            }}
+                            className={`input ${fieldErrors.city ? "border-red-500 focus:border-red-500 focus:ring-red-500" : ""}`}
                             placeholder="e.g., Almaty"
                             required
                           />
+                          {fieldErrors.city && (
+                            <p className="text-red-500 text-sm mt-1">{fieldErrors.city}</p>
+                          )}
                         </div>
                         <div>
                           <label className="block text-sm font-medium mb-2">
                             Country *
                           </label>
-                          <CountrySelector
-                            selectedCountry={selectedCountry}
-                            onSelect={(country) => {
-                              setSelectedCountry(country);
-                              setJobForm({
-                                ...jobForm,
-                                country: country.name,
-                              });
-                            }}
-                            placeholder="Select a country"
-                            filterToCentralAsia={true}
-                          />
+                          <div id="country-selector">
+                            <CountrySelector
+                              selectedCountry={selectedCountry}
+                              onSelect={(country) => {
+                                setSelectedCountry(country);
+                                setJobForm({
+                                  ...jobForm,
+                                  country: country.name,
+                                });
+                                // Clear error when user selects a country
+                                if (fieldErrors.country) {
+                                  setFieldErrors({ ...fieldErrors, country: "" });
+                                }
+                              }}
+                              placeholder="Select a country"
+                              filterToCentralAsia={true}
+                            />
+                          </div>
+                          {fieldErrors.country && (
+                            <p className="text-red-500 text-sm mt-1">{fieldErrors.country}</p>
+                          )}
                         </div>
                       </div>
 
@@ -542,12 +658,19 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({
                             Employment Type *
                           </label>
                           <select 
+                            id="employmentType"
                             value={jobForm.employmentType}
-                            onChange={(e) => setJobForm({
-                              ...jobForm,
-                              employmentType: e.target.value,
-                            })}
-                            className="input" 
+                            onChange={(e) => {
+                              setJobForm({
+                                ...jobForm,
+                                employmentType: e.target.value,
+                              });
+                              // Clear error when user selects an option
+                              if (fieldErrors.employmentType) {
+                                setFieldErrors({ ...fieldErrors, employmentType: "" });
+                              }
+                            }}
+                            className={`input ${fieldErrors.employmentType ? "border-red-500 focus:border-red-500 focus:ring-red-500" : ""}`}
                             required
                           >
                             <option value="">Select type</option>
@@ -555,6 +678,9 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({
                             <option value="PART_TIME">Part-time</option>
                             <option value="CONTRACT">Contract</option>
                           </select>
+                          {fieldErrors.employmentType && (
+                            <p className="text-red-500 text-sm mt-1">{fieldErrors.employmentType}</p>
+                          )}
                         </div>
                         <div>
                           <label className="block text-sm font-medium mb-2">
@@ -564,15 +690,25 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({
                             <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-500">$</span>
                             <input
                               type="text"
+                              id="salary"
                               value={jobForm.salary}
-                              onChange={(e) => setJobForm({
-                                ...jobForm,
-                                salary: e.target.value,
-                              })}
-                              className="input pl-7"
+                              onChange={(e) => {
+                                setJobForm({
+                                  ...jobForm,
+                                  salary: e.target.value,
+                                });
+                                // Clear error when user starts typing
+                                if (fieldErrors.salary) {
+                                  setFieldErrors({ ...fieldErrors, salary: "" });
+                                }
+                              }}
+                              className={`input pl-7 ${fieldErrors.salary ? "border-red-500 focus:border-red-500 focus:ring-red-500" : ""}`}
                               placeholder="e.g., 2,800 - 3,500"
                               required
                             />
+                            {fieldErrors.salary && (
+                              <p className="text-red-500 text-sm mt-1">{fieldErrors.salary}</p>
+                            )}
                           </div>
                         </div>
                         <div>
@@ -602,16 +738,26 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({
                         Job Description *
                       </label>
                       <textarea
+                        id="description"
                         value={jobForm.description}
-                        onChange={(e) => setJobForm({
-                          ...jobForm,
-                          description: e.target.value,
-                        })}
-                        className="input"
+                        onChange={(e) => {
+                          setJobForm({
+                            ...jobForm,
+                            description: e.target.value,
+                          });
+                          // Clear error when user starts typing
+                          if (fieldErrors.description) {
+                            setFieldErrors({ ...fieldErrors, description: "" });
+                          }
+                        }}
+                        className={`input ${fieldErrors.description ? "border-red-500 focus:border-red-500 focus:ring-red-500" : ""}`}
                         rows={6}
                         placeholder="Describe the role, responsibilities, and what makes your school a great place to work..."
                         required
                       />
+                      {fieldErrors.description && (
+                        <p className="text-red-500 text-sm mt-1">{fieldErrors.description}</p>
+                      )}
                     </div>
                   )}
 
@@ -1286,6 +1432,11 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({
                       e.stopPropagation();
                       // Only submit if we're on the last tab
                       if (activeTab === "school") {
+                        // Validate form before submission
+                        if (!validateForm()) {
+                          return;
+                        }
+                        
                         const form = document.getElementById("job-form") as HTMLFormElement;
                         if (form) {
                           form.requestSubmit();
