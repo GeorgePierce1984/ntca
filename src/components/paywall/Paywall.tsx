@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Lock } from "lucide-react";
 import { ChoosePlanModal } from "@/components/modals/ChoosePlanModal";
 
