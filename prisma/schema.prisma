@@ -42,6 +42,9 @@ model User {
   password  String?  // Optional for OAuth users
   userType  UserType
   stripeCustomerId String? // Stripe customer ID
+  emailVerified Boolean @default(false)
+  resetToken String? // For password reset and email verification
+  resetTokenExpiry DateTime? // Expiry time for reset token
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
