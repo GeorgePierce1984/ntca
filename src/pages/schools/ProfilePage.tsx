@@ -506,7 +506,8 @@ export const SchoolProfilePage: React.FC = () => {
         housingProvided, flightReimbursement, visaWorkPermitSupport, contractCompletionBonus, 
         paidHolidays, overtimePay, paidAnnualLeave, nationalHolidays, sickLeave, 
         healthInsurance, relocationSupport, teachingMaterialsProvided, curriculumGuidance, 
-        teacherTraining, promotionOpportunities, contractRenewalOptions, ...restFormData 
+        teacherTraining, promotionOpportunities, contractRenewalOptions, contactEmail, // Exclude contactEmail as it's read-only
+        ...restFormData 
       } = formData;
 
       const response = await fetch("/api/schools/profile", {
