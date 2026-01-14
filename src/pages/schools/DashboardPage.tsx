@@ -713,17 +713,17 @@ export const SchoolDashboardPage: React.FC = () => {
   const handleJobSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Check job limit for non-subscribed schools (max 1 job)
+    // Check job limit for non-subscribed schools (max 1 job TOTAL, not just active)
+    // Note: Editing is already blocked in openEditModal, so selectedJobForEdit should never be set for non-subscribed schools
     if (!canAccessPremiumFeatures(subscriptionStatus, subscriptionLoading)) {
-      const activeJobCount = jobs.filter((job) => getEffectiveStatus(job) === "ACTIVE").length;
-      if (activeJobCount >= 1 && !selectedJobForEdit) {
+      if (jobs.length >= 1 && !selectedJobForEdit) {
         toast.error("Free accounts can post up to 1 job. Subscribe to post unlimited jobs and access premium features.", {
           duration: 6000,
           icon: "🔒",
         });
         // Open the choose plan modal
         setShowPostJobModal(false);
-        // You can add logic here to show ChoosePlanModal
+        setShowChoosePlanModal(true);
         return;
       }
     }
@@ -1550,6 +1550,8 @@ export const SchoolDashboardPage: React.FC = () => {
                             size="sm"
                             leftIcon={<Edit3 className="w-4 h-4" />}
                             onClick={() => openEditModal(job)}
+                            disabled={!canAccessPremiumFeatures(subscriptionStatus, subscriptionLoading)}
+                            title={!canAccessPremiumFeatures(subscriptionStatus, subscriptionLoading) ? "Editing requires a subscription" : "Edit job posting"}
                           >
                             Edit
                           </Button>
