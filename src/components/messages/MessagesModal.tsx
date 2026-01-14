@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/contexts/AuthContext";
+import { Paywall } from "@/components/paywall/Paywall";
+import { canAccessPremiumFeatures } from "@/utils/subscription";
 import toast from "react-hot-toast";
 
 interface Conversation {
@@ -70,6 +72,7 @@ export const MessagesModal: React.FC<MessagesModalProps> = ({ isOpen, onClose, o
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Scroll to bottom of messages
@@ -403,6 +406,8 @@ export const MessagesModal: React.FC<MessagesModalProps> = ({ isOpen, onClose, o
 
   if (!isOpen) return null;
 
+  const isBlocked = user?.userType === "SCHOOL" && !canAccessPremiumFeatures(subscriptionStatus);
+
   return (
     <AnimatePresence>
       <motion.div
@@ -416,6 +421,11 @@ export const MessagesModal: React.FC<MessagesModalProps> = ({ isOpen, onClose, o
         <div className="absolute inset-0 bg-transparent" />
         
         {/* Modal Content */}
+        <Paywall
+          isBlocked={isBlocked}
+          featureName="Message Center"
+          description="Subscribe to unlock messaging functionality and communicate with applicants."
+        >
         <motion.div
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -637,6 +647,7 @@ export const MessagesModal: React.FC<MessagesModalProps> = ({ isOpen, onClose, o
             </div>
           </div>
         </motion.div>
+        </Paywall>
       </motion.div>
     </AnimatePresence>
   );
