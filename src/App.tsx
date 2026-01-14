@@ -54,6 +54,7 @@ import { CookiePolicyPage } from "@/pages/legal/CookiePolicyPage";
 import { LoginPage } from "@/pages/auth/LoginPage";
 import { SignUpPage } from "@/pages/auth/SignUpPage";
 import { ForgotPasswordPage } from "@/pages/auth/ForgotPasswordPage";
+import { ResetPasswordPage } from "@/pages/auth/ResetPasswordPage";
 
 // Error pages
 import { NotFoundPage } from "@/pages/NotFoundPage";
@@ -145,6 +146,7 @@ function AppContent() {
           <Route path="/signup" element={<SignUpPage />} />
           <Route path="/schools/signup" element={<SchoolSignupPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
 
           {/* Protected School routes */}
           <Route
