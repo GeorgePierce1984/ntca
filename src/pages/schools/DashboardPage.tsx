@@ -1806,17 +1806,19 @@ export const SchoolDashboardPage: React.FC = () => {
       />
 
       {/* Profile Completion Modal */}
-      <ProfileCompletionModal
-        isOpen={showProfileCompletionModal}
-        onClose={() => {
-          setShowProfileCompletionModal(false);
-          sessionStorage.setItem("profileCompletionModalDismissed", "true");
-        }}
-        school={fullSchoolData}
-        onUpdate={() => {
-          fetchSchoolProfile();
-        }}
-      />
+      {fullSchoolData && (
+        <ProfileCompletionModal
+          isOpen={showProfileCompletionModal}
+          onClose={() => {
+            setShowProfileCompletionModal(false);
+            sessionStorage.setItem("profileCompletionModalDismissed", "true");
+          }}
+          school={fullSchoolData}
+          onUpdate={() => {
+            fetchSchoolProfile();
+          }}
+        />
+      )}
 
       {/* Interview Schedule Modal */}
       {selectedApplicantForInterview && (
