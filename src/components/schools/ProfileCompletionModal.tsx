@@ -424,7 +424,7 @@ export const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({
                           </label>
                           <input
                             type="email"
-                            value={school.user?.email || formData.contactEmail || ""}
+                            value={(school?.user?.email || formData.contactEmail || "") as string}
                             disabled
                             className="input w-full bg-neutral-100 dark:bg-neutral-700 cursor-not-allowed"
                             placeholder="contact@school.com"
@@ -583,7 +583,27 @@ export const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({
                             </label>
                             <input
                               type="date"
-                              value={formData.established ? new Date(formData.established).toISOString().split('T')[0] : ""}
+                              value={(() => {
+                                if (!formData.established) return "";
+                                const established = formData.established;
+                                if (typeof established === 'string') {
+                                  // If it's already in YYYY-MM-DD format, use it directly
+                                  if (/^\d{4}-\d{2}-\d{2}$/.test(established)) {
+                                    return established;
+                                  }
+                                  // If it's an ISO string, extract the date part
+                                  if (established.includes('T')) {
+                                    return established.split('T')[0];
+                                  }
+                                  return established;
+                                }
+                                // If it's a Date object, convert to YYYY-MM-DD
+                                try {
+                                  return new Date(established).toISOString().split('T')[0];
+                                } catch {
+                                  return "";
+                                }
+                              })()}
                               onChange={(e) => setFormData({ ...formData, established: e.target.value })}
                               className="input w-full"
                             />
