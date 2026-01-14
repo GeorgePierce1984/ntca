@@ -1407,11 +1407,14 @@ export const SchoolProfilePage: React.FC = () => {
                     {editMode ? (
                       <input
                         type="email"
-                        value={formData.contactEmail || ""}
-                        onChange={(e) => setFormData({ ...formData, contactEmail: e.target.value })}
-                        className="input"
+                        value={school?.user?.email || formData.contactEmail || ""}
+                        disabled
+                        className="input bg-neutral-100 dark:bg-neutral-700 cursor-not-allowed"
                         placeholder="contact@school.com"
                       />
+                      <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                        This is your account email and cannot be changed
+                      </p>
                     ) : (
                       <p className="text-neutral-900 dark:text-neutral-100">
                         {school.contactEmail || school.user.email}

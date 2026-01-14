@@ -15,6 +15,9 @@ import {
   CheckCircle,
   AlertCircle,
   Info,
+  ArrowLeft,
+  Upload,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { CountrySelector } from "@/components/forms/CountrySelector";
@@ -49,6 +52,9 @@ interface School {
   averageClassSize?: number;
   benefits?: string;
   completionPercentage?: number;
+  user?: {
+    email: string;
+  };
 }
 
 interface ProfileCompletionModalProps {
@@ -79,6 +85,8 @@ export const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({
   const [formData, setFormData] = useState<Partial<School>>({});
   const [saving, setSaving] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState<Country | undefined>(undefined);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingCoverPhoto, setUploadingCoverPhoto] = useState(false);
 
   useEffect(() => {
     if (school) {
@@ -148,13 +156,16 @@ export const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({
 
     setSaving(true);
     try {
+      // Don't send contactEmail as it's read-only (uses account email)
+      const { contactEmail, ...dataToSend } = formData;
+      
       const response = await fetch("/api/schools/profile", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("authToken")}`,
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(dataToSend),
       });
 
       if (response.ok) {
@@ -181,6 +192,92 @@ export const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({
       toast.error("Failed to update profile");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Logo must be less than 5MB");
+      return;
+    }
+
+    const token = localStorage.getItem("authToken");
+    if (!token || token === "null" || token === "undefined") {
+      toast.error("Authentication required. Please log in again.");
+      return;
+    }
+
+    setUploadingLogo(true);
+    const uploadFormData = new FormData();
+    uploadFormData.append("file", file);
+    uploadFormData.append("type", "logo");
+
+    try {
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: uploadFormData,
+      });
+
+      if (!response.ok) throw new Error("Failed to upload logo");
+
+      const data = await response.json();
+      setFormData({ ...formData, logoUrl: data.fileUrl });
+      toast.success("Logo uploaded successfully");
+      onUpdate(); // Refresh to update completion percentage
+    } catch (error) {
+      console.error("Error uploading logo:", error);
+      toast.error("Failed to upload logo");
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
+
+  const handleCoverPhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Cover photo must be less than 10MB");
+      return;
+    }
+
+    const token = localStorage.getItem("authToken");
+    if (!token || token === "null" || token === "undefined") {
+      toast.error("Authentication required. Please log in again.");
+      return;
+    }
+
+    setUploadingCoverPhoto(true);
+    const uploadFormData = new FormData();
+    uploadFormData.append("file", file);
+    uploadFormData.append("type", "coverPhoto");
+
+    try {
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: uploadFormData,
+      });
+
+      if (!response.ok) throw new Error("Failed to upload cover photo");
+
+      const data = await response.json();
+      setFormData({ ...formData, coverPhotoUrl: data.fileUrl });
+      toast.success("Cover photo uploaded successfully");
+      onUpdate(); // Refresh to update completion percentage
+    } catch (error) {
+      console.error("Error uploading cover photo:", error);
+      toast.error("Failed to upload cover photo");
+    } finally {
+      setUploadingCoverPhoto(false);
     }
   };
 
@@ -327,11 +424,14 @@ export const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({
                           </label>
                           <input
                             type="email"
-                            value={formData.contactEmail || ""}
-                            onChange={(e) => setFormData({ ...formData, contactEmail: e.target.value })}
-                            className="input w-full"
+                            value={school.user?.email || formData.contactEmail || ""}
+                            disabled
+                            className="input w-full bg-neutral-100 dark:bg-neutral-700 cursor-not-allowed"
                             placeholder="contact@school.com"
                           />
+                          <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                            This is your account email and cannot be changed
+                          </p>
                         </div>
 
                         <div>
@@ -580,34 +680,102 @@ export const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({
                       <div className="space-y-6">
                         <div>
                           <label className="block text-sm font-medium mb-2">
-                            School Logo URL
+                            School Logo
                           </label>
-                          <input
-                            type="url"
-                            value={formData.logoUrl || ""}
-                            onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
-                            className="input w-full"
-                            placeholder="https://example.com/logo.png"
-                          />
-                          <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
-                            Upload your logo to a hosting service and paste the URL here
-                          </p>
+                          {formData.logoUrl ? (
+                            <div className="space-y-2">
+                              <img
+                                src={formData.logoUrl}
+                                alt="School Logo"
+                                className="w-32 h-32 object-cover rounded-lg border border-neutral-200 dark:border-neutral-700"
+                              />
+                              <div>
+                                <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
+                                  <Upload className="w-4 h-4" />
+                                  {uploadingLogo ? "Uploading..." : "Replace Logo"}
+                                  <input
+                                    type="file"
+                                    accept="image/jpeg,image/png,image/webp"
+                                    onChange={handleLogoUpload}
+                                    className="hidden"
+                                    disabled={uploadingLogo}
+                                  />
+                                </label>
+                              </div>
+                            </div>
+                          ) : (
+                            <label className="cursor-pointer flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-neutral-300 dark:border-neutral-600 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors">
+                              {uploadingLogo ? (
+                                <div className="flex flex-col items-center gap-2">
+                                  <Loader2 className="w-8 h-8 text-primary-600 animate-spin" />
+                                  <span className="text-sm text-neutral-600 dark:text-neutral-400">Uploading...</span>
+                                </div>
+                              ) : (
+                                <div className="flex flex-col items-center gap-2">
+                                  <Upload className="w-8 h-8 text-neutral-400" />
+                                  <span className="text-sm text-neutral-600 dark:text-neutral-400">Click to upload logo</span>
+                                  <span className="text-xs text-neutral-500 dark:text-neutral-500">JPG, PNG, or WebP (max 5MB)</span>
+                                </div>
+                              )}
+                              <input
+                                type="file"
+                                accept="image/jpeg,image/png,image/webp"
+                                onChange={handleLogoUpload}
+                                className="hidden"
+                                disabled={uploadingLogo}
+                              />
+                            </label>
+                          )}
                         </div>
 
                         <div>
                           <label className="block text-sm font-medium mb-2">
-                            Cover Photo URL
+                            Cover Photo
                           </label>
-                          <input
-                            type="url"
-                            value={formData.coverPhotoUrl || ""}
-                            onChange={(e) => setFormData({ ...formData, coverPhotoUrl: e.target.value })}
-                            className="input w-full"
-                            placeholder="https://example.com/cover.jpg"
-                          />
-                          <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
-                            A cover photo helps showcase your school's facilities and environment
-                          </p>
+                          {formData.coverPhotoUrl ? (
+                            <div className="space-y-2">
+                              <img
+                                src={formData.coverPhotoUrl}
+                                alt="Cover Photo"
+                                className="w-full h-48 object-cover rounded-lg border border-neutral-200 dark:border-neutral-700"
+                              />
+                              <div>
+                                <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
+                                  <Upload className="w-4 h-4" />
+                                  {uploadingCoverPhoto ? "Uploading..." : "Replace Cover Photo"}
+                                  <input
+                                    type="file"
+                                    accept="image/jpeg,image/png,image/webp"
+                                    onChange={handleCoverPhotoUpload}
+                                    className="hidden"
+                                    disabled={uploadingCoverPhoto}
+                                  />
+                                </label>
+                              </div>
+                            </div>
+                          ) : (
+                            <label className="cursor-pointer flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-neutral-300 dark:border-neutral-600 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors">
+                              {uploadingCoverPhoto ? (
+                                <div className="flex flex-col items-center gap-2">
+                                  <Loader2 className="w-8 h-8 text-primary-600 animate-spin" />
+                                  <span className="text-sm text-neutral-600 dark:text-neutral-400">Uploading...</span>
+                                </div>
+                              ) : (
+                                <div className="flex flex-col items-center gap-2">
+                                  <Upload className="w-8 h-8 text-neutral-400" />
+                                  <span className="text-sm text-neutral-600 dark:text-neutral-400">Click to upload cover photo</span>
+                                  <span className="text-xs text-neutral-500 dark:text-neutral-500">JPG, PNG, or WebP (max 10MB)</span>
+                                </div>
+                              )}
+                              <input
+                                type="file"
+                                accept="image/jpeg,image/png,image/webp"
+                                onChange={handleCoverPhotoUpload}
+                                className="hidden"
+                                disabled={uploadingCoverPhoto}
+                              />
+                            </label>
+                          )}
                         </div>
                       </div>
                     </motion.div>
@@ -617,12 +785,29 @@ export const ProfileCompletionModal: React.FC<ProfileCompletionModalProps> = ({
 
               {/* Footer */}
               <div className="p-6 border-t border-neutral-200 dark:border-neutral-700 flex justify-between items-center">
-                <button
-                  onClick={onClose}
-                  className="text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100"
-                >
-                  I'll complete this later
-                </button>
+                <div className="flex items-center gap-4">
+                  {(activeTab === "details" || activeTab === "media") && (
+                    <Button
+                      onClick={() => {
+                        if (activeTab === "details") {
+                          setActiveTab("basic");
+                        } else if (activeTab === "media") {
+                          setActiveTab("details");
+                        }
+                      }}
+                      variant="secondary"
+                      leftIcon={<ArrowLeft className="w-4 h-4" />}
+                    >
+                      Back
+                    </Button>
+                  )}
+                  <button
+                    onClick={onClose}
+                    className="text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100"
+                  >
+                    I'll complete this later
+                  </button>
+                </div>
                 <Button
                   onClick={handleSave}
                   disabled={saving}
