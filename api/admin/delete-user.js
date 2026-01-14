@@ -2,8 +2,6 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-const EMAIL_TO_DELETE = "georgepierce@hotmail.co.uk";
-
 export default async function handler(req, res) {
   // Security: Only allow POST requests
   if (req.method !== "POST") {
@@ -11,20 +9,26 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method Not Allowed" });
   }
 
+  const { email, confirm } = req.body || {};
+
+  if (!email || typeof email !== "string") {
+    return res.status(400).json({ error: "Email is required" });
+  }
+
   // Security: Require confirmation
-  const { confirm } = req.body;
   if (confirm !== "DELETE_ALL_ACCOUNTS") {
     return res.status(400).json({
-      error: "Confirmation required. Send { confirm: 'DELETE_ALL_ACCOUNTS' } to proceed.",
+      error:
+        "Confirmation required. Send { email: \"user@example.com\", confirm: 'DELETE_ALL_ACCOUNTS' } to proceed.",
     });
   }
 
   try {
-    console.log(`🔍 Searching for accounts with email: ${EMAIL_TO_DELETE}`);
+    console.log(`🔍 Searching for accounts with email: ${email}`);
 
     // Find all users with this email
     const users = await prisma.user.findMany({
-      where: { email: EMAIL_TO_DELETE },
+      where: { email },
       include: {
         school: {
           include: {
