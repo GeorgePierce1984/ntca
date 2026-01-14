@@ -374,10 +374,16 @@ export const SchoolDashboardPage: React.FC = () => {
         });
         
         // Show modal if:
-        // 1. User just activated (always show for new accounts, regardless of completion %), OR
+        // 1. User just activated (always show for new accounts, regardless of completion % or dismissed flag), OR
         // 2. Modal hasn't been dismissed AND completion < 100%
+        // For newly activated accounts, clear the dismissed flag to ensure modal shows
+        if (justActivated && completionDismissed) {
+          console.log("Newly activated account - clearing dismissed flag");
+          sessionStorage.removeItem("profileCompletionModalDismissed");
+        }
+        
         const shouldShowModal = data.school && (
-          justActivated || // Always show for newly activated accounts
+          justActivated || // Always show for newly activated accounts (regardless of dismissed flag)
           (!completionDismissed && completionPercentage < 100) // Or show if not dismissed and incomplete
         );
         
@@ -391,14 +397,20 @@ export const SchoolDashboardPage: React.FC = () => {
             setTimeout(() => {
               setShowProfileCompletionModal(true);
               console.log("Profile completion modal should now be visible");
-              // Clear the flag after showing
+              // Clear the justActivated flag after showing (but don't set dismissed yet)
               if (justActivated) {
                 sessionStorage.removeItem("justActivated");
               }
             }, 500); // Increased timeout to ensure all state is set
           });
         } else {
-          console.log("Modal not showing - conditions not met");
+          console.log("Modal not showing - conditions not met", {
+            hasSchool: !!data.school,
+            justActivated,
+            completionDismissed,
+            completionPercentage,
+            shouldShow: shouldShowModal
+          });
         }
       }
     } catch (error) {

@@ -192,11 +192,15 @@ export default async function handler(req, res) {
           console.log("✅ Created missing school profile:", newSchool.id);
           
           // Return the newly created profile with completion calculation
+          // Use the same required fields as the main GET handler for consistency
           const requiredFields = [
             newSchool.name,
             newSchool.contactName,
+            newSchool.telephone,
+            newSchool.streetAddress,
             newSchool.city,
             newSchool.country,
+            newSchool.schoolType,
           ];
 
       const optionalButImportantFields = [
