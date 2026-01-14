@@ -1556,6 +1556,11 @@ export const SchoolDashboardPage: React.FC = () => {
             )}
 
             {activeTab === "applicants" && (
+              <Paywall
+                isBlocked={!canAccessPremiumFeatures(subscriptionStatus)}
+                featureName="Applicants Management"
+                description="Subscribe to view and manage applicants for your job postings, schedule interviews, and make hiring decisions."
+              >
               <motion.div
                 key="applicants"
                 initial={{ opacity: 0, y: 20 }}
@@ -1752,6 +1757,7 @@ export const SchoolDashboardPage: React.FC = () => {
                   )}
                 </div>
               </motion.div>
+              </Paywall>
             )}
           </AnimatePresence>
         </div>
