@@ -464,12 +464,49 @@ export const SignUpPage: React.FC = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleNext = () => {
-    if (validateCurrentStep()) {
-      // Both schools and teachers have 3 steps now (email verification replaces plan selection)
-      if (currentStep < 3) {
-        setCurrentStep(currentStep + 1);
+  const handleNext = async () => {
+    if (!validateCurrentStep()) {
+      return;
+    }
+
+    // For school sign-up on step 2, check if email already exists
+    if (currentStep === 2 && userType === "school" && schoolForm.email) {
+      setLoading(true);
+      try {
+        const response = await fetch("/api/auth/check-email", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email: schoolForm.email }),
+        });
+
+        const data = await response.json();
+
+        if (data.exists) {
+          // Email already exists, show error and prevent continuation
+          toast.error(data.message || "An account with this email already exists. Please try logging in instead.", {
+            duration: 5000,
+            icon: "⚠️",
+          });
+          setErrors({
+            email: data.message || "An account with this email already exists. Please try logging in instead.",
+          });
+          setLoading(false);
+          return;
+        }
+      } catch (error) {
+        console.error("Error checking email:", error);
+        toast.error("Failed to verify email. Please try again.", { duration: 4000 });
+        setLoading(false);
+        return;
       }
+      setLoading(false);
+    }
+
+    // Both schools and teachers have 3 steps now (email verification replaces plan selection)
+    if (currentStep < 3) {
+      setCurrentStep(currentStep + 1);
     }
   };
 
@@ -1772,8 +1809,9 @@ export const SignUpPage: React.FC = () => {
                       onClick={handleNext}
                       variant="gradient"
                       rightIcon={<ArrowRight className="w-5 h-5" />}
+                      disabled={loading}
                     >
-                      Continue
+                      {loading ? "Checking..." : "Continue"}
                     </Button>
                   )}
                 </div>
