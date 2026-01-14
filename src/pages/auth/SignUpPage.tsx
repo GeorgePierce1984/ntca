@@ -715,20 +715,32 @@ export const SignUpPage: React.FC = () => {
         } else {
           // Handle specific error cases
           const errorMessage = data.error || "Registration failed";
-          if (errorMessage.includes("already exists")) {
+          if (errorMessage.includes("already exists") || errorMessage.includes("User already exists") || errorMessage.includes("account with this email")) {
+            const email = teacherForm.email;
+            toast.error(
+              `An account with the email ${email} already exists. Please try logging in instead.`,
+              {
+                duration: 5000,
+                icon: "⚠️",
+              }
+            );
             setErrors({
               submit:
                 "An account with this email already exists. Please try logging in instead.",
             });
           } else if (errorMessage.includes("required")) {
+            toast.error("Please fill in all required fields.", { duration: 4000 });
             setErrors({ submit: "Please fill in all required fields." });
           } else if (errorMessage.includes("password")) {
+            toast.error("Password must be at least 8 characters long.", { duration: 4000 });
             setErrors({
               submit: "Password must be at least 8 characters long.",
             });
           } else if (errorMessage.includes("email")) {
+            toast.error("Please provide a valid email address.", { duration: 4000 });
             setErrors({ submit: "Please provide a valid email address." });
           } else {
+            toast.error(errorMessage, { duration: 4000 });
             setErrors({ submit: errorMessage });
           }
         }
@@ -780,20 +792,32 @@ export const SignUpPage: React.FC = () => {
         } else {
           // Handle specific error cases
           const errorMessage = data.error || "Registration failed";
-          if (errorMessage.includes("already exists")) {
+          if (errorMessage.includes("already exists") || errorMessage.includes("User already exists") || errorMessage.includes("account with this email")) {
+            const email = schoolForm.email;
+            toast.error(
+              `An account with the email ${email} already exists. Please try logging in instead.`,
+              {
+                duration: 5000,
+                icon: "⚠️",
+              }
+            );
             setErrors({
               submit:
                 "An account with this email already exists. Please try logging in instead.",
             });
           } else if (errorMessage.includes("required")) {
+            toast.error("Please fill in all required fields.", { duration: 4000 });
             setErrors({ submit: "Please fill in all required fields." });
           } else if (errorMessage.includes("password")) {
+            toast.error("Password must be at least 8 characters long.", { duration: 4000 });
             setErrors({
               submit: "Password must be at least 8 characters long.",
             });
           } else if (errorMessage.includes("email")) {
+            toast.error("Please provide a valid email address.", { duration: 4000 });
             setErrors({ submit: "Please provide a valid email address." });
           } else {
+            toast.error(errorMessage, { duration: 4000 });
             setErrors({ submit: errorMessage });
           }
         }
