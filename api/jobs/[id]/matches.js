@@ -263,6 +263,12 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Verify authentication (optional but recommended for school-specific data)
+    const token = req.headers.authorization?.replace("Bearer ", "");
+    if (!token) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
     const { id } = req.query;
 
     if (!id) {
