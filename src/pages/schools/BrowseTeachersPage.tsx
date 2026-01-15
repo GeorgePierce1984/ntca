@@ -10,6 +10,9 @@ import {
   CheckCircle,
   Globe,
   ChevronRight,
+  Award,
+  Languages,
+  User,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Paywall } from "@/components/paywall/Paywall";
