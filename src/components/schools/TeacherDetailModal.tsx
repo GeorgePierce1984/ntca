@@ -236,11 +236,32 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
 
                 {/* Certifications - CELTA, DELTA, TESOL, TEFL with icons */}
                 {(() => {
-                  const hasCertification = (certName: string) => {
+                  // Check certifications array
+                  const hasCertInArray = (certName: string) => {
                     if (!teacher.certifications || teacher.certifications.length === 0) return false;
                     return teacher.certifications.some(cert => 
                       cert.toLowerCase().includes(certName.toLowerCase())
                     );
+                  };
+
+                  // Check education array (like DashboardPage does)
+                  const hasCertInEducation = (certName: string) => {
+                    if (!teacher.education || teacher.education.length === 0) return false;
+                    return teacher.education.some((edu: any) => {
+                      if (!edu?.degree) return false;
+                      const degree = edu.degree.toLowerCase();
+                      return degree.includes(certName.toLowerCase());
+                    });
+                  };
+
+                  // Check qualification field
+                  const hasCertInQualification = (certName: string) => {
+                    if (!teacher.qualification) return false;
+                    return teacher.qualification.toLowerCase().includes(certName.toLowerCase());
+                  };
+
+                  const hasCertification = (certName: string) => {
+                    return hasCertInArray(certName) || hasCertInEducation(certName) || hasCertInQualification(certName);
                   };
 
                   const certs = [];
