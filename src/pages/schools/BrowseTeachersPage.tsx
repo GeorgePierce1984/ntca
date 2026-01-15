@@ -228,7 +228,7 @@ export const BrowseTeachersPage: React.FC = () => {
 
           {/* Teachers Grid */}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredTeachers.map((teacher) => (
+            {filteredTeachers && Array.isArray(filteredTeachers) && filteredTeachers.map((teacher) => (
               <motion.div
                 key={teacher.id}
                 whileHover={{ y: -4 }}
@@ -284,11 +284,13 @@ export const BrowseTeachersPage: React.FC = () => {
                         {teacher.city}, {teacher.country}
                       </span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <GraduationCap className="w-4 h-4" />
-                      <span>{teacher.experienceYears} years experience</span>
-                    </div>
-                    {teacher.languages && (
+                    {teacher.experienceYears && (
+                      <div className="flex items-center gap-2">
+                        <GraduationCap className="w-4 h-4" />
+                        <span>{teacher.experienceYears} years experience</span>
+                      </div>
+                    )}
+                    {teacher.languages && Array.isArray(teacher.languages) && teacher.languages.length > 0 && (
                       <div className="flex items-center gap-2">
                         <Globe className="w-4 h-4" />
                         <span>{teacher.languages.join(", ")}</span>
@@ -299,7 +301,7 @@ export const BrowseTeachersPage: React.FC = () => {
                   <div className="mt-4 pt-4 border-t border-neutral-200 dark:border-neutral-700">
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-neutral-500">
-                        Available: {teacher.availability}
+                        {teacher.availability ? `Available: ${teacher.availability}` : "Availability: Not specified"}
                       </span>
                       <ChevronRight className="w-5 h-5 text-neutral-400" />
                     </div>
