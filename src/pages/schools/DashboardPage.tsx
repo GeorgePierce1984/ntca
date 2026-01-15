@@ -28,6 +28,8 @@ import {
   User,
   AlertCircle,
   MessageSquare,
+  TrendingUp,
+  UserCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -253,6 +255,20 @@ export const SchoolDashboardPage: React.FC = () => {
   const [showProfileCompletionModal, setShowProfileCompletionModal] = useState(false);
   const [fullSchoolData, setFullSchoolData] = useState<any>(null);
   const [showChoosePlanModal, setShowChoosePlanModal] = useState(false);
+  const [jobMatches, setJobMatches] = useState<Record<string, {
+    totalMatches: number;
+    byAvailability: {
+      now: number;
+      within30Days: number;
+      within3Months: number;
+    };
+    byStrength: {
+      strong: number;
+      medium: number;
+      partial: number;
+    };
+  }>>({});
+  const [loadingMatches, setLoadingMatches] = useState<Record<string, boolean>>({});
 
   // Calculate stats from real data
   const totalJobs = jobs.length;
