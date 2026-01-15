@@ -234,7 +234,27 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
                   </div>
                 )}
 
-                {/* Certifications - CELTA, DELTA, TESOL, TEFL with icons */}
+                {/* Age Groups */}
+                {teacher.ageGroups && teacher.ageGroups.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                      <Users className="w-5 h-5" />
+                      Age Groups
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {teacher.ageGroups.map((ageGroup, index) => (
+                        <span
+                          key={index}
+                          className="px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full text-sm"
+                        >
+                          {ageGroup}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Qualifications - Certifications (CELTA, DELTA, TESOL, TEFL) and Education (Masters, Bachelors, PhD) */}
                 {(() => {
                   // Check certifications array
                   const hasCertInArray = (certName: string) => {
@@ -264,90 +284,69 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
                     return hasCertInArray(certName) || hasCertInEducation(certName) || hasCertInQualification(certName);
                   };
 
+                  // Get certifications (CELTA, DELTA, TESOL, TEFL)
                   const certs = [];
                   if (hasCertification('TEFL')) certs.push({ name: 'TEFL', icon: Award });
                   if (hasCertification('CELTA')) certs.push({ name: 'CELTA', icon: Award });
                   if (hasCertification('TESOL')) certs.push({ name: 'TESOL', icon: Award });
                   if (hasCertification('DELTA')) certs.push({ name: 'DELTA', icon: Award });
 
-                  if (certs.length > 0) {
-                    return (
-                      <div>
-                        <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
-                          <Award className="w-5 h-5" />
-                          Certifications
-                        </h3>
-                        <div className="flex flex-wrap gap-4">
-                          {certs.map((cert, index) => {
-                            const Icon = cert.icon;
-                            return (
-                              <div key={index} className="flex items-center gap-2" title={`${cert.name} Certified`}>
-                                <Icon className="w-5 h-5 text-primary-600" />
-                                <span className="text-sm text-neutral-600 dark:text-neutral-400">{cert.name}</span>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    );
-                  }
-                  return null;
-                })()}
+                  // Get degrees (Masters, Bachelors, PhD)
+                  const degrees = teacher.education && teacher.education.length > 0
+                    ? teacher.education.filter((edu: any) => {
+                        if (!edu?.degree) return false;
+                        const degree = edu.degree.toLowerCase();
+                        return degree.includes("master") || degree.includes("bachelor") || degree.includes("phd") || degree.includes("degree");
+                      })
+                    : [];
 
-                {/* Age Groups */}
-                {teacher.ageGroups && teacher.ageGroups.length > 0 && (
-                  <div>
-                    <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
-                      <Users className="w-5 h-5" />
-                      Age Groups
-                    </h3>
-                    <div className="flex flex-wrap gap-2">
-                      {teacher.ageGroups.map((ageGroup, index) => (
-                        <span
-                          key={index}
-                          className="px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full text-sm"
-                        >
-                          {ageGroup}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Education - Masters, Bachelors, PhD */}
-                {teacher.education && teacher.education.length > 0 && (() => {
-                  // Filter for degrees (Masters, Bachelors, PhD)
-                  const degrees = teacher.education.filter((edu: any) => {
-                    if (!edu?.degree) return false;
-                    const degree = edu.degree.toLowerCase();
-                    return degree.includes("master") || degree.includes("bachelor") || degree.includes("phd") || degree.includes("degree");
-                  });
-
-                  if (degrees.length > 0) {
+                  // Only show Qualifications section if we have certifications or degrees
+                  if (certs.length > 0 || degrees.length > 0) {
                     return (
                       <div>
                         <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
                           <GraduationCap className="w-5 h-5" />
-                          Education
+                          Qualifications
                         </h3>
-                        <div className="space-y-3">
-                          {degrees.map((edu: any, index: number) => (
-                            <div
-                              key={index}
-                              className="p-4 bg-neutral-50 dark:bg-neutral-900/50 rounded-lg"
-                            >
-                              <p className="font-medium">
-                                {edu.degree}
-                                {edu.field && edu.field.trim() && ` in ${edu.field}`}
-                              </p>
-                              <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                                {edu.institution && edu.institution.trim() && `${edu.institution}`}
-                                {edu.institution && edu.institution.trim() && edu.year && ` • `}
-                                {edu.year && edu.year.trim() && `${edu.year}`}
-                              </p>
+                        
+                        {/* Certifications with icons */}
+                        {certs.length > 0 && (
+                          <div className="mb-4">
+                            <div className="flex flex-wrap gap-4">
+                              {certs.map((cert, index) => {
+                                const Icon = cert.icon;
+                                return (
+                                  <div key={index} className="flex items-center gap-2" title={`${cert.name} Certified`}>
+                                    <Icon className="w-5 h-5 text-primary-600" />
+                                    <span className="text-sm text-neutral-600 dark:text-neutral-400">{cert.name}</span>
+                                  </div>
+                                );
+                              })}
                             </div>
-                          ))}
-                        </div>
+                          </div>
+                        )}
+
+                        {/* Education degrees */}
+                        {degrees.length > 0 && (
+                          <div className="space-y-3">
+                            {degrees.map((edu: any, index: number) => (
+                              <div
+                                key={index}
+                                className="p-4 bg-neutral-50 dark:bg-neutral-900/50 rounded-lg"
+                              >
+                                <p className="font-medium">
+                                  {edu.degree}
+                                  {edu.field && edu.field.trim() && ` in ${edu.field}`}
+                                </p>
+                                <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                                  {edu.institution && edu.institution.trim() && `${edu.institution}`}
+                                  {edu.institution && edu.institution.trim() && edu.year && ` • `}
+                                  {edu.year && edu.year.trim() && `${edu.year}`}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     );
                   }
