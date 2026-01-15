@@ -141,15 +141,27 @@ export const BrowseTeachersPage: React.FC = () => {
       const response = await fetch(`/api/teachers/public?${params}`);
       
       if (response.ok) {
-        const data = await response.json();
-        setTeachers(data.teachers || []);
+        const data = await response.json().catch((err) => {
+          console.error("Error parsing JSON:", err);
+          return { teachers: [] };
+        });
+        // Ensure we have a valid array
+        if (Array.isArray(data.teachers)) {
+          setTeachers(data.teachers);
+        } else {
+          console.error("Invalid teachers data format:", data);
+          setTeachers([]);
+        }
       } else {
-        console.error("Error fetching teachers:", response.statusText);
+        const errorText = await response.text().catch(() => response.statusText);
+        console.error("Error fetching teachers:", response.status, errorText);
+        setError(`Failed to load teachers: ${response.status}`);
         // Fallback to empty array if API fails
         setTeachers([]);
       }
     } catch (error) {
       console.error("Error fetching teachers:", error);
+      setError(error instanceof Error ? error.message : "Failed to load teachers");
       // Fallback to empty array on error
       setTeachers([]);
     } finally {
