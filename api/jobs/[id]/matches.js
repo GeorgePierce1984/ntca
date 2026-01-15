@@ -66,7 +66,7 @@ function calculateMatchStrength(job, teacher) {
   if (jobRequirements.tefl) {
     const hasTEFL = teacher.certifications?.some(cert => 
       cert.toLowerCase().includes('tefl')
-    ) || teacher.education?.some((edu: any) => 
+    ) || teacher.education?.some(edu => 
       edu?.degree?.toLowerCase().includes('tefl')
     );
     if (hasTEFL) score += 5;
@@ -74,7 +74,7 @@ function calculateMatchStrength(job, teacher) {
   if (jobRequirements.celta) {
     const hasCELTA = teacher.certifications?.some(cert => 
       cert.toLowerCase().includes('celta')
-    ) || teacher.education?.some((edu: any) => 
+    ) || teacher.education?.some(edu => 
       edu?.degree?.toLowerCase().includes('celta')
     );
     if (hasCELTA) score += 5;
@@ -82,7 +82,7 @@ function calculateMatchStrength(job, teacher) {
   if (jobRequirements.tesol) {
     const hasTESOL = teacher.certifications?.some(cert => 
       cert.toLowerCase().includes('tesol')
-    ) || teacher.education?.some((edu: any) => 
+    ) || teacher.education?.some(edu => 
       edu?.degree?.toLowerCase().includes('tesol')
     );
     if (hasTESOL) score += 5;
@@ -90,7 +90,7 @@ function calculateMatchStrength(job, teacher) {
   if (jobRequirements.delta) {
     const hasDELTA = teacher.certifications?.some(cert => 
       cert.toLowerCase().includes('delta')
-    ) || teacher.education?.some((edu: any) => 
+    ) || teacher.education?.some(edu => 
       edu?.degree?.toLowerCase().includes('delta')
     );
     if (hasDELTA) score += 5;
@@ -99,7 +99,7 @@ function calculateMatchStrength(job, teacher) {
   // 2. Degree (15 points)
   maxScore += 15;
   if (jobRequirements.bachelorsDegree) {
-    const hasDegree = teacher.education?.some((edu: any) => {
+    const hasDegree = teacher.education?.some(edu => {
       if (!edu?.degree) return false;
       const degree = edu.degree.toLowerCase();
       return degree.includes("bachelor") || degree.includes("master") || degree.includes("phd") || degree.includes("degree");
