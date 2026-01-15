@@ -126,7 +126,7 @@ export const BrowseTeachersPage: React.FC = () => {
     }
   };
 
-  const fetchTeachers = async () => {
+  const fetchTeachers = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -155,7 +155,7 @@ export const BrowseTeachersPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchTerm, filters]);
 
   // Teachers are already filtered by the API, so we can use them directly
   const filteredTeachers = teachers;

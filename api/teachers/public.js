@@ -45,9 +45,9 @@ export default async function handler(req, res) {
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
     // Build search filters - only show searchable teachers
+    // Note: We'll filter by searchable only, as profileComplete might not be set for all teachers
     const where = {
       searchable: true,
-      profileComplete: true, // Only show teachers with complete profiles
     };
 
     // Build OR conditions for text search and location
@@ -207,7 +207,9 @@ export default async function handler(req, res) {
         photoUrl: teacher.photoUrl,
         subjects: teacher.subjects || [],
         languages: teacher.otherLanguages 
-          ? teacher.otherLanguages.split(",").map(l => l.trim())
+          ? (typeof teacher.otherLanguages === 'string' 
+              ? teacher.otherLanguages.split(",").map(l => l.trim())
+              : [])
           : teacher.nativeLanguage 
             ? [teacher.nativeLanguage]
             : [],
@@ -222,7 +224,7 @@ export default async function handler(req, res) {
         preferredLocations: teacher.preferredLocations || [],
         visaStatus: teacher.visaStatus,
         workAuthorization: teacher.workAuthorization || [],
-        startDate: teacher.startDate,
+        startDate: teacher.startDate ? (teacher.startDate instanceof Date ? teacher.startDate.toISOString() : teacher.startDate) : null,
         education: Array.isArray(teacher.education) ? teacher.education : [],
         teachingExperience: teacher.teachingExperience 
           ? (Array.isArray(teacher.teachingExperience) ? teacher.teachingExperience : [])
