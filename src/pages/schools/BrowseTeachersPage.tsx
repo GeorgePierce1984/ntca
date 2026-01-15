@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -98,7 +98,7 @@ export const BrowseTeachersPage: React.FC = () => {
 
     fetchTeachers();
     fetchSubscriptionStatus();
-  }, [isAuthenticated, user, navigate]);
+  }, [isAuthenticated, user, navigate, fetchTeachers]);
 
   // Fetch subscription status
   const fetchSubscriptionStatus = async () => {
@@ -129,162 +129,36 @@ export const BrowseTeachersPage: React.FC = () => {
   const fetchTeachers = async () => {
     try {
       setLoading(true);
-      // In a real app, this would be an API call
-      // For now, show mock data
-      setTeachers([
-        {
-          id: "1",
-          firstName: "Sarah",
-          lastName: "Johnson",
-          city: "London",
-          country: "UK",
-          qualification: "CELTA, MA Applied Linguistics",
-          experienceYears: 5,
-          verified: true,
-          rating: 4.8,
-          subjects: ["English", "IELTS Preparation"],
-          languages: ["English", "Spanish"],
-          availability: "Immediate",
-          bio: "Experienced English language teacher with a passion for helping students achieve their language learning goals. Specialized in IELTS preparation and academic English. I have taught students from diverse backgrounds and age groups, from young learners to adult professionals.",
-          certifications: ["CELTA", "MA Applied Linguistics", "TEFL"],
-          ageGroups: ["Teens", "Adults"],
-          teachingStyle: "Communicative approach with focus on practical language use",
-          nativeLanguage: "English",
-          currentLocation: "London, UK",
-          willingToRelocate: true,
-          preferredLocations: ["Central Asia", "Southeast Asia"],
-          visaStatus: "Available for sponsorship",
-          workAuthorization: ["UK", "EU"],
-          education: [
-            {
-              degree: "Master of Arts",
-              field: "Applied Linguistics",
-              institution: "University of London",
-              year: "2018",
-            },
-            {
-              degree: "Bachelor of Arts",
-              field: "English Literature",
-              institution: "University of Manchester",
-              year: "2015",
-            },
-          ],
-          teachingExperience: [
-            {
-              schoolName: "British Council",
-              country: "UK",
-              startDate: "Jan 2019",
-              endDate: "Present",
-              studentAgeGroups: ["Adults"],
-              subjectsTaught: ["IELTS Preparation", "Business English"],
-              keyAchievements: "Achieved 95% pass rate for IELTS students, developed specialized curriculum for business English courses",
-            },
-            {
-              schoolName: "International Language School",
-              country: "Spain",
-              startDate: "Sep 2017",
-              endDate: "Dec 2018",
-              studentAgeGroups: ["Teens", "Adults"],
-              subjectsTaught: ["General English", "Conversational English"],
-              keyAchievements: "Taught classes of up to 20 students, improved student retention by 30%",
-            },
-          ],
-          specializations: ["IELTS Preparation", "Academic Writing", "Business English"],
-          achievements: ["Teacher of the Year 2020", "Published research paper on language acquisition"],
-          resumeUrl: "https://example.com/resume-sarah-johnson.pdf",
-          email: "sarah.johnson@example.com",
-          phone: "1234567890",
-          phoneCountryCode: "+44",
-        },
-        {
-          id: "2",
-          firstName: "Michael",
-          lastName: "Chen",
-          city: "Singapore",
-          country: "Singapore",
-          qualification: "DELTA, BA English Literature",
-          experienceYears: 8,
-          verified: true,
-          rating: 4.9,
-          subjects: ["Business English", "Academic Writing"],
-          languages: ["English", "Mandarin"],
-          availability: "1 month notice",
-          bio: "Dedicated English teacher with extensive experience in business and academic contexts. Passionate about creating engaging learning environments and helping students develop both language skills and cultural awareness. Strong background in curriculum development and teacher training.",
-          certifications: ["DELTA", "BA English Literature", "TESOL", "CELTA"],
-          ageGroups: ["Adults"],
-          teachingStyle: "Task-based learning with emphasis on real-world application",
-          nativeLanguage: "English",
-          currentLocation: "Singapore",
-          willingToRelocate: true,
-          preferredLocations: ["Central Asia", "China", "Japan"],
-          visaStatus: "Singapore PR",
-          workAuthorization: ["Singapore", "China"],
-          education: [
-            {
-              degree: "Bachelor of Arts",
-              field: "English Literature",
-              institution: "National University of Singapore",
-              year: "2014",
-            },
-          ],
-          teachingExperience: [
-            {
-              schoolName: "Singapore International School",
-              country: "Singapore",
-              startDate: "Jan 2016",
-              endDate: "Present",
-              studentAgeGroups: ["Adults"],
-              subjectsTaught: ["Business English", "Academic Writing", "Presentation Skills"],
-              keyAchievements: "Led teacher training workshops, developed award-winning business English curriculum",
-            },
-            {
-              schoolName: "Language Academy",
-              country: "China",
-              startDate: "Mar 2014",
-              endDate: "Dec 2015",
-              studentAgeGroups: ["Adults"],
-              subjectsTaught: ["General English", "Business English"],
-              keyAchievements: "Taught over 500 students, maintained 98% student satisfaction rate",
-            },
-          ],
-          specializations: ["Business English", "Academic Writing", "Teacher Training"],
-          achievements: ["Outstanding Teacher Award 2021", "Published 3 articles on language teaching"],
-          resumeUrl: "https://example.com/resume-michael-chen.pdf",
-          portfolioUrl: "https://example.com/portfolio-michael-chen",
-          email: "michael.chen@example.com",
-          phone: "9876543210",
-          phoneCountryCode: "+65",
-        },
-      ]);
+      
+      // Build query parameters
+      const params = new URLSearchParams();
+      if (searchTerm) params.append("search", searchTerm);
+      if (filters.qualification) params.append("qualification", filters.qualification);
+      if (filters.experience) params.append("experience_min", filters.experience);
+      if (filters.location) params.append("location", filters.location);
+      params.append("limit", "50"); // Fetch more teachers initially
+      
+      const response = await fetch(`/api/teachers/public?${params}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        setTeachers(data.teachers || []);
+      } else {
+        console.error("Error fetching teachers:", response.statusText);
+        // Fallback to empty array if API fails
+        setTeachers([]);
+      }
     } catch (error) {
       console.error("Error fetching teachers:", error);
+      // Fallback to empty array on error
+      setTeachers([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredTeachers = teachers.filter((teacher) => {
-    // Search filter
-    const matchesSearch = searchTerm === "" || 
-      `${teacher.firstName} ${teacher.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      teacher.qualification.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      teacher.subjects.some(subject => subject.toLowerCase().includes(searchTerm.toLowerCase()));
-
-    // Qualification filter - show all if empty
-    const matchesQualification = filters.qualification === "" || 
-      teacher.qualification.toLowerCase().includes(filters.qualification.toLowerCase());
-
-    // Experience filter - show all if empty
-    const matchesExperience = filters.experience === "" || 
-      teacher.experienceYears >= parseInt(filters.experience);
-
-    // Location filter - show all if empty
-    const matchesLocation = filters.location === "" ||
-      teacher.city.toLowerCase().includes(filters.location.toLowerCase()) ||
-      teacher.country.toLowerCase().includes(filters.location.toLowerCase());
-
-    return matchesSearch && matchesQualification && matchesExperience && matchesLocation;
-  });
+  // Teachers are already filtered by the API, so we can use them directly
+  const filteredTeachers = teachers;
 
   if (loading) {
     return (
