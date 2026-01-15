@@ -1,24 +1,52 @@
 import { PrismaClient } from "@prisma/client";
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
+  datasources: {
+    db: {
+      url: process.env.DATABASE_URL,
+    },
+  },
+});
 
-// Retry operation helper for Prisma connection issues
-async function retryOperation(operation, maxRetries = 3) {
+// Helper function to retry database operations
+// Prisma auto-connects on first query, so we don't need manual connection management
+async function retryOperation(operation, maxRetries = 3, initialDelay = 1000) {
+  let delay = initialDelay;
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
+      // Prisma will auto-connect on first query
+      // For cold starts, add a small delay before first attempt
+      if (attempt === 1) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
       return await operation();
     } catch (error) {
-      if (attempt === maxRetries) throw error;
-      
-      // Check if it's a connection error
-      if (error.message?.includes("Engine is not yet connected") || 
-          error.message?.includes("Response from the Engine was empty")) {
-        const delay = attempt * 1000;
+      const isConnectionError = 
+        error.message?.includes("Engine was empty") ||
+        error.message?.includes("Engine is not yet connected") ||
+        error.message?.includes("connection") ||
+        error.message?.includes("Response from the Engine was empty") ||
+        error.code === "P1001" ||
+        error.code === "P1017" ||
+        error.code === "P1008" ||
+        error.code === "GenericFailure" ||
+        error.name === "PrismaClientUnknownRequestError";
+
+      if (isConnectionError && attempt < maxRetries) {
         console.log(`Connection error on attempt ${attempt}, retrying in ${delay}ms...`);
-        await new Promise(resolve => setTimeout(resolve, delay));
-      } else {
-        throw error;
+        // Disconnect to reset connection state
+        await prisma.$disconnect().catch(() => {});
+        // Wait before retrying - longer for "Engine is not yet connected"
+        if (error.message?.includes("Engine is not yet connected")) {
+          await new Promise(resolve => setTimeout(resolve, 1500 + (attempt * 500)));
+        } else {
+          await new Promise(resolve => setTimeout(resolve, delay));
+          delay = Math.min(delay * 1.5, 2000); // Cap at 2 seconds to avoid timeout
+        }
+        continue;
       }
+      throw error;
     }
   }
 }
