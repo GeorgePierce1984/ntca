@@ -19,6 +19,7 @@ import { Paywall } from "@/components/paywall/Paywall";
 import { TeacherDetailModal } from "@/components/schools/TeacherDetailModal";
 import { canAccessPremiumFeatures } from "@/utils/subscription";
 import { motion } from "framer-motion";
+import { getCountryByName } from "@/data/countries";
 
 interface Teacher {
   id: string;
@@ -69,6 +70,8 @@ interface Teacher {
   phone?: string;
   phoneCountryCode?: string;
   email?: string;
+  nationality?: string;
+  languageSkills?: Record<string, string>;
 }
 
 export const BrowseTeachersPage: React.FC = () => {
@@ -252,87 +255,162 @@ export const BrowseTeachersPage: React.FC = () => {
 
               {/* Teachers Grid */}
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {Array.isArray(filteredTeachers) && filteredTeachers.length > 0 ? filteredTeachers.map((teacher) => (
-                  <motion.div
-                    key={teacher.id}
-                    whileHover={{ y: -4 }}
-                    className="bg-white dark:bg-neutral-800 rounded-xl shadow-sm hover:shadow-lg transition-all duration-200 cursor-pointer"
-                    onClick={() => {
-                      setSelectedTeacher(teacher);
-                      setShowTeacherModal(true);
-                    }}
-                  >
-                    <div className="p-6">
-                      <div className="flex items-start justify-between mb-4">
+                {Array.isArray(filteredTeachers) && filteredTeachers.length > 0 ? filteredTeachers.map((teacher) => {
+                  // Helper functions matching Profile Snapshot logic
+                  const getNationalityFlag = () => {
+                    if (!teacher.nationality) return null;
+                    const country = getCountryByName(teacher.nationality);
+                    return country?.flag || null;
+                  };
+
+                  const hasCertification = (certName: string) => {
+                    if (!teacher.certifications || teacher.certifications.length === 0) return false;
+                    return teacher.certifications.some(cert => 
+                      cert.toLowerCase().includes(certName.toLowerCase())
+                    );
+                  };
+
+                  const hasDegree = () => {
+                    if (!teacher.education || teacher.education.length === 0) return false;
+                    return teacher.education.some((edu: any) => {
+                      if (!edu?.degree) return false;
+                      const degree = edu.degree.toLowerCase();
+                      return degree.includes("bachelor") || degree.includes("master") || degree.includes("phd") || degree.includes("degree");
+                    });
+                  };
+
+                  const getQualification = () => {
+                    if (!teacher.education || teacher.education.length === 0) return null;
+                    const degree = teacher.education.find((edu: any) => {
+                      if (!edu?.degree) return false;
+                      const deg = edu.degree.toLowerCase();
+                      return deg.includes("bachelor") || deg.includes("master") || deg.includes("phd") || deg.includes("degree");
+                    });
+                    if (degree?.degree) return degree.degree;
+                    return teacher.education[0]?.degree || null;
+                  };
+
+                  const isNativeEnglish = () => {
+                    if (teacher.nativeLanguage?.toLowerCase().includes('english')) return true;
+                    if (teacher.languageSkills && typeof teacher.languageSkills === 'object') {
+                      const englishLevel = (teacher.languageSkills as Record<string, string>)['English']?.toLowerCase();
+                      return englishLevel === 'native' || englishLevel === 'near-native' || englishLevel === 'near native';
+                    }
+                    return false;
+                  };
+
+                  const calculatePreferredAgeRange = () => {
+                    if (!teacher.ageGroups || teacher.ageGroups.length === 0) return null;
+                    return teacher.ageGroups.join(", ");
+                  };
+
+                  return (
+                    <motion.div
+                      key={teacher.id}
+                      whileHover={{ y: -4 }}
+                      className="card p-6 cursor-pointer hover:shadow-lg transition-all duration-200"
+                      onClick={() => {
+                        setSelectedTeacher(teacher);
+                        setShowTeacherModal(true);
+                      }}
+                    >
+                      <div className="space-y-4">
                         <div className="flex items-center gap-4">
-                          {teacher.photoUrl ? (
-                            <img
-                              src={teacher.photoUrl}
-                              alt={`${teacher.firstName} ${teacher.lastName}`}
-                              className="w-16 h-16 rounded-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-16 h-16 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
-                              <span className="text-xl font-semibold text-primary-600 dark:text-primary-400">
-                                {teacher.firstName?.[0] || ""}
-                                {teacher.lastName?.[0] || ""}
+                          <div className="w-16 h-16 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center flex-shrink-0">
+                            {teacher.photoUrl ? (
+                              <img
+                                src={teacher.photoUrl}
+                                alt={`${teacher.firstName} ${teacher.lastName}`}
+                                className="w-16 h-16 rounded-full object-cover"
+                              />
+                            ) : (
+                              <User className="w-8 h-8 text-primary-600 dark:text-primary-400" />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              {getNationalityFlag() && (
+                                <span className="text-xl">{getNationalityFlag()}</span>
+                              )}
+                              <h4 className="font-semibold text-lg truncate">
+                                {teacher.firstName} {teacher.lastName}
+                              </h4>
+                              {teacher.verified && (
+                                <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
+                              )}
+                            </div>
+                            <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
+                              {teacher.city || "Unknown"}, {teacher.country || "Unknown"}
+                            </p>
+                            {teacher.experienceYears !== undefined && teacher.experienceYears !== null && (
+                              <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
+                                {teacher.experienceYears} {teacher.experienceYears === 1 ? 'Year' : 'Years'} Experience
+                              </p>
+                            )}
+                            {calculatePreferredAgeRange() && (
+                              <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
+                                Ages: {calculatePreferredAgeRange()}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Certification Icons */}
+                        <div className="flex items-center gap-4 pt-2 border-t border-neutral-200 dark:border-neutral-700 flex-wrap">
+                          {hasCertification('TEFL') && (
+                            <div className="flex items-center gap-2" title="TEFL Certified">
+                              <Award className="w-5 h-5 text-primary-600" />
+                              <span className="text-sm text-neutral-600 dark:text-neutral-400">TEFL</span>
+                            </div>
+                          )}
+                          {hasCertification('CELTA') && (
+                            <div className="flex items-center gap-2" title="CELTA Certified">
+                              <Award className="w-5 h-5 text-primary-600" />
+                              <span className="text-sm text-neutral-600 dark:text-neutral-400">CELTA</span>
+                            </div>
+                          )}
+                          {hasCertification('TESOL') && (
+                            <div className="flex items-center gap-2" title="TESOL Certified">
+                              <Award className="w-5 h-5 text-primary-600" />
+                              <span className="text-sm text-neutral-600 dark:text-neutral-400">TESOL</span>
+                            </div>
+                          )}
+                          {hasCertification('DELTA') && (
+                            <div className="flex items-center gap-2" title="DELTA Certified">
+                              <Award className="w-5 h-5 text-primary-600" />
+                              <span className="text-sm text-neutral-600 dark:text-neutral-400">DELTA</span>
+                            </div>
+                          )}
+                          {hasDegree() && (
+                            <div className="flex items-center gap-2" title="Has Degree">
+                              <GraduationCap className="w-5 h-5 text-primary-600" />
+                              <span className="text-sm text-neutral-600 dark:text-neutral-400">
+                                {getQualification() || 'Degree'}
                               </span>
                             </div>
                           )}
-                          <div>
-                            <h3 className="font-semibold text-lg flex items-center gap-2">
-                              {teacher.firstName} {teacher.lastName}
-                              {teacher.verified && (
-                                <CheckCircle className="w-5 h-5 text-green-500" />
-                              )}
-                            </h3>
-                            <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                              {teacher.qualification || "No qualification listed"}
-                            </p>
-                          </div>
+                          {isNativeEnglish() && (
+                            <div className="flex items-center gap-2" title="Native/Near Native English">
+                              <Languages className="w-5 h-5 text-primary-600" />
+                              <span className="text-sm text-neutral-600 dark:text-neutral-400">Native English</span>
+                            </div>
+                          )}
                         </div>
-                        {teacher.rating && (
-                          <div className="flex items-center gap-1">
-                            <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                            <span className="text-sm font-medium">
-                              {teacher.rating}
-                            </span>
-                          </div>
-                        )}
-                      </div>
 
-                      <div className="space-y-2 text-sm text-neutral-600 dark:text-neutral-400">
-                        <div className="flex items-center gap-2">
-                          <MapPin className="w-4 h-4" />
-                          <span>
-                            {teacher.city || "Unknown"}, {teacher.country || "Unknown"}
-                          </span>
-                        </div>
-                        {teacher.experienceYears && (
-                          <div className="flex items-center gap-2">
-                            <GraduationCap className="w-4 h-4" />
-                            <span>{teacher.experienceYears} years experience</span>
-                          </div>
-                        )}
-                        {teacher.languages && Array.isArray(teacher.languages) && teacher.languages.length > 0 && (
-                          <div className="flex items-center gap-2">
-                            <Globe className="w-4 h-4" />
-                            <span>{teacher.languages.join(", ")}</span>
+                        {teacher.availability && (
+                          <div className="pt-2 border-t border-neutral-200 dark:border-neutral-700">
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm text-neutral-600 dark:text-neutral-400">
+                                Available: {teacher.availability}
+                              </span>
+                              <ChevronRight className="w-5 h-5 text-neutral-400" />
+                            </div>
                           </div>
                         )}
                       </div>
-
-                      <div className="mt-4 pt-4 border-t border-neutral-200 dark:border-neutral-700">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-neutral-500">
-                            {teacher.availability ? `Available: ${teacher.availability}` : "Availability: Not specified"}
-                          </span>
-                          <ChevronRight className="w-5 h-5 text-neutral-400" />
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                )) : null}
+                    </motion.div>
+                  );
+                }) : null}
               </div>
 
               {!loading && filteredTeachers && filteredTeachers.length === 0 && (
