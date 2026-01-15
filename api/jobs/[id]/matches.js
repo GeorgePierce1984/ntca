@@ -145,48 +145,7 @@ function calculateMatchStrength(job, teacher) {
     }
   }
 
-  // 4. Subjects (15 points)
-  maxScore += 15;
-  if (job.subjectsTaught) {
-    const jobSubjects = job.subjectsTaught.split(',').map(s => s.trim().toLowerCase());
-    const teacherSubjects = (teacher.subjects || []).map(s => s.toLowerCase());
-    
-    // Check if this is an English Language school (English is primary subject)
-    const hasEnglish = jobSubjects.some(js => 
-      js.includes('english') || js.includes('esl') || js.includes('efl')
-    );
-    
-    if (hasEnglish) {
-      // For English Language schools: English is required, other subjects are bonus
-      const hasEnglishMatch = teacherSubjects.some(ts => 
-        ts.includes('english') || ts.includes('esl') || ts.includes('efl')
-      );
-      
-      if (hasEnglishMatch) {
-        // Base score for English match
-        score += 12;
-        
-        // Bonus for other matching subjects (up to 3 points)
-        const otherMatchingSubjects = jobSubjects.filter(js => 
-          !js.includes('english') && !js.includes('esl') && !js.includes('efl') &&
-          teacherSubjects.some(ts => ts.includes(js) || js.includes(ts))
-        );
-        if (otherMatchingSubjects.length > 0) {
-          score += Math.min(3, otherMatchingSubjects.length);
-        }
-      }
-    } else {
-      // For other subjects: standard matching
-      const matchingSubjects = jobSubjects.filter(js => 
-        teacherSubjects.some(ts => ts.includes(js) || js.includes(ts))
-      );
-      if (matchingSubjects.length > 0) {
-        score += (matchingSubjects.length / jobSubjects.length) * 15;
-      }
-    }
-  }
-
-  // 5. Age Groups (15 points)
+  // 4. Age Groups (15 points)
   maxScore += 15;
   if (job.studentAgeGroupMin !== null && job.studentAgeGroupMax !== null) {
     const teacherAgeGroups = teacher.ageGroups || [];
@@ -218,41 +177,7 @@ function calculateMatchStrength(job, teacher) {
     if (hasOverlap) score += 15;
   }
 
-  // 6. Visa Support (10 points)
-  maxScore += 10;
-  if (jobRequirements.visaSupport) {
-    const visaSupport = jobRequirements.visaSupport.toLowerCase();
-    
-    if (visaSupport.includes("must already have")) {
-      // Check visaStatus field
-      const hasVisa = teacher.visaStatus && (
-        teacher.visaStatus.toLowerCase().includes("have") ||
-        teacher.visaStatus.toLowerCase().includes("right to work") ||
-        teacher.visaStatus.toLowerCase().includes("work permit") ||
-        teacher.visaStatus.toLowerCase().includes("authorized")
-      );
-      
-      // Also check workAuthorization array
-      const hasWorkAuth = teacher.workAuthorization && Array.isArray(teacher.workAuthorization) &&
-        teacher.workAuthorization.some(auth => 
-          auth.toLowerCase().includes("have") ||
-          auth.toLowerCase().includes("right to work") ||
-          auth.toLowerCase().includes("work permit")
-        );
-      
-      if (hasVisa || hasWorkAuth) {
-        score += 10;
-      }
-    } else if (visaSupport.includes("can provide")) {
-      // Teacher can accept visa support - always award points
-      score += 10;
-    } else if (visaSupport.includes("not required")) {
-      // No visa requirement - always award points
-      score += 10;
-    }
-  }
-
-  // 7. Location (5 points)
+  // 5. Location (5 points)
   maxScore += 5;
   if (teacher.willingToRelocate || 
       teacher.preferredLocations?.some(loc => 
