@@ -244,6 +244,7 @@ export default async function handler(req, res) {
         ageGroups: teacher.ageGroups || [],
         teachingStyle: teacher.teachingStyle,
         nativeLanguage: teacher.nativeLanguage,
+        nationality: teacher.nationality,
         currentLocation: teacher.currentLocation,
         willingToRelocate: teacher.willingToRelocate,
         preferredLocations: teacher.preferredLocations || [],
