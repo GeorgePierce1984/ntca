@@ -30,6 +30,7 @@ interface Teacher {
   country: string;
   qualification: string;
   experienceYears: number;
+  experience?: string;
   verified: boolean;
   rating?: number;
   photoUrl?: string;
@@ -201,15 +202,15 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
                   </div>
                 )}
 
-                {/* Bio/Summary */}
-                {teacher.bio && teacher.bio.trim() && (
+                {/* Bio/Summary - Check both bio and experience fields */}
+                {((teacher.bio && teacher.bio.trim()) || (teacher.experience && teacher.experience.trim())) && (
                   <div>
                     <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
                       <User className="w-5 h-5" />
                       About
                     </h3>
                     <p className="text-neutral-700 dark:text-neutral-300 whitespace-pre-wrap">
-                      {teacher.bio}
+                      {teacher.bio && teacher.bio.trim() ? teacher.bio : (teacher.experience || "")}
                     </p>
                   </div>
                 )}
