@@ -185,6 +185,7 @@ export default async function handler(req, res) {
             nativeLanguage: true,
             languageSkills: true,
             otherLanguages: true,
+            nationality: true,
             currentLocation: true,
             willingToRelocate: true,
             preferredLocations: true,
