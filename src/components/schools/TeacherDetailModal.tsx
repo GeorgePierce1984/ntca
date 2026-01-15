@@ -20,6 +20,7 @@ import {
   Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { getCountryByName } from "@/data/countries";
 
 interface Teacher {
   id: string;
@@ -70,6 +71,7 @@ interface Teacher {
   phone?: string;
   phoneCountryCode?: string;
   email?: string;
+  nationality?: string;
 }
 
 interface TeacherDetailModalProps {
@@ -129,6 +131,10 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
                   )}
                   <div>
                     <h2 className="text-2xl font-bold flex items-center gap-2">
+                      {teacher.nationality && (() => {
+                        const country = getCountryByName(teacher.nationality);
+                        return country?.flag ? <span className="text-2xl">{country.flag}</span> : null;
+                      })()}
                       {teacher.firstName} {teacher.lastName}
                       {teacher.verified && (
                         <CheckCircle className="w-6 h-6 text-green-500" />
@@ -175,19 +181,6 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
                   )}
                 </div>
 
-                {/* Bio */}
-                {teacher.bio && (
-                  <div>
-                    <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
-                      <User className="w-5 h-5" />
-                      About
-                    </h3>
-                    <p className="text-neutral-700 dark:text-neutral-300 whitespace-pre-wrap">
-                      {teacher.bio}
-                    </p>
-                  </div>
-                )}
-
                 {/* Subjects */}
                 {teacher.subjects && teacher.subjects.length > 0 && (
                   <div>
@@ -205,6 +198,19 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
                         </span>
                       ))}
                     </div>
+                  </div>
+                )}
+
+                {/* Bio */}
+                {teacher.bio && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                      <User className="w-5 h-5" />
+                      About
+                    </h3>
+                    <p className="text-neutral-700 dark:text-neutral-300 whitespace-pre-wrap">
+                      {teacher.bio}
+                    </p>
                   </div>
                 )}
 
@@ -228,25 +234,44 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
                   </div>
                 )}
 
-                {/* Certifications */}
-                {teacher.certifications && teacher.certifications.length > 0 && (
-                  <div>
-                    <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
-                      <Award className="w-5 h-5" />
-                      Certifications
-                    </h3>
-                    <div className="flex flex-wrap gap-2">
-                      {teacher.certifications.map((cert, index) => (
-                        <span
-                          key={index}
-                          className="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full text-sm"
-                        >
-                          {cert}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                {/* Certifications - CELTA, DELTA, TESOL, TEFL with icons */}
+                {(() => {
+                  const hasCertification = (certName: string) => {
+                    if (!teacher.certifications || teacher.certifications.length === 0) return false;
+                    return teacher.certifications.some(cert => 
+                      cert.toLowerCase().includes(certName.toLowerCase())
+                    );
+                  };
+
+                  const certs = [];
+                  if (hasCertification('TEFL')) certs.push({ name: 'TEFL', icon: Award });
+                  if (hasCertification('CELTA')) certs.push({ name: 'CELTA', icon: Award });
+                  if (hasCertification('TESOL')) certs.push({ name: 'TESOL', icon: Award });
+                  if (hasCertification('DELTA')) certs.push({ name: 'DELTA', icon: Award });
+
+                  if (certs.length > 0) {
+                    return (
+                      <div>
+                        <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                          <Award className="w-5 h-5" />
+                          Certifications
+                        </h3>
+                        <div className="flex flex-wrap gap-4">
+                          {certs.map((cert, index) => {
+                            const Icon = cert.icon;
+                            return (
+                              <div key={index} className="flex items-center gap-2" title={`${cert.name} Certified`}>
+                                <Icon className="w-5 h-5 text-primary-600" />
+                                <span className="text-sm text-neutral-600 dark:text-neutral-400">{cert.name}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
 
                 {/* Age Groups */}
                 {teacher.ageGroups && teacher.ageGroups.length > 0 && (
@@ -268,28 +293,45 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
                   </div>
                 )}
 
-                {/* Education */}
-                {teacher.education && teacher.education.length > 0 && (
-                  <div>
-                    <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
-                      <GraduationCap className="w-5 h-5" />
-                      Education
-                    </h3>
-                    <div className="space-y-3">
-                      {teacher.education.map((edu, index) => (
-                        <div
-                          key={index}
-                          className="p-4 bg-neutral-50 dark:bg-neutral-900/50 rounded-lg"
-                        >
-                          <p className="font-medium">{edu.degree} in {edu.field}</p>
-                          <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                            {edu.institution} • {edu.year}
-                          </p>
+                {/* Education - Masters, Bachelors, PhD */}
+                {teacher.education && teacher.education.length > 0 && (() => {
+                  // Filter for degrees (Masters, Bachelors, PhD)
+                  const degrees = teacher.education.filter((edu: any) => {
+                    if (!edu?.degree) return false;
+                    const degree = edu.degree.toLowerCase();
+                    return degree.includes("master") || degree.includes("bachelor") || degree.includes("phd") || degree.includes("degree");
+                  });
+
+                  if (degrees.length > 0) {
+                    return (
+                      <div>
+                        <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                          <GraduationCap className="w-5 h-5" />
+                          Education
+                        </h3>
+                        <div className="space-y-3">
+                          {degrees.map((edu: any, index: number) => (
+                            <div
+                              key={index}
+                              className="p-4 bg-neutral-50 dark:bg-neutral-900/50 rounded-lg"
+                            >
+                              <p className="font-medium">
+                                {edu.degree}
+                                {edu.field && edu.field.trim() && ` in ${edu.field}`}
+                              </p>
+                              <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                                {edu.institution && edu.institution.trim() && `${edu.institution}`}
+                                {edu.institution && edu.institution.trim() && edu.year && ` • `}
+                                {edu.year && edu.year.trim() && `${edu.year}`}
+                              </p>
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
 
                 {/* Teaching Experience */}
                 {teacher.teachingExperience && teacher.teachingExperience.length > 0 && (
@@ -357,32 +399,6 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
                           {spec}
                         </span>
                       ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Contact Information */}
-                {(teacher.email || teacher.phone) && (
-                  <div>
-                    <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
-                      <Mail className="w-5 h-5" />
-                      Contact Information
-                    </h3>
-                    <div className="space-y-2">
-                      {teacher.email && (
-                        <div className="flex items-center gap-2">
-                          <Mail className="w-4 h-4 text-neutral-400" />
-                          <span>{teacher.email}</span>
-                        </div>
-                      )}
-                      {teacher.phone && (
-                        <div className="flex items-center gap-2">
-                          <Phone className="w-4 h-4 text-neutral-400" />
-                          <span>
-                            {teacher.phoneCountryCode} {teacher.phone}
-                          </span>
-                        </div>
-                      )}
                     </div>
                   </div>
                 )}
