@@ -11,27 +11,38 @@ const prisma = new PrismaClient({
 });
 
 // Helper function to retry database operations with exponential backoff
-async function retryOperation(operation, maxRetries = 3, delay = 1000) {
+async function retryOperation(operation, maxRetries = 3, initialDelay = 500) {
+  let delay = initialDelay;
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      // Ensure connection is active
-      await prisma.$connect();
+      // For cold starts, add a small delay before first attempt
+      if (attempt === 1) {
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
       return await operation();
     } catch (error) {
       const isConnectionError = 
         error.message?.includes("Engine was empty") ||
+        error.message?.includes("Engine is not yet connected") ||
         error.message?.includes("connection") ||
-        error.code === "P1001" ||
-        error.code === "P1017" ||
-        error.code === "P1008" ||
+        error.message?.includes("Response from the Engine was empty") ||
+        error.code === "P1001" || // Can't reach database server
+        error.code === "P1017" || // Server closed the connection
+        error.code === "P1008" || // Timed out
+        error.code === "GenericFailure" || // Generic engine error
         error.name === "PrismaClientUnknownRequestError";
 
       if (isConnectionError && attempt < maxRetries) {
         console.log(`Connection error on attempt ${attempt}, retrying in ${delay}ms...`);
-        // Disconnect and wait before retrying
+        // Disconnect to reset connection state
         await prisma.$disconnect().catch(() => {});
-        await new Promise(resolve => setTimeout(resolve, delay));
-        delay *= 2; // Exponential backoff
+        // Wait before retrying - longer for "Engine is not yet connected"
+        if (error.message?.includes("Engine is not yet connected")) {
+          await new Promise(resolve => setTimeout(resolve, 1500 + (attempt * 500))); // Longer delay for engine startup
+        } else {
+          await new Promise(resolve => setTimeout(resolve, delay));
+          delay = Math.min(delay * 1.5, 2000); // Cap at 2 seconds to avoid excessive timeouts
+        }
         continue;
       }
       throw error;
