@@ -176,11 +176,7 @@ export default async function handler(req, res) {
             phoneCountryCode: true,
             createdAt: true,
             lastActive: true,
-            user: {
-              select: {
-                email: true,
-              },
-            },
+            // Note: user relation might be null for some teachers, so we handle it safely
           },
         });
       }),
@@ -237,7 +233,7 @@ export default async function handler(req, res) {
         portfolioUrl: teacher.portfolioUrl,
         phone: teacher.phone,
         phoneCountryCode: teacher.phoneCountryCode,
-        email: teacher.user?.email,
+        // Note: Email is not included in public API for privacy
       })),
       pagination: {
         page: parseInt(page),
