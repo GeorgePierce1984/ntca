@@ -201,8 +201,8 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
                   </div>
                 )}
 
-                {/* Bio */}
-                {teacher.bio && (
+                {/* Bio/Summary */}
+                {teacher.bio && teacher.bio.trim() && (
                   <div>
                     <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
                       <User className="w-5 h-5" />
