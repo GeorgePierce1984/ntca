@@ -1596,94 +1596,113 @@ export const SchoolDashboardPage: React.FC = () => {
                             </div>
                           )}
 
-                          {/* Job Match Insights */}
-                          {getEffectiveStatus(job) === "ACTIVE" && jobMatches[job.id] && (
-                            <div className="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg p-4 mb-4">
-                              <div className="flex items-center gap-2 mb-3">
-                                <TrendingUp className="w-5 h-5 text-primary-600 dark:text-primary-400" />
-                                <h4 className="font-semibold text-primary-900 dark:text-primary-100">
-                                  {jobMatches[job.id].totalMatches} teachers match your role
-                                </h4>
-                              </div>
-                              
-                              {/* Availability Breakdown */}
-                              <div className="mb-3">
-                                <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                                  Availability:
-                                </p>
-                                <div className="grid grid-cols-3 gap-2 text-sm">
-                                  <div className="bg-white dark:bg-neutral-800 rounded p-2">
-                                    <div className="font-semibold text-green-600 dark:text-green-400">
-                                      {jobMatches[job.id].byAvailability.now}
+                          {/* Job Match Insights - Always show for active jobs */}
+                          {getEffectiveStatus(job) === "ACTIVE" && (
+                            <>
+                            {jobMatches[job.id] ? (
+                              <div className="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg p-4 mb-4">
+                                <div className="flex items-center gap-2 mb-3">
+                                  <TrendingUp className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                                  <h4 className="font-semibold text-primary-900 dark:text-primary-100">
+                                    {jobMatches[job.id].totalMatches} teachers match your role
+                                  </h4>
+                                </div>
+                                
+                                {/* Availability Breakdown */}
+                                <div className="mb-3">
+                                  <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                                    Availability:
+                                  </p>
+                                  <div className="grid grid-cols-3 gap-2 text-sm">
+                                    <div className="bg-white dark:bg-neutral-800 rounded p-2">
+                                      <div className="font-semibold text-green-600 dark:text-green-400">
+                                        {jobMatches[job.id].byAvailability.now}
+                                      </div>
+                                      <div className="text-xs text-neutral-600 dark:text-neutral-400">
+                                        Available now
+                                      </div>
                                     </div>
-                                    <div className="text-xs text-neutral-600 dark:text-neutral-400">
-                                      Available now
+                                    <div className="bg-white dark:bg-neutral-800 rounded p-2">
+                                      <div className="font-semibold text-blue-600 dark:text-blue-400">
+                                        {jobMatches[job.id].byAvailability.within30Days}
+                                      </div>
+                                      <div className="text-xs text-neutral-600 dark:text-neutral-400">
+                                        Within 30 days
+                                      </div>
+                                    </div>
+                                    <div className="bg-white dark:bg-neutral-800 rounded p-2">
+                                      <div className="font-semibold text-purple-600 dark:text-purple-400">
+                                        {jobMatches[job.id].byAvailability.within3Months}
+                                      </div>
+                                      <div className="text-xs text-neutral-600 dark:text-neutral-400">
+                                        Within 3 months
+                                      </div>
                                     </div>
                                   </div>
-                                  <div className="bg-white dark:bg-neutral-800 rounded p-2">
-                                    <div className="font-semibold text-blue-600 dark:text-blue-400">
-                                      {jobMatches[job.id].byAvailability.within30Days}
+                                </div>
+
+                                {/* Match Strength Bands */}
+                                <div>
+                                  <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                                    Match Strength:
+                                  </p>
+                                  <div className="grid grid-cols-3 gap-2 text-sm">
+                                    <div className="bg-white dark:bg-neutral-800 rounded p-2">
+                                      <div className="font-semibold text-green-600 dark:text-green-400">
+                                        {jobMatches[job.id].byStrength.strong}
+                                      </div>
+                                      <div className="text-xs text-neutral-600 dark:text-neutral-400">
+                                        Strong (80-100%)
+                                      </div>
                                     </div>
-                                    <div className="text-xs text-neutral-600 dark:text-neutral-400">
-                                      Within 30 days
+                                    <div className="bg-white dark:bg-neutral-800 rounded p-2">
+                                      <div className="font-semibold text-yellow-600 dark:text-yellow-400">
+                                        {jobMatches[job.id].byStrength.medium}
+                                      </div>
+                                      <div className="text-xs text-neutral-600 dark:text-neutral-400">
+                                        Medium (60-79%)
+                                      </div>
                                     </div>
-                                  </div>
-                                  <div className="bg-white dark:bg-neutral-800 rounded p-2">
-                                    <div className="font-semibold text-purple-600 dark:text-purple-400">
-                                      {jobMatches[job.id].byAvailability.within3Months}
-                                    </div>
-                                    <div className="text-xs text-neutral-600 dark:text-neutral-400">
-                                      Within 3 months
+                                    <div className="bg-white dark:bg-neutral-800 rounded p-2">
+                                      <div className="font-semibold text-orange-600 dark:text-orange-400">
+                                        {jobMatches[job.id].byStrength.partial}
+                                      </div>
+                                      <div className="text-xs text-neutral-600 dark:text-neutral-400">
+                                        Partial (40-59%)
+                                      </div>
                                     </div>
                                   </div>
                                 </div>
                               </div>
-
-                              {/* Match Strength Bands */}
-                              <div>
-                                <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                                  Match Strength:
-                                </p>
-                                <div className="grid grid-cols-3 gap-2 text-sm">
-                                  <div className="bg-white dark:bg-neutral-800 rounded p-2">
-                                    <div className="font-semibold text-green-600 dark:text-green-400">
-                                      {jobMatches[job.id].byStrength.strong}
-                                    </div>
-                                    <div className="text-xs text-neutral-600 dark:text-neutral-400">
-                                      Strong (80-100%)
-                                    </div>
-                                  </div>
-                                  <div className="bg-white dark:bg-neutral-800 rounded p-2">
-                                    <div className="font-semibold text-yellow-600 dark:text-yellow-400">
-                                      {jobMatches[job.id].byStrength.medium}
-                                    </div>
-                                    <div className="text-xs text-neutral-600 dark:text-neutral-400">
-                                      Medium (60-79%)
-                                    </div>
-                                  </div>
-                                  <div className="bg-white dark:bg-neutral-800 rounded p-2">
-                                    <div className="font-semibold text-orange-600 dark:text-orange-400">
-                                      {jobMatches[job.id].byStrength.partial}
-                                    </div>
-                                    <div className="text-xs text-neutral-600 dark:text-neutral-400">
-                                      Partial (40-59%)
-                                    </div>
-                                  </div>
+                            ) : loadingMatches[job.id] ? (
+                              <div className="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg p-4 mb-4">
+                                <div className="flex items-center gap-2">
+                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600"></div>
+                                  <span className="text-sm text-neutral-600 dark:text-neutral-400">
+                                    Calculating matches...
+                                  </span>
                                 </div>
                               </div>
-                            </div>
-                          )}
-
-                          {/* Loading state for matches */}
-                          {getEffectiveStatus(job) === "ACTIVE" && loadingMatches[job.id] && !jobMatches[job.id] && (
-                            <div className="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg p-4 mb-4">
-                              <div className="flex items-center gap-2">
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600"></div>
-                                <span className="text-sm text-neutral-600 dark:text-neutral-400">
-                                  Calculating matches...
-                                </span>
+                            ) : (
+                              <div className="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg p-4 mb-4">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <TrendingUp className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                                    <span className="text-sm text-neutral-600 dark:text-neutral-400">
+                                      Match insights loading...
+                                    </span>
+                                  </div>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => fetchJobMatches(job.id)}
+                                  >
+                                    Load Matches
+                                  </Button>
+                                </div>
                               </div>
-                            </div>
+                            )}
+                            </>
                           )}
                         </div>
                         <div className="flex items-center gap-2 ml-4">
