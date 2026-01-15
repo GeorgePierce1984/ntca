@@ -319,12 +319,16 @@ export const SchoolDashboardPage: React.FC = () => {
       if (response.ok) {
         const data = await response.json();
         setJobs(data.jobs || []);
-        // Fetch matches for all active jobs
-        data.jobs?.forEach((job: JobPosting) => {
-          if (getEffectiveStatus(job) === "ACTIVE") {
-            fetchJobMatches(job.id);
-          }
-        });
+        // Fetch matches for all active jobs after state is set
+        setTimeout(() => {
+          data.jobs?.forEach((job: JobPosting) => {
+            const effectiveStatus = getEffectiveStatus(job);
+            if (effectiveStatus === "ACTIVE") {
+              console.log(`Fetching matches for job ${job.id} (${job.title})`);
+              fetchJobMatches(job.id);
+            }
+          });
+        }, 100);
       }
     } catch (error) {
       console.error("Error fetching jobs:", error);
@@ -346,6 +350,7 @@ export const SchoolDashboardPage: React.FC = () => {
 
       if (response.ok) {
         const data = await response.json();
+        console.log(`Match data for job ${jobId}:`, data);
         setJobMatches(prev => ({
           ...prev,
           [jobId]: {
@@ -354,6 +359,9 @@ export const SchoolDashboardPage: React.FC = () => {
             byStrength: data.byStrength,
           },
         }));
+      } else {
+        const errorText = await response.text();
+        console.error(`Failed to fetch matches for job ${jobId}:`, response.status, errorText);
       }
     } catch (error) {
       console.error("Error fetching job matches:", error);
