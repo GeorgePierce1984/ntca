@@ -111,10 +111,37 @@ function calculateMatchStrength(job, teacher) {
   maxScore += 20;
   if (jobRequirements.minimumTeachingExperience) {
     const minExp = parseInt(jobRequirements.minimumTeachingExperience) || 0;
+    
+    // Check experienceYears first
     if (teacher.experienceYears && teacher.experienceYears >= minExp) {
       // Bonus for exceeding minimum
       const excess = teacher.experienceYears - minExp;
       score += Math.min(20, 15 + (excess * 2));
+    } else if (teacher.teachingExperience) {
+      // Fallback: check teachingExperience array for relevant experience
+      try {
+        const teachingExp = Array.isArray(teacher.teachingExperience) 
+          ? teacher.teachingExperience 
+          : JSON.parse(teacher.teachingExperience || '[]');
+        
+        // Count years of experience from teachingExperience entries
+        let totalYears = 0;
+        teachingExp.forEach(exp => {
+          if (exp.startDate && exp.endDate) {
+            const start = new Date(exp.startDate);
+            const end = exp.endDate.toLowerCase() === 'present' ? new Date() : new Date(exp.endDate);
+            const years = (end - start) / (1000 * 60 * 60 * 24 * 365);
+            if (years > 0) totalYears += years;
+          }
+        });
+        
+        if (totalYears >= minExp) {
+          const excess = totalYears - minExp;
+          score += Math.min(20, 15 + (excess * 2));
+        }
+      } catch (e) {
+        // If parsing fails, skip this check
+      }
     }
   }
 
@@ -123,11 +150,39 @@ function calculateMatchStrength(job, teacher) {
   if (job.subjectsTaught) {
     const jobSubjects = job.subjectsTaught.split(',').map(s => s.trim().toLowerCase());
     const teacherSubjects = (teacher.subjects || []).map(s => s.toLowerCase());
-    const matchingSubjects = jobSubjects.filter(js => 
-      teacherSubjects.some(ts => ts.includes(js) || js.includes(ts))
+    
+    // Check if this is an English Language school (English is primary subject)
+    const hasEnglish = jobSubjects.some(js => 
+      js.includes('english') || js.includes('esl') || js.includes('efl')
     );
-    if (matchingSubjects.length > 0) {
-      score += (matchingSubjects.length / jobSubjects.length) * 15;
+    
+    if (hasEnglish) {
+      // For English Language schools: English is required, other subjects are bonus
+      const hasEnglishMatch = teacherSubjects.some(ts => 
+        ts.includes('english') || ts.includes('esl') || ts.includes('efl')
+      );
+      
+      if (hasEnglishMatch) {
+        // Base score for English match
+        score += 12;
+        
+        // Bonus for other matching subjects (up to 3 points)
+        const otherMatchingSubjects = jobSubjects.filter(js => 
+          !js.includes('english') && !js.includes('esl') && !js.includes('efl') &&
+          teacherSubjects.some(ts => ts.includes(js) || js.includes(ts))
+        );
+        if (otherMatchingSubjects.length > 0) {
+          score += Math.min(3, otherMatchingSubjects.length);
+        }
+      }
+    } else {
+      // For other subjects: standard matching
+      const matchingSubjects = jobSubjects.filter(js => 
+        teacherSubjects.some(ts => ts.includes(js) || js.includes(ts))
+      );
+      if (matchingSubjects.length > 0) {
+        score += (matchingSubjects.length / jobSubjects.length) * 15;
+      }
     }
   }
 
@@ -167,15 +222,33 @@ function calculateMatchStrength(job, teacher) {
   maxScore += 10;
   if (jobRequirements.visaSupport) {
     const visaSupport = jobRequirements.visaSupport.toLowerCase();
+    
     if (visaSupport.includes("must already have")) {
-      if (teacher.visaStatus && teacher.visaStatus.toLowerCase().includes("have")) {
+      // Check visaStatus field
+      const hasVisa = teacher.visaStatus && (
+        teacher.visaStatus.toLowerCase().includes("have") ||
+        teacher.visaStatus.toLowerCase().includes("right to work") ||
+        teacher.visaStatus.toLowerCase().includes("work permit") ||
+        teacher.visaStatus.toLowerCase().includes("authorized")
+      );
+      
+      // Also check workAuthorization array
+      const hasWorkAuth = teacher.workAuthorization && Array.isArray(teacher.workAuthorization) &&
+        teacher.workAuthorization.some(auth => 
+          auth.toLowerCase().includes("have") ||
+          auth.toLowerCase().includes("right to work") ||
+          auth.toLowerCase().includes("work permit")
+        );
+      
+      if (hasVisa || hasWorkAuth) {
         score += 10;
       }
     } else if (visaSupport.includes("can provide")) {
-      // Teacher can accept visa support
+      // Teacher can accept visa support - always award points
       score += 10;
     } else if (visaSupport.includes("not required")) {
-      score += 10; // No visa requirement
+      // No visa requirement - always award points
+      score += 10;
     }
   }
 
@@ -315,6 +388,7 @@ export default async function handler(req, res) {
           willingToRelocate: true,
           preferredLocations: true,
           education: true,
+          teachingExperience: true,
           profileComplete: true,
         },
       });
