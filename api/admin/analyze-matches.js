@@ -55,11 +55,17 @@ function calculateMatchStrength(job, teacher) {
   let jobRequirements = {};
   try {
     if (job.requirements) {
-      jobRequirements = JSON.parse(job.requirements);
+      const parsed = typeof job.requirements === 'string' 
+        ? JSON.parse(job.requirements) 
+        : job.requirements;
+      jobRequirements = parsed || {};
     }
   } catch (e) {
-    console.error("Error parsing job requirements:", e);
+    console.error("Error parsing job requirements:", e, "Raw requirements:", job.requirements);
   }
+  
+  // Debug: Log requirements to help diagnose issues
+  console.log("Job requirements parsed:", JSON.stringify(jobRequirements));
 
   const breakdown = {
     qualifications: { score: 0, maxScore: 0, details: [] },
@@ -73,7 +79,10 @@ function calculateMatchStrength(job, teacher) {
   maxScore += 20;
   breakdown.qualifications.maxScore = 20;
   
-  if (jobRequirements.tefl) {
+  // Debug: Log what certifications are being checked
+  breakdown.qualifications.details.push(`Job requirements object: ${JSON.stringify(jobRequirements)}`);
+  
+  if (jobRequirements.tefl === true || jobRequirements.tefl === "true") {
     const hasTEFL = teacher.certifications?.some(cert => 
       cert.toLowerCase().includes('tefl')
     ) || teacher.education?.some(edu => 
@@ -88,7 +97,7 @@ function calculateMatchStrength(job, teacher) {
     }
   }
   
-  if (jobRequirements.celta) {
+  if (jobRequirements.celta === true || jobRequirements.celta === "true") {
     const hasCELTA = teacher.certifications?.some(cert => 
       cert.toLowerCase().includes('celta')
     ) || teacher.education?.some(edu => 
@@ -103,7 +112,7 @@ function calculateMatchStrength(job, teacher) {
     }
   }
   
-  if (jobRequirements.tesol) {
+  if (jobRequirements.tesol === true || jobRequirements.tesol === "true") {
     const hasTESOL = teacher.certifications?.some(cert => 
       cert.toLowerCase().includes('tesol')
     ) || teacher.education?.some(edu => 
@@ -118,7 +127,7 @@ function calculateMatchStrength(job, teacher) {
     }
   }
   
-  if (jobRequirements.delta) {
+  if (jobRequirements.delta === true || jobRequirements.delta === "true") {
     const hasDELTA = teacher.certifications?.some(cert => 
       cert.toLowerCase().includes('delta')
     ) || teacher.education?.some(edu => 
@@ -136,7 +145,7 @@ function calculateMatchStrength(job, teacher) {
   // 2. Degree (15 points)
   maxScore += 15;
   breakdown.degree.maxScore = 15;
-  if (jobRequirements.bachelorsDegree) {
+  if (jobRequirements.bachelorsDegree === true || jobRequirements.bachelorsDegree === "true") {
     const hasDegree = teacher.education?.some(edu => {
       if (!edu?.degree) return false;
       const degree = edu.degree.toLowerCase();
@@ -155,13 +164,33 @@ function calculateMatchStrength(job, teacher) {
       breakdown.degree.details.push("✗ Bachelor's degree: Required but not found (0 points)");
     }
   } else {
-    breakdown.degree.details.push("No degree requirement (not scored)");
+    // No degree requirement - if teacher has a degree, they're overskilled, so score max
+    const hasDegree = teacher.education?.some(edu => {
+      if (!edu?.degree) return false;
+      const degree = edu.degree.toLowerCase();
+      return degree.includes("bachelor") || degree.includes("master") || degree.includes("phd") || degree.includes("degree");
+    });
+    if (hasDegree) {
+      score += 15;
+      breakdown.degree.score = 15;
+      const degreeFound = teacher.education?.find(edu => {
+        if (!edu?.degree) return false;
+        const degree = edu.degree.toLowerCase();
+        return degree.includes("bachelor") || degree.includes("master") || degree.includes("phd") || degree.includes("degree");
+      });
+      breakdown.degree.details.push(`No degree requirement, but teacher has: "${degreeFound?.degree || 'Unknown'}" (overskilled, +15 points)`);
+    } else {
+      breakdown.degree.details.push("No degree requirement (not scored)");
+    }
   }
 
   // 3. Experience (20 points)
   maxScore += 20;
   breakdown.experience.maxScore = 20;
-  if (jobRequirements.minimumTeachingExperience) {
+  if (jobRequirements.minimumTeachingExperience && 
+      (jobRequirements.minimumTeachingExperience !== "" && 
+       jobRequirements.minimumTeachingExperience !== null && 
+       jobRequirements.minimumTeachingExperience !== undefined)) {
     const minExp = parseInt(jobRequirements.minimumTeachingExperience) || 0;
     breakdown.experience.details.push(`Job requires: ${minExp} years minimum`);
     
@@ -226,7 +255,9 @@ function calculateMatchStrength(job, teacher) {
   // 4. Age Groups (15 points)
   maxScore += 15;
   breakdown.ageGroups.maxScore = 15;
-  if (job.studentAgeGroupMin !== null && job.studentAgeGroupMax !== null) {
+  // Check for both null and undefined, and also ensure values are valid numbers
+  if (job.studentAgeGroupMin != null && job.studentAgeGroupMax != null && 
+      typeof job.studentAgeGroupMin === 'number' && typeof job.studentAgeGroupMax === 'number') {
     const teacherAgeGroups = teacher.ageGroups || [];
     const jobMinAge = job.studentAgeGroupMin;
     const jobMaxAge = job.studentAgeGroupMax;
@@ -334,6 +365,16 @@ export default async function handler(req, res) {
             },
             orderBy: {
               createdAt: "desc"
+            },
+            select: {
+              id: true,
+              title: true,
+              city: true,
+              country: true,
+              studentAgeGroupMin: true,
+              studentAgeGroupMax: true,
+              requirements: true,
+              startDate: true,
             }
           }
         }
