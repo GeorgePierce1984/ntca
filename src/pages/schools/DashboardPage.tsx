@@ -1604,108 +1604,66 @@ export const SchoolDashboardPage: React.FC = () => {
                             <>
                             {jobMatches[job.id] ? (
                               <div className="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg p-4 mb-4">
-                                <div className="flex items-center gap-2 mb-3">
-                                  <TrendingUp className="w-5 h-5 text-primary-600 dark:text-primary-400" />
-                                  <h4 className="font-semibold text-primary-900 dark:text-primary-100">
-                                    {jobMatches[job.id].totalMatches} teachers match your role
-                                  </h4>
-                                </div>
+                                {/* Headline */}
+                                <h4 className="font-semibold text-primary-900 dark:text-primary-100 mb-4">
+                                  Matches Found:
+                                </h4>
 
-                                {/* Match Strength Bands */}
-                                <div>
-                                  <div className="flex items-center justify-between mb-2">
-                                    <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                                      Match Strength:
-                                    </p>
-                                    <span className="text-xs text-neutral-500 dark:text-neutral-400">
-                                      {jobMatches[job.id].totalMatches} total
-                                    </span>
-                                  </div>
-                                  <div className="space-y-2">
-                                    {/* Strong Matches */}
-                                    {jobMatches[job.id].byStrength.strong > 0 && (
+                                {/* Match Category Boxes */}
+                                <div className="grid grid-cols-3 gap-3">
+                                  {/* Strong Matches Box */}
+                                  <button
+                                    onClick={() => navigate(`/schools/browse-teachers?jobId=${job.id}&matchStrength=strong`)}
+                                    className="bg-white dark:bg-neutral-800 rounded-lg p-4 border-2 border-green-500 hover:border-green-600 transition-colors cursor-pointer text-left"
+                                  >
+                                    <div className="flex items-center gap-3">
+                                      <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400 flex-shrink-0" />
                                       <div>
-                                        <div className="flex items-center justify-between mb-1">
-                                          <span className="text-xs font-medium text-green-600 dark:text-green-400">
-                                            Strong (80-100%)
-                                          </span>
-                                          <span className="text-xs text-neutral-600 dark:text-neutral-400">
-                                            {jobMatches[job.id].byStrength.strong}
-                                          </span>
+                                        <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                                          {jobMatches[job.id].byStrength.strong}
                                         </div>
-                                        <MatchStrengthBar
-                                          strong={jobMatches[job.id].byStrength.strong}
-                                          medium={0}
-                                          partial={0}
-                                          total={jobMatches[job.id].byStrength.strong}
-                                          onClick={() => navigate(`/schools/browse-teachers?jobId=${job.id}&matchStrength=strong`)}
-                                        />
+                                        <div className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                                          Strong
+                                        </div>
                                       </div>
-                                    )}
-                                    
-                                    {/* Good Matches */}
-                                    {jobMatches[job.id].byStrength.medium > 0 && (
+                                    </div>
+                                  </button>
+
+                                  {/* Good Matches Box */}
+                                  <button
+                                    onClick={() => navigate(`/schools/browse-teachers?jobId=${job.id}&matchStrength=medium`)}
+                                    className="bg-white dark:bg-neutral-800 rounded-lg p-4 border-2 border-yellow-500 hover:border-yellow-600 transition-colors cursor-pointer text-left"
+                                  >
+                                    <div className="flex items-center gap-3">
+                                      <CheckCircle className="w-6 h-6 text-yellow-600 dark:text-yellow-400 flex-shrink-0" />
                                       <div>
-                                        <div className="flex items-center justify-between mb-1">
-                                          <span className="text-xs font-medium text-yellow-600 dark:text-yellow-400">
-                                            Good (60-79%)
-                                          </span>
-                                          <span className="text-xs text-neutral-600 dark:text-neutral-400">
-                                            {jobMatches[job.id].byStrength.medium}
-                                          </span>
+                                        <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
+                                          {jobMatches[job.id].byStrength.medium}
                                         </div>
-                                        <MatchStrengthBar
-                                          strong={0}
-                                          medium={jobMatches[job.id].byStrength.medium}
-                                          partial={0}
-                                          total={jobMatches[job.id].byStrength.medium}
-                                          onClick={() => navigate(`/schools/browse-teachers?jobId=${job.id}&matchStrength=medium`)}
-                                        />
+                                        <div className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                                          Good
+                                        </div>
                                       </div>
-                                    )}
-                                    
-                                    {/* Partial Matches */}
-                                    {jobMatches[job.id].byStrength.partial > 0 && (
+                                    </div>
+                                  </button>
+
+                                  {/* Partial Matches Box */}
+                                  <button
+                                    onClick={() => navigate(`/schools/browse-teachers?jobId=${job.id}&matchStrength=partial`)}
+                                    className="bg-white dark:bg-neutral-800 rounded-lg p-4 border-2 border-neutral-400 hover:border-neutral-500 transition-colors cursor-pointer text-left"
+                                  >
+                                    <div className="flex items-center gap-3">
+                                      <CheckCircle className="w-6 h-6 text-neutral-500 dark:text-neutral-400 flex-shrink-0" />
                                       <div>
-                                        <div className="flex items-center justify-between mb-1">
-                                          <span className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
-                                            Partial (40-59%)
-                                          </span>
-                                          <span className="text-xs text-neutral-600 dark:text-neutral-400">
-                                            {jobMatches[job.id].byStrength.partial}
-                                          </span>
+                                        <div className="text-2xl font-bold text-neutral-600 dark:text-neutral-400">
+                                          {jobMatches[job.id].byStrength.partial}
                                         </div>
-                                        <MatchStrengthBar
-                                          strong={0}
-                                          medium={0}
-                                          partial={jobMatches[job.id].byStrength.partial}
-                                          total={jobMatches[job.id].byStrength.partial}
-                                          onClick={() => navigate(`/schools/browse-teachers?jobId=${job.id}&matchStrength=partial`)}
-                                        />
-                                      </div>
-                                    )}
-                                    
-                                    {/* Combined view - clickable to see all matches */}
-                                    {jobMatches[job.id].totalMatches > 0 && (
-                                      <div className="mt-3 pt-3 border-t border-neutral-200 dark:border-neutral-700">
-                                        <div className="flex items-center justify-between mb-1">
-                                          <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300">
-                                            All Matches
-                                          </span>
-                                          <span className="text-xs text-neutral-600 dark:text-neutral-400">
-                                            {jobMatches[job.id].totalMatches}
-                                          </span>
+                                        <div className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                                          Partial
                                         </div>
-                                        <MatchStrengthBar
-                                          strong={jobMatches[job.id].byStrength.strong}
-                                          medium={jobMatches[job.id].byStrength.medium}
-                                          partial={jobMatches[job.id].byStrength.partial}
-                                          total={jobMatches[job.id].totalMatches}
-                                          onClick={() => navigate(`/schools/browse-teachers?jobId=${job.id}`)}
-                                        />
                                       </div>
-                                    )}
-                                  </div>
+                                    </div>
+                                  </button>
                                 </div>
                               </div>
                             ) : loadingMatches[job.id] ? (
