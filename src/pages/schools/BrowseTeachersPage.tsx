@@ -271,8 +271,208 @@ export const BrowseTeachersPage: React.FC = () => {
     fetchSubscriptionStatus();
   }, [isAuthenticated, user, navigate, fetchTeachers, fetchSubscriptionStatus]);
 
-  // Teachers are already filtered by the API, so we can use them directly
-  const filteredTeachers = teachers || [];
+  // Group teachers by match strength when jobId is present
+  const groupTeachersByMatchStrength = (teachersList: Teacher[]) => {
+    if (!jobId) {
+      return { strong: [], medium: [], partial: [], ungrouped: teachersList };
+    }
+
+    const grouped = {
+      strong: [] as Teacher[],
+      medium: [] as Teacher[],
+      partial: [] as Teacher[],
+      ungrouped: [] as Teacher[],
+    };
+
+    teachersList.forEach(teacher => {
+      const matchPct = teacher.matchPercentage;
+      if (matchPct === undefined) {
+        grouped.ungrouped.push(teacher);
+      } else if (matchPct >= 80) {
+        grouped.strong.push(teacher);
+      } else if (matchPct >= 60) {
+        grouped.medium.push(teacher);
+      } else if (matchPct >= 40) {
+        grouped.partial.push(teacher);
+      } else {
+        grouped.ungrouped.push(teacher);
+      }
+    });
+
+    return grouped;
+  };
+
+  const groupedTeachers = groupTeachersByMatchStrength(teachers || []);
+  const showGrouped = jobId && !matchStrength; // Show grouped view when jobId present but no specific strength filter
+
+  // Helper function to render teacher card
+  const renderTeacherCard = (teacher: Teacher) => {
+    const getNationalityFlag = () => {
+      if (!teacher.nationality) return null;
+      const country = getCountryByName(teacher.nationality);
+      return country?.flag || null;
+    };
+
+    const hasCertification = (certName: string) => {
+      if (!teacher.certifications || teacher.certifications.length === 0) return false;
+      return teacher.certifications.some(cert => 
+        cert.toLowerCase().includes(certName.toLowerCase())
+      );
+    };
+
+    const hasDegree = () => {
+      if (!teacher.education || teacher.education.length === 0) return false;
+      return teacher.education.some((edu: any) => {
+        if (!edu?.degree) return false;
+        const degree = edu.degree.toLowerCase();
+        return degree.includes("bachelor") || degree.includes("master") || degree.includes("phd") || degree.includes("degree");
+      });
+    };
+
+    const getQualification = () => {
+      if (!teacher.education || teacher.education.length === 0) return null;
+      const degree = teacher.education.find((edu: any) => {
+        if (!edu?.degree) return false;
+        const deg = edu.degree.toLowerCase();
+        return deg.includes("bachelor") || deg.includes("master") || deg.includes("phd") || deg.includes("degree");
+      });
+      if (degree?.degree) return degree.degree;
+      return teacher.education[0]?.degree || null;
+    };
+
+    const isNativeEnglish = () => {
+      if (teacher.nativeLanguage?.toLowerCase().includes('english')) return true;
+      if (teacher.languageSkills && typeof teacher.languageSkills === 'object') {
+        const englishLevel = (teacher.languageSkills as Record<string, string>)['English']?.toLowerCase();
+        return englishLevel === 'native' || englishLevel === 'near-native' || englishLevel === 'near native';
+      }
+      return false;
+    };
+
+    const calculatePreferredAgeRange = () => {
+      if (!teacher.ageGroups || teacher.ageGroups.length === 0) return null;
+      return teacher.ageGroups.join(", ");
+    };
+
+    return (
+      <motion.div
+        key={teacher.id}
+        whileHover={{ y: -4 }}
+        className="card p-6 cursor-pointer hover:shadow-lg transition-all duration-200"
+        onClick={() => {
+          setSelectedTeacher(teacher);
+          setShowTeacherModal(true);
+        }}
+      >
+        <div className="space-y-4">
+          <div className="flex items-center gap-4">
+            <div className="relative flex-shrink-0">
+              <div className="w-16 h-16 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center relative">
+                {/* Match Score Ring - positioned around the photo */}
+                {teacher.matchPercentage !== undefined && (
+                  <div className="absolute -inset-1 z-10">
+                    <MatchScoreRing
+                      percentage={teacher.matchPercentage}
+                      size={68}
+                      strokeWidth={3}
+                    />
+                  </div>
+                )}
+                {teacher.photoUrl ? (
+                  <img
+                    src={teacher.photoUrl}
+                    alt={`${teacher.firstName} ${teacher.lastName}`}
+                    className="w-16 h-16 rounded-full object-cover"
+                  />
+                ) : (
+                  <User className="w-8 h-8 text-primary-600 dark:text-primary-400" />
+                )}
+              </div>
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                {getNationalityFlag() && (
+                  <span className="text-xl">{getNationalityFlag()}</span>
+                )}
+                <h4 className="font-semibold text-lg truncate">
+                  {teacher.firstName} {teacher.lastName}
+                </h4>
+                {teacher.verified && (
+                  <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
+                )}
+              </div>
+              <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
+                {teacher.city || "Unknown"}, {teacher.country || "Unknown"}
+              </p>
+              {teacher.experienceYears !== undefined && teacher.experienceYears !== null && (
+                <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
+                  {teacher.experienceYears} {teacher.experienceYears === 1 ? 'Year' : 'Years'} Experience
+                </p>
+              )}
+              {calculatePreferredAgeRange() && (
+                <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
+                  Ages: {calculatePreferredAgeRange()}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Certification Icons */}
+          <div className="flex items-center gap-4 pt-2 border-t border-neutral-200 dark:border-neutral-700 flex-wrap">
+            {hasCertification('TEFL') && (
+              <div className="flex items-center gap-2" title="TEFL Certified">
+                <Award className="w-5 h-5 text-primary-600" />
+                <span className="text-sm text-neutral-600 dark:text-neutral-400">TEFL</span>
+              </div>
+            )}
+            {hasCertification('CELTA') && (
+              <div className="flex items-center gap-2" title="CELTA Certified">
+                <Award className="w-5 h-5 text-primary-600" />
+                <span className="text-sm text-neutral-600 dark:text-neutral-400">CELTA</span>
+              </div>
+            )}
+            {hasCertification('TESOL') && (
+              <div className="flex items-center gap-2" title="TESOL Certified">
+                <Award className="w-5 h-5 text-primary-600" />
+                <span className="text-sm text-neutral-600 dark:text-neutral-400">TESOL</span>
+              </div>
+            )}
+            {hasCertification('DELTA') && (
+              <div className="flex items-center gap-2" title="DELTA Certified">
+                <Award className="w-5 h-5 text-primary-600" />
+                <span className="text-sm text-neutral-600 dark:text-neutral-400">DELTA</span>
+              </div>
+            )}
+            {hasDegree() && (
+              <div className="flex items-center gap-2" title="Has Degree">
+                <GraduationCap className="w-5 h-5 text-primary-600" />
+                <span className="text-sm text-neutral-600 dark:text-neutral-400">
+                  {getQualification() || 'Degree'}
+                </span>
+              </div>
+            )}
+            {isNativeEnglish() && (
+              <div className="flex items-center gap-2" title="Native/Near Native English">
+                <Languages className="w-5 h-5 text-primary-600" />
+                <span className="text-sm text-neutral-600 dark:text-neutral-400">Native English</span>
+              </div>
+            )}
+          </div>
+
+          {teacher.availability && (
+            <div className="pt-2 border-t border-neutral-200 dark:border-neutral-700">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-neutral-600 dark:text-neutral-400">
+                  Available: {teacher.availability}
+                </span>
+                <ChevronRight className="w-5 h-5 text-neutral-400" />
+              </div>
+            </div>
+          )}
+        </div>
+      </motion.div>
+    );
+  };
 
   // Show loading only on initial load
   if (loading && teachers.length === 0 && !error) {
@@ -348,183 +548,69 @@ export const BrowseTeachersPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Teachers Grid */}
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {Array.isArray(filteredTeachers) && filteredTeachers.length > 0 ? filteredTeachers.map((teacher) => {
-                  // Helper functions matching Profile Snapshot logic
-                  const getNationalityFlag = () => {
-                    if (!teacher.nationality) return null;
-                    const country = getCountryByName(teacher.nationality);
-                    return country?.flag || null;
-                  };
-
-                  const hasCertification = (certName: string) => {
-                    if (!teacher.certifications || teacher.certifications.length === 0) return false;
-                    return teacher.certifications.some(cert => 
-                      cert.toLowerCase().includes(certName.toLowerCase())
-                    );
-                  };
-
-                  const hasDegree = () => {
-                    if (!teacher.education || teacher.education.length === 0) return false;
-                    return teacher.education.some((edu: any) => {
-                      if (!edu?.degree) return false;
-                      const degree = edu.degree.toLowerCase();
-                      return degree.includes("bachelor") || degree.includes("master") || degree.includes("phd") || degree.includes("degree");
-                    });
-                  };
-
-                  const getQualification = () => {
-                    if (!teacher.education || teacher.education.length === 0) return null;
-                    const degree = teacher.education.find((edu: any) => {
-                      if (!edu?.degree) return false;
-                      const deg = edu.degree.toLowerCase();
-                      return deg.includes("bachelor") || deg.includes("master") || deg.includes("phd") || deg.includes("degree");
-                    });
-                    if (degree?.degree) return degree.degree;
-                    return teacher.education[0]?.degree || null;
-                  };
-
-                  const isNativeEnglish = () => {
-                    if (teacher.nativeLanguage?.toLowerCase().includes('english')) return true;
-                    if (teacher.languageSkills && typeof teacher.languageSkills === 'object') {
-                      const englishLevel = (teacher.languageSkills as Record<string, string>)['English']?.toLowerCase();
-                      return englishLevel === 'native' || englishLevel === 'near-native' || englishLevel === 'near native';
-                    }
-                    return false;
-                  };
-
-                  const calculatePreferredAgeRange = () => {
-                    if (!teacher.ageGroups || teacher.ageGroups.length === 0) return null;
-                    return teacher.ageGroups.join(", ");
-                  };
-
-                  return (
-                    <motion.div
-                      key={teacher.id}
-                      whileHover={{ y: -4 }}
-                      className="card p-6 cursor-pointer hover:shadow-lg transition-all duration-200"
-                      onClick={() => {
-                        setSelectedTeacher(teacher);
-                        setShowTeacherModal(true);
-                      }}
-                    >
-                      <div className="space-y-4">
-                        <div className="flex items-center gap-4">
-                          <div className="relative flex-shrink-0">
-                            <div className="w-16 h-16 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center relative">
-                              {/* Match Score Ring - positioned around the photo */}
-                              {teacher.matchPercentage !== undefined && (
-                                <div className="absolute -inset-1 z-10">
-                                  <MatchScoreRing
-                                    percentage={teacher.matchPercentage}
-                                    size={68}
-                                    strokeWidth={3}
-                                  />
-                                </div>
-                              )}
-                              {teacher.photoUrl ? (
-                                <img
-                                  src={teacher.photoUrl}
-                                  alt={`${teacher.firstName} ${teacher.lastName}`}
-                                  className="w-16 h-16 rounded-full object-cover"
-                                />
-                              ) : (
-                                <User className="w-8 h-8 text-primary-600 dark:text-primary-400" />
-                              )}
-                            </div>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              {getNationalityFlag() && (
-                                <span className="text-xl">{getNationalityFlag()}</span>
-                              )}
-                              <h4 className="font-semibold text-lg truncate">
-                                {teacher.firstName} {teacher.lastName}
-                              </h4>
-                              {teacher.verified && (
-                                <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
-                              )}
-                            </div>
-                            <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
-                              {teacher.city || "Unknown"}, {teacher.country || "Unknown"}
-                            </p>
-                            {teacher.experienceYears !== undefined && teacher.experienceYears !== null && (
-                              <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
-                                {teacher.experienceYears} {teacher.experienceYears === 1 ? 'Year' : 'Years'} Experience
-                              </p>
-                            )}
-                            {calculatePreferredAgeRange() && (
-                              <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
-                                Ages: {calculatePreferredAgeRange()}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Certification Icons */}
-                        <div className="flex items-center gap-4 pt-2 border-t border-neutral-200 dark:border-neutral-700 flex-wrap">
-                          {hasCertification('TEFL') && (
-                            <div className="flex items-center gap-2" title="TEFL Certified">
-                              <Award className="w-5 h-5 text-primary-600" />
-                              <span className="text-sm text-neutral-600 dark:text-neutral-400">TEFL</span>
-                            </div>
-                          )}
-                          {hasCertification('CELTA') && (
-                            <div className="flex items-center gap-2" title="CELTA Certified">
-                              <Award className="w-5 h-5 text-primary-600" />
-                              <span className="text-sm text-neutral-600 dark:text-neutral-400">CELTA</span>
-                            </div>
-                          )}
-                          {hasCertification('TESOL') && (
-                            <div className="flex items-center gap-2" title="TESOL Certified">
-                              <Award className="w-5 h-5 text-primary-600" />
-                              <span className="text-sm text-neutral-600 dark:text-neutral-400">TESOL</span>
-                            </div>
-                          )}
-                          {hasCertification('DELTA') && (
-                            <div className="flex items-center gap-2" title="DELTA Certified">
-                              <Award className="w-5 h-5 text-primary-600" />
-                              <span className="text-sm text-neutral-600 dark:text-neutral-400">DELTA</span>
-                            </div>
-                          )}
-                          {hasDegree() && (
-                            <div className="flex items-center gap-2" title="Has Degree">
-                              <GraduationCap className="w-5 h-5 text-primary-600" />
-                              <span className="text-sm text-neutral-600 dark:text-neutral-400">
-                                {getQualification() || 'Degree'}
-                              </span>
-                            </div>
-                          )}
-                          {isNativeEnglish() && (
-                            <div className="flex items-center gap-2" title="Native/Near Native English">
-                              <Languages className="w-5 h-5 text-primary-600" />
-                              <span className="text-sm text-neutral-600 dark:text-neutral-400">Native English</span>
-                            </div>
-                          )}
-                        </div>
-
-                        {teacher.availability && (
-                          <div className="pt-2 border-t border-neutral-200 dark:border-neutral-700">
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm text-neutral-600 dark:text-neutral-400">
-                                Available: {teacher.availability}
-                              </span>
-                              <ChevronRight className="w-5 h-5 text-neutral-400" />
-                            </div>
-                          </div>
-                        )}
+              {/* Teachers Grid - Grouped by match strength when jobId is present */}
+              {showGrouped ? (
+                <div className="space-y-12">
+                  {/* Strong Matches Section */}
+                  {groupedTeachers.strong.length > 0 && (
+                    <div>
+                      <div className="flex items-center gap-3 mb-6">
+                        <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400" />
+                        <h2 className="text-2xl font-bold text-green-600 dark:text-green-400">
+                          Strong Matches ({groupedTeachers.strong.length})
+                        </h2>
                       </div>
-                    </motion.div>
-                  );
-                }) : null}
-              </div>
+                      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {groupedTeachers.strong.map((teacher) => {
+                          return renderTeacherCard(teacher);
+                        })}
+                      </div>
+                    </div>
+                  )}
 
-              {!loading && filteredTeachers && filteredTeachers.length === 0 && (
-                <div className="text-center py-12">
-                  <p className="text-neutral-600 dark:text-neutral-400">
-                    No teachers found matching your search criteria.
-                  </p>
+                  {/* Good Matches Section */}
+                  {groupedTeachers.medium.length > 0 && (
+                    <div>
+                      <div className="flex items-center gap-3 mb-6">
+                        <CheckCircle className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
+                        <h2 className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
+                          Good Matches ({groupedTeachers.medium.length})
+                        </h2>
+                      </div>
+                      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {groupedTeachers.medium.map((teacher) => {
+                          return renderTeacherCard(teacher);
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Partial Matches Section */}
+                  {groupedTeachers.partial.length > 0 && (
+                    <div>
+                      <div className="flex items-center gap-3 mb-6">
+                        <CheckCircle className="w-6 h-6 text-neutral-500 dark:text-neutral-400" />
+                        <h2 className="text-2xl font-bold text-neutral-600 dark:text-neutral-400">
+                          Partial Matches ({groupedTeachers.partial.length})
+                        </h2>
+                      </div>
+                      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {groupedTeachers.partial.map((teacher) => {
+                          return renderTeacherCard(teacher);
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {Array.isArray(filteredTeachers) && filteredTeachers.length > 0 ? filteredTeachers.map((teacher) => {
+                    return renderTeacherCard(teacher);
+                  }) : (
+                    <div className="col-span-full text-center py-12">
+                      <p className="text-neutral-500 dark:text-neutral-400">No teachers found matching your criteria.</p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
