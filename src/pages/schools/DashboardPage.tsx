@@ -1604,15 +1604,15 @@ export const SchoolDashboardPage: React.FC = () => {
                             <>
                             {jobMatches[job.id] ? (
                               <div className="card p-4 mb-4">
-                                {/* Headline - Top Right */}
-                                <div className="flex justify-end mb-4">
+                                {/* Headline - Top Left */}
+                                <div className="flex justify-start mb-4">
                                   <h4 className="font-semibold text-neutral-900 dark:text-neutral-100">
                                     Matches Found: {jobMatches[job.id].totalMatches}
                                   </h4>
                                 </div>
 
-                                {/* Match Category Boxes - Bottom Right */}
-                                <div className="flex items-center justify-end gap-3 mb-4">
+                                {/* Match Category Boxes - Bottom Left */}
+                                <div className="flex items-center justify-start gap-3 mb-4">
                                   {/* Strong Matches Box */}
                                   <div className="flex items-center gap-2 px-4 py-2 rounded-lg border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20">
                                     <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0" />
