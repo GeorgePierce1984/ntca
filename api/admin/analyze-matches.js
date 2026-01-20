@@ -75,77 +75,102 @@ function calculateMatchStrength(job, teacher) {
     location: { score: 0, maxScore: 0, details: [] },
   };
 
-  // 1. Qualifications (20 points)
-  maxScore += 20;
+  // 1. Qualifications (20 points) - Proportional scoring based on selected requirements
   breakdown.qualifications.maxScore = 20;
   
   // Debug: Log what certifications are being checked
   breakdown.qualifications.details.push(`Job requirements object: ${JSON.stringify(jobRequirements)}`);
   
-  if (jobRequirements.tefl === true || jobRequirements.tefl === "true") {
-    // TEFL and TESOL are considered equivalent
-    const hasTEFL = teacher.certifications?.some(cert => 
-      cert.toLowerCase().includes('tefl') || cert.toLowerCase().includes('tesol')
-    ) || teacher.education?.some(edu => 
-      edu?.degree?.toLowerCase().includes('tefl') || edu?.degree?.toLowerCase().includes('tesol')
-    );
-    if (hasTEFL) {
-      score += 5;
-      breakdown.qualifications.score += 5;
-      const certFound = teacher.certifications?.find(cert => 
-        cert.toLowerCase().includes('tefl') || cert.toLowerCase().includes('tesol')
-      ) || teacher.education?.find(edu => 
-        edu?.degree?.toLowerCase().includes('tefl') || edu?.degree?.toLowerCase().includes('tesol')
+  // Count how many qualifications are selected in the job posting
+  const selectedQualifications = [];
+  if (jobRequirements.tefl === true || jobRequirements.tefl === "true") selectedQualifications.push("tefl");
+  if (jobRequirements.celta === true || jobRequirements.celta === "true") selectedQualifications.push("celta");
+  if (jobRequirements.tesol === true || jobRequirements.tesol === "true") selectedQualifications.push("tesol");
+  if (jobRequirements.delta === true || jobRequirements.delta === "true") selectedQualifications.push("delta");
+  
+  breakdown.qualifications.details.push(`Selected qualifications in job: ${selectedQualifications.length} (${selectedQualifications.join(", ")})`);
+  
+  if (selectedQualifications.length === 0) {
+    // No qualifications required, don't score this section
+    breakdown.qualifications.details.push("No qualifications required (not scored)");
+    // Don't add to maxScore
+  } else {
+    maxScore += 20;
+    // Calculate points per qualification (20 points divided by number of selected qualifications)
+    const pointsPerQualification = 20 / selectedQualifications.length;
+    breakdown.qualifications.details.push(`Points per qualification: ${pointsPerQualification.toFixed(2)} (20 total ÷ ${selectedQualifications.length} qualifications)`);
+    
+    let matchedCount = 0;
+    
+    // Check TEFL (only if selected)
+    if (selectedQualifications.includes("tefl")) {
+      const hasTEFL = teacher.certifications?.some(cert => 
+        cert.toLowerCase().includes('tefl')
+      ) || teacher.education?.some(edu => 
+        edu?.degree?.toLowerCase().includes('tefl')
       );
-      breakdown.qualifications.details.push(`TEFL: ✓ Found (${certFound?.degree || certFound || 'TEFL/TESOL equivalent'} +5 points)`);
-    } else {
-      breakdown.qualifications.details.push("TEFL: ✗ Required but not found (0 points)");
+      if (hasTEFL) {
+        score += pointsPerQualification;
+        breakdown.qualifications.score += pointsPerQualification;
+        matchedCount++;
+        breakdown.qualifications.details.push(`TEFL: ✓ Found (+${pointsPerQualification.toFixed(2)} points)`);
+      } else {
+        breakdown.qualifications.details.push(`TEFL: ✗ Required but not found (0 points)`);
+      }
     }
-  }
-  
-  if (jobRequirements.celta === true || jobRequirements.celta === "true") {
-    const hasCELTA = teacher.certifications?.some(cert => 
-      cert.toLowerCase().includes('celta')
-    ) || teacher.education?.some(edu => 
-      edu?.degree?.toLowerCase().includes('celta')
-    );
-    if (hasCELTA) {
-      score += 5;
-      breakdown.qualifications.score += 5;
-      breakdown.qualifications.details.push("CELTA: ✓ Found (+5 points)");
-    } else {
-      breakdown.qualifications.details.push("CELTA: ✗ Required but not found (0 points)");
+    
+    // Check CELTA (only if selected)
+    if (selectedQualifications.includes("celta")) {
+      const hasCELTA = teacher.certifications?.some(cert => 
+        cert.toLowerCase().includes('celta')
+      ) || teacher.education?.some(edu => 
+        edu?.degree?.toLowerCase().includes('celta')
+      );
+      if (hasCELTA) {
+        score += pointsPerQualification;
+        breakdown.qualifications.score += pointsPerQualification;
+        matchedCount++;
+        breakdown.qualifications.details.push(`CELTA: ✓ Found (+${pointsPerQualification.toFixed(2)} points)`);
+      } else {
+        breakdown.qualifications.details.push(`CELTA: ✗ Required but not found (0 points)`);
+      }
     }
-  }
-  
-  if (jobRequirements.tesol === true || jobRequirements.tesol === "true") {
-    const hasTESOL = teacher.certifications?.some(cert => 
-      cert.toLowerCase().includes('tesol')
-    ) || teacher.education?.some(edu => 
-      edu?.degree?.toLowerCase().includes('tesol')
-    );
-    if (hasTESOL) {
-      score += 5;
-      breakdown.qualifications.score += 5;
-      breakdown.qualifications.details.push("TESOL: ✓ Found (+5 points)");
-    } else {
-      breakdown.qualifications.details.push("TESOL: ✗ Required but not found (0 points)");
+    
+    // Check TESOL (only if selected)
+    if (selectedQualifications.includes("tesol")) {
+      const hasTESOL = teacher.certifications?.some(cert => 
+        cert.toLowerCase().includes('tesol')
+      ) || teacher.education?.some(edu => 
+        edu?.degree?.toLowerCase().includes('tesol')
+      );
+      if (hasTESOL) {
+        score += pointsPerQualification;
+        breakdown.qualifications.score += pointsPerQualification;
+        matchedCount++;
+        breakdown.qualifications.details.push(`TESOL: ✓ Found (+${pointsPerQualification.toFixed(2)} points)`);
+      } else {
+        breakdown.qualifications.details.push(`TESOL: ✗ Required but not found (0 points)`);
+      }
     }
-  }
-  
-  if (jobRequirements.delta === true || jobRequirements.delta === "true") {
-    const hasDELTA = teacher.certifications?.some(cert => 
-      cert.toLowerCase().includes('delta')
-    ) || teacher.education?.some(edu => 
-      edu?.degree?.toLowerCase().includes('delta')
-    );
-    if (hasDELTA) {
-      score += 5;
-      breakdown.qualifications.score += 5;
-      breakdown.qualifications.details.push("DELTA: ✓ Found (+5 points)");
-    } else {
-      breakdown.qualifications.details.push("DELTA: ✗ Required but not found (0 points)");
+    
+    // Check DELTA (only if selected)
+    if (selectedQualifications.includes("delta")) {
+      const hasDELTA = teacher.certifications?.some(cert => 
+        cert.toLowerCase().includes('delta')
+      ) || teacher.education?.some(edu => 
+        edu?.degree?.toLowerCase().includes('delta')
+      );
+      if (hasDELTA) {
+        score += pointsPerQualification;
+        breakdown.qualifications.score += pointsPerQualification;
+        matchedCount++;
+        breakdown.qualifications.details.push(`DELTA: ✓ Found (+${pointsPerQualification.toFixed(2)} points)`);
+      } else {
+        breakdown.qualifications.details.push(`DELTA: ✗ Required but not found (0 points)`);
+      }
     }
+    
+    breakdown.qualifications.details.push(`Summary: ${matchedCount}/${selectedQualifications.length} qualifications matched`);
   }
 
   // 2. Degree (15 points)
