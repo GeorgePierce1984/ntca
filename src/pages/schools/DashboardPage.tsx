@@ -1603,12 +1603,62 @@ export const SchoolDashboardPage: React.FC = () => {
                           {getEffectiveStatus(job) === "ACTIVE" && (
                             <>
                             {jobMatches[job.id] ? (
-                              <div className="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg p-6 mb-4">
-                                {/* Headline with total */}
-                                <div className="flex items-center justify-between mb-4">
-                                  <h4 className="font-semibold text-primary-900 dark:text-primary-100">
+                              <div className="card p-4 mb-4">
+                                {/* Headline with match boxes */}
+                                <div className="flex items-center gap-4 mb-4">
+                                  {/* Match Category Boxes */}
+                                  <div className="flex gap-3 flex-1">
+                                    {/* Strong Matches Box */}
+                                    <button
+                                      onClick={() => navigate(`/schools/browse-teachers?jobId=${job.id}&matchStrength=strong`)}
+                                      className="flex items-center gap-2 px-4 py-2 rounded-lg border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors cursor-pointer"
+                                    >
+                                      <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0" />
+                                      <span className="text-lg font-bold text-green-600 dark:text-green-400">
+                                        {jobMatches[job.id].byStrength.strong}
+                                      </span>
+                                      <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                                        Strong
+                                      </span>
+                                    </button>
+
+                                    {/* Good Matches Box */}
+                                    <button
+                                      onClick={() => navigate(`/schools/browse-teachers?jobId=${job.id}&matchStrength=medium`)}
+                                      className="flex items-center gap-2 px-4 py-2 rounded-lg border border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-900/20 hover:bg-yellow-100 dark:hover:bg-yellow-900/30 transition-colors cursor-pointer"
+                                    >
+                                      <CheckCircle className="w-4 h-4 text-yellow-600 dark:text-yellow-400 flex-shrink-0" />
+                                      <span className="text-lg font-bold text-yellow-600 dark:text-yellow-400">
+                                        {jobMatches[job.id].byStrength.medium}
+                                      </span>
+                                      <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                                        Good
+                                      </span>
+                                    </button>
+
+                                    {/* Partial Matches Box */}
+                                    <button
+                                      onClick={() => navigate(`/schools/browse-teachers?jobId=${job.id}&matchStrength=partial`)}
+                                      className="flex items-center gap-2 px-4 py-2 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+                                    >
+                                      <CheckCircle className="w-4 h-4 text-neutral-500 dark:text-neutral-400 flex-shrink-0" />
+                                      <span className="text-lg font-bold text-neutral-600 dark:text-neutral-400">
+                                        {jobMatches[job.id].byStrength.partial}
+                                      </span>
+                                      <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                                        Partial
+                                      </span>
+                                    </button>
+                                  </div>
+                                  
+                                  {/* Headline */}
+                                  <h4 className="font-semibold text-neutral-900 dark:text-neutral-100 whitespace-nowrap">
                                     Matches Found: {jobMatches[job.id].totalMatches}
                                   </h4>
+                                </div>
+
+                                {/* View Matches Button - Bottom Right */}
+                                <div className="flex justify-end">
                                   <Button
                                     variant="secondary"
                                     size="sm"
@@ -1616,57 +1666,6 @@ export const SchoolDashboardPage: React.FC = () => {
                                   >
                                     View Matches
                                   </Button>
-                                </div>
-
-                                {/* Match Category Boxes */}
-                                <div className="grid grid-cols-3 gap-4">
-                                  {/* Strong Matches Box */}
-                                  <button
-                                    onClick={() => navigate(`/schools/browse-teachers?jobId=${job.id}&matchStrength=strong`)}
-                                    className="card p-6 border-2 border-green-500 hover:border-green-600 transition-colors cursor-pointer text-left h-full"
-                                  >
-                                    <div className="flex items-center gap-3">
-                                      <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400 flex-shrink-0" />
-                                      <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                                        {jobMatches[job.id].byStrength.strong}
-                                      </div>
-                                      <div className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                                        Strong
-                                      </div>
-                                    </div>
-                                  </button>
-
-                                  {/* Good Matches Box */}
-                                  <button
-                                    onClick={() => navigate(`/schools/browse-teachers?jobId=${job.id}&matchStrength=medium`)}
-                                    className="card p-6 border-2 border-yellow-500 hover:border-yellow-600 transition-colors cursor-pointer text-left h-full"
-                                  >
-                                    <div className="flex items-center gap-3">
-                                      <CheckCircle className="w-6 h-6 text-yellow-600 dark:text-yellow-400 flex-shrink-0" />
-                                      <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
-                                        {jobMatches[job.id].byStrength.medium}
-                                      </div>
-                                      <div className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                                        Good
-                                      </div>
-                                    </div>
-                                  </button>
-
-                                  {/* Partial Matches Box */}
-                                  <button
-                                    onClick={() => navigate(`/schools/browse-teachers?jobId=${job.id}&matchStrength=partial`)}
-                                    className="card p-6 border-2 border-neutral-400 hover:border-neutral-500 transition-colors cursor-pointer text-left h-full"
-                                  >
-                                    <div className="flex items-center gap-3">
-                                      <CheckCircle className="w-6 h-6 text-neutral-500 dark:text-neutral-400 flex-shrink-0" />
-                                      <div className="text-2xl font-bold text-neutral-600 dark:text-neutral-400">
-                                        {jobMatches[job.id].byStrength.partial}
-                                      </div>
-                                      <div className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                                        Partial
-                                      </div>
-                                    </div>
-                                  </button>
                                 </div>
                               </div>
                             ) : loadingMatches[job.id] ? (
