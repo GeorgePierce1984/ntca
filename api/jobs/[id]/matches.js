@@ -64,40 +64,61 @@ function calculateMatchStrength(job, teacher) {
     console.error("Error parsing job requirements:", e, "Raw requirements:", job.requirements);
   }
 
-  // 1. Qualifications (20 points)
-  maxScore += 20;
-  if (jobRequirements.tefl === true || jobRequirements.tefl === "true") {
-    // TEFL and TESOL are considered equivalent
-    const hasTEFL = teacher.certifications?.some(cert => 
-      cert.toLowerCase().includes('tefl') || cert.toLowerCase().includes('tesol')
-    ) || teacher.education?.some(edu => 
-      edu?.degree?.toLowerCase().includes('tefl') || edu?.degree?.toLowerCase().includes('tesol')
-    );
-    if (hasTEFL) score += 5;
-  }
-  if (jobRequirements.celta === true || jobRequirements.celta === "true") {
-    const hasCELTA = teacher.certifications?.some(cert => 
-      cert.toLowerCase().includes('celta')
-    ) || teacher.education?.some(edu => 
-      edu?.degree?.toLowerCase().includes('celta')
-    );
-    if (hasCELTA) score += 5;
-  }
-  if (jobRequirements.tesol === true || jobRequirements.tesol === "true") {
-    const hasTESOL = teacher.certifications?.some(cert => 
-      cert.toLowerCase().includes('tesol')
-    ) || teacher.education?.some(edu => 
-      edu?.degree?.toLowerCase().includes('tesol')
-    );
-    if (hasTESOL) score += 5;
-  }
-  if (jobRequirements.delta === true || jobRequirements.delta === "true") {
-    const hasDELTA = teacher.certifications?.some(cert => 
-      cert.toLowerCase().includes('delta')
-    ) || teacher.education?.some(edu => 
-      edu?.degree?.toLowerCase().includes('delta')
-    );
-    if (hasDELTA) score += 5;
+  // 1. Qualifications (20 points) - Proportional scoring based on selected requirements
+  // Count how many qualifications are selected in the job posting
+  const selectedQualifications = [];
+  if (jobRequirements.tefl === true || jobRequirements.tefl === "true") selectedQualifications.push("tefl");
+  if (jobRequirements.celta === true || jobRequirements.celta === "true") selectedQualifications.push("celta");
+  if (jobRequirements.tesol === true || jobRequirements.tesol === "true") selectedQualifications.push("tesol");
+  if (jobRequirements.delta === true || jobRequirements.delta === "true") selectedQualifications.push("delta");
+  
+  if (selectedQualifications.length === 0) {
+    // No qualifications required, don't score this section
+    // maxScore stays the same (we'll subtract 20 later if needed, but for consistency we'll keep it)
+  } else {
+    maxScore += 20;
+    // Calculate points per qualification (20 points divided by number of selected qualifications)
+    const pointsPerQualification = 20 / selectedQualifications.length;
+    
+    // Check TEFL (only if selected)
+    if (selectedQualifications.includes("tefl")) {
+      const hasTEFL = teacher.certifications?.some(cert => 
+        cert.toLowerCase().includes('tefl')
+      ) || teacher.education?.some(edu => 
+        edu?.degree?.toLowerCase().includes('tefl')
+      );
+      if (hasTEFL) score += pointsPerQualification;
+    }
+    
+    // Check CELTA (only if selected)
+    if (selectedQualifications.includes("celta")) {
+      const hasCELTA = teacher.certifications?.some(cert => 
+        cert.toLowerCase().includes('celta')
+      ) || teacher.education?.some(edu => 
+        edu?.degree?.toLowerCase().includes('celta')
+      );
+      if (hasCELTA) score += pointsPerQualification;
+    }
+    
+    // Check TESOL (only if selected)
+    if (selectedQualifications.includes("tesol")) {
+      const hasTESOL = teacher.certifications?.some(cert => 
+        cert.toLowerCase().includes('tesol')
+      ) || teacher.education?.some(edu => 
+        edu?.degree?.toLowerCase().includes('tesol')
+      );
+      if (hasTESOL) score += pointsPerQualification;
+    }
+    
+    // Check DELTA (only if selected)
+    if (selectedQualifications.includes("delta")) {
+      const hasDELTA = teacher.certifications?.some(cert => 
+        cert.toLowerCase().includes('delta')
+      ) || teacher.education?.some(edu => 
+        edu?.degree?.toLowerCase().includes('delta')
+      );
+      if (hasDELTA) score += pointsPerQualification;
+    }
   }
 
   // 2. Degree (15 points)
