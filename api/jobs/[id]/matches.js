@@ -67,10 +67,11 @@ function calculateMatchStrength(job, teacher) {
   // 1. Qualifications (20 points)
   maxScore += 20;
   if (jobRequirements.tefl === true || jobRequirements.tefl === "true") {
+    // TEFL and TESOL are considered equivalent
     const hasTEFL = teacher.certifications?.some(cert => 
-      cert.toLowerCase().includes('tefl')
+      cert.toLowerCase().includes('tefl') || cert.toLowerCase().includes('tesol')
     ) || teacher.education?.some(edu => 
-      edu?.degree?.toLowerCase().includes('tefl')
+      edu?.degree?.toLowerCase().includes('tefl') || edu?.degree?.toLowerCase().includes('tesol')
     );
     if (hasTEFL) score += 5;
   }
@@ -164,23 +165,48 @@ function calculateMatchStrength(job, teacher) {
   // Check for both null and undefined, and also ensure values are valid numbers
   if (job.studentAgeGroupMin != null && job.studentAgeGroupMax != null && 
       typeof job.studentAgeGroupMin === 'number' && typeof job.studentAgeGroupMax === 'number') {
+    // Get age groups from both teacher.ageGroups and teachingExperience
     const teacherAgeGroups = teacher.ageGroups || [];
-    // Convert job age range to age group strings
+    const teachingExp = teacher.teachingExperience || [];
+    const teachingExpAgeGroups = [];
+    
+    // Extract age groups from teaching experience
+    if (Array.isArray(teachingExp)) {
+      teachingExp.forEach(exp => {
+        if (exp.studentAgeGroups && Array.isArray(exp.studentAgeGroups)) {
+          exp.studentAgeGroups.forEach(ageGroup => {
+            if (!teachingExpAgeGroups.includes(ageGroup)) {
+              teachingExpAgeGroups.push(ageGroup);
+            }
+          });
+        }
+      });
+    }
+    
+    // Combine both sources
+    const allTeacherAgeGroups = [...new Set([...teacherAgeGroups, ...teachingExpAgeGroups])];
+    
     const jobMinAge = job.studentAgeGroupMin;
     const jobMaxAge = job.studentAgeGroupMax;
     
-    // Check if teacher's age groups overlap with job requirements
+    // Map age group strings to numeric ranges
     const ageGroupRanges = {
       "0-5": [0, 5],
       "6-11": [6, 11],
       "12-14": [12, 14],
       "15-18": [15, 18],
       "19-30": [19, 30],
-      "30+": [30, 100]
+      "30+": [30, 100],
+      // Handle common string formats from teaching experience
+      "Kids (5-12)": [5, 12],
+      "Teens (13-17)": [13, 17],
+      "Adults (18+)": [18, 100],
+      "Young Adults (18-25)": [18, 25],
+      "Adults (25+)": [25, 100],
     };
     
     let hasOverlap = false;
-    teacherAgeGroups.forEach(ageGroup => {
+    allTeacherAgeGroups.forEach(ageGroup => {
       const range = ageGroupRanges[ageGroup];
       if (range) {
         // Check if ranges overlap
