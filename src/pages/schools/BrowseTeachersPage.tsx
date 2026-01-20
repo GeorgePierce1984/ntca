@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   Search,
@@ -17,6 +17,7 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Paywall } from "@/components/paywall/Paywall";
 import { TeacherDetailModal } from "@/components/schools/TeacherDetailModal";
+import { MatchScoreRing } from "@/components/schools/MatchScoreRing";
 import { canAccessPremiumFeatures } from "@/utils/subscription";
 import { motion } from "framer-motion";
 import { getCountryByName } from "@/data/countries";
@@ -72,10 +73,12 @@ interface Teacher {
   email?: string;
   nationality?: string;
   languageSkills?: Record<string, string>;
+  matchPercentage?: number; // Added for match scoring
 }
 
 export const BrowseTeachersPage: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user, isAuthenticated } = useAuth();
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [loading, setLoading] = useState(true);
@@ -90,6 +93,10 @@ export const BrowseTeachersPage: React.FC = () => {
     experience: "",
     location: "",
   });
+  
+  // Get URL parameters for match filtering
+  const jobId = searchParams.get("jobId");
+  const matchStrength = searchParams.get("matchStrength"); // "strong", "medium", "partial"
 
   // Fetch subscription status
   const fetchSubscriptionStatus = useCallback(async () => {
@@ -117,6 +124,42 @@ export const BrowseTeachersPage: React.FC = () => {
     }
   }, [user]);
 
+  // Fetch match data for teachers if jobId is provided
+  const fetchTeacherMatches = useCallback(async (teacherIds: string[], jobId: string) => {
+    const token = localStorage.getItem("authToken");
+    if (!token) return {};
+
+    try {
+      // Fetch matches for the job
+      const response = await fetch(`/api/jobs/${jobId}/matches`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Create a map of teacherId -> match percentage
+        const matchMap: Record<string, number> = {};
+        
+        // The matches array contains teacher matches
+        if (data.matches && Array.isArray(data.matches)) {
+          data.matches.forEach((match: any) => {
+            // We need to match by teacher ID - the API returns teacherId
+            // But we need to check if the API returns full teacher data or just IDs
+            // For now, we'll need to enhance the API to return teacher IDs with match percentages
+          });
+        }
+        
+        return matchMap;
+      }
+    } catch (error) {
+      console.error("Error fetching teacher matches:", error);
+    }
+    
+    return {};
+  }, []);
+
   const fetchTeachers = useCallback(async () => {
     try {
       setLoading(true);
@@ -138,12 +181,64 @@ export const BrowseTeachersPage: React.FC = () => {
           return { teachers: [] };
         });
         // Ensure we have a valid array
+        let fetchedTeachers: Teacher[] = [];
         if (Array.isArray(data.teachers)) {
-          setTeachers(data.teachers);
+          fetchedTeachers = data.teachers;
         } else {
           console.error("Invalid teachers data format:", data);
-          setTeachers([]);
+          fetchedTeachers = [];
         }
+        
+        // If jobId is provided, fetch match data and filter by match strength
+        if (jobId) {
+          const token = localStorage.getItem("authToken");
+          try {
+            const matchResponse = await fetch(`/api/jobs/${jobId}/matches`, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            });
+            
+            if (matchResponse.ok) {
+              const matchData = await matchResponse.json();
+              
+              // Create a map of teacherId -> matchPercentage
+              const teacherMatchMap: Record<string, number> = {};
+              
+              if (matchData.matches && Array.isArray(matchData.matches)) {
+                matchData.matches.forEach((match: any) => {
+                  if (match.teacherId && match.matchStrength !== undefined) {
+                    teacherMatchMap[match.teacherId] = match.matchStrength;
+                  }
+                });
+              }
+              
+              // Add match percentages to teachers
+              fetchedTeachers = fetchedTeachers.map(teacher => ({
+                ...teacher,
+                matchPercentage: teacherMatchMap[teacher.id],
+              }));
+              
+              // Filter teachers based on match strength if specified
+              if (matchStrength) {
+                const minPercentage = matchStrength === "strong" ? 80 : matchStrength === "medium" ? 60 : 40;
+                const maxPercentage = matchStrength === "strong" ? 100 : matchStrength === "medium" ? 79 : 59;
+                
+                fetchedTeachers = fetchedTeachers.filter(teacher => {
+                  const matchPct = teacher.matchPercentage;
+                  return matchPct !== undefined && matchPct >= minPercentage && matchPct <= maxPercentage;
+                });
+              } else {
+                // If no match strength filter, only show teachers with matches
+                fetchedTeachers = fetchedTeachers.filter(teacher => teacher.matchPercentage !== undefined);
+              }
+            }
+          } catch (matchError) {
+            console.error("Error fetching matches:", matchError);
+          }
+        }
+        
+        setTeachers(fetchedTeachers);
       } else {
         const errorText = await response.text().catch(() => response.statusText);
         console.error("Error fetching teachers:", response.status, errorText);
@@ -157,7 +252,7 @@ export const BrowseTeachersPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [searchTerm, filters]);
+  }, [searchTerm, filters, jobId, matchStrength]);
 
   useEffect(() => {
     // Check if user is authenticated and is a school
@@ -316,16 +411,28 @@ export const BrowseTeachersPage: React.FC = () => {
                     >
                       <div className="space-y-4">
                         <div className="flex items-center gap-4">
-                          <div className="w-16 h-16 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center flex-shrink-0">
-                            {teacher.photoUrl ? (
-                              <img
-                                src={teacher.photoUrl}
-                                alt={`${teacher.firstName} ${teacher.lastName}`}
-                                className="w-16 h-16 rounded-full object-cover"
-                              />
-                            ) : (
-                              <User className="w-8 h-8 text-primary-600 dark:text-primary-400" />
-                            )}
+                          <div className="relative flex-shrink-0">
+                            <div className="w-16 h-16 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center relative">
+                              {/* Match Score Ring - positioned around the photo */}
+                              {teacher.matchPercentage !== undefined && (
+                                <div className="absolute -inset-1 z-10">
+                                  <MatchScoreRing
+                                    percentage={teacher.matchPercentage}
+                                    size={68}
+                                    strokeWidth={3}
+                                  />
+                                </div>
+                              )}
+                              {teacher.photoUrl ? (
+                                <img
+                                  src={teacher.photoUrl}
+                                  alt={`${teacher.firstName} ${teacher.lastName}`}
+                                  className="w-16 h-16 rounded-full object-cover"
+                                />
+                              ) : (
+                                <User className="w-8 h-8 text-primary-600 dark:text-primary-400" />
+                              )}
+                            </div>
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">

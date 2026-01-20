@@ -392,6 +392,8 @@ export default async function handler(req, res) {
           teacherId: teacher.id,
           teacherName: `${teacher.firstName} ${teacher.lastName}`,
           matchStrength: match.percentage,
+          matchScore: match.score,
+          matchMaxScore: match.maxScore,
           availability,
         };
       })

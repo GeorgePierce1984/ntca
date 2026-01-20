@@ -46,7 +46,9 @@ import { ProfileCompletionModal } from "@/components/schools/ProfileCompletionMo
 import { Paywall } from "@/components/paywall/Paywall";
 import { ChoosePlanModal } from "@/components/modals/ChoosePlanModal";
 import { canAccessPremiumFeatures } from "@/utils/subscription";
+import { MatchStrengthBar } from "@/components/schools/MatchStrengthBar";
 import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
 // Types
 interface JobPosting {
@@ -135,6 +137,7 @@ interface Application {
 
 export const SchoolDashboardPage: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
   
@@ -1643,34 +1646,98 @@ export const SchoolDashboardPage: React.FC = () => {
 
                                 {/* Match Strength Bands */}
                                 <div>
-                                  <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                                    Match Strength:
-                                  </p>
-                                  <div className="grid grid-cols-3 gap-2 text-sm">
-                                    <div className="bg-white dark:bg-neutral-800 rounded p-2">
-                                      <div className="font-semibold text-green-600 dark:text-green-400">
-                                        {jobMatches[job.id].byStrength.strong}
+                                  <div className="flex items-center justify-between mb-2">
+                                    <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                                      Match Strength:
+                                    </p>
+                                    <span className="text-xs text-neutral-500 dark:text-neutral-400">
+                                      {jobMatches[job.id].totalMatches} total
+                                    </span>
+                                  </div>
+                                  <div className="space-y-2">
+                                    {/* Strong Matches */}
+                                    {jobMatches[job.id].byStrength.strong > 0 && (
+                                      <div>
+                                        <div className="flex items-center justify-between mb-1">
+                                          <span className="text-xs font-medium text-green-600 dark:text-green-400">
+                                            Strong (80-100%)
+                                          </span>
+                                          <span className="text-xs text-neutral-600 dark:text-neutral-400">
+                                            {jobMatches[job.id].byStrength.strong}
+                                          </span>
+                                        </div>
+                                        <MatchStrengthBar
+                                          strong={jobMatches[job.id].byStrength.strong}
+                                          medium={0}
+                                          partial={0}
+                                          total={jobMatches[job.id].byStrength.strong}
+                                          onClick={() => navigate(`/schools/browse-teachers?jobId=${job.id}&matchStrength=strong`)}
+                                        />
                                       </div>
-                                      <div className="text-xs text-neutral-600 dark:text-neutral-400">
-                                        Strong (80-100%)
+                                    )}
+                                    
+                                    {/* Good Matches */}
+                                    {jobMatches[job.id].byStrength.medium > 0 && (
+                                      <div>
+                                        <div className="flex items-center justify-between mb-1">
+                                          <span className="text-xs font-medium text-yellow-600 dark:text-yellow-400">
+                                            Good (60-79%)
+                                          </span>
+                                          <span className="text-xs text-neutral-600 dark:text-neutral-400">
+                                            {jobMatches[job.id].byStrength.medium}
+                                          </span>
+                                        </div>
+                                        <MatchStrengthBar
+                                          strong={0}
+                                          medium={jobMatches[job.id].byStrength.medium}
+                                          partial={0}
+                                          total={jobMatches[job.id].byStrength.medium}
+                                          onClick={() => navigate(`/schools/browse-teachers?jobId=${job.id}&matchStrength=medium`)}
+                                        />
                                       </div>
-                                    </div>
-                                    <div className="bg-white dark:bg-neutral-800 rounded p-2">
-                                      <div className="font-semibold text-yellow-600 dark:text-yellow-400">
-                                        {jobMatches[job.id].byStrength.medium}
+                                    )}
+                                    
+                                    {/* Partial Matches */}
+                                    {jobMatches[job.id].byStrength.partial > 0 && (
+                                      <div>
+                                        <div className="flex items-center justify-between mb-1">
+                                          <span className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
+                                            Partial (40-59%)
+                                          </span>
+                                          <span className="text-xs text-neutral-600 dark:text-neutral-400">
+                                            {jobMatches[job.id].byStrength.partial}
+                                          </span>
+                                        </div>
+                                        <MatchStrengthBar
+                                          strong={0}
+                                          medium={0}
+                                          partial={jobMatches[job.id].byStrength.partial}
+                                          total={jobMatches[job.id].byStrength.partial}
+                                          onClick={() => navigate(`/schools/browse-teachers?jobId=${job.id}&matchStrength=partial`)}
+                                        />
                                       </div>
-                                      <div className="text-xs text-neutral-600 dark:text-neutral-400">
-                                        Medium (60-79%)
+                                    )}
+                                    
+                                    {/* Combined view - clickable to see all matches */}
+                                    {jobMatches[job.id].totalMatches > 0 && (
+                                      <div className="mt-3 pt-3 border-t border-neutral-200 dark:border-neutral-700">
+                                        <div className="flex items-center justify-between mb-1">
+                                          <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300">
+                                            All Matches
+                                          </span>
+                                          <span className="text-xs text-neutral-600 dark:text-neutral-400">
+                                            {jobMatches[job.id].totalMatches}
+                                          </span>
+                                        </div>
+                                        <MatchStrengthBar
+                                          strong={jobMatches[job.id].byStrength.strong}
+                                          medium={jobMatches[job.id].byStrength.medium}
+                                          partial={jobMatches[job.id].byStrength.partial}
+                                          total={jobMatches[job.id].totalMatches}
+                                          onClick={() => navigate(`/schools/browse-teachers?jobId=${job.id}`)}
+                                        />
                                       </div>
-                                    </div>
-                                    <div className="bg-white dark:bg-neutral-800 rounded p-2">
-                                      <div className="font-semibold text-orange-600 dark:text-orange-400">
-                                        {jobMatches[job.id].byStrength.partial}
-                                      </div>
-                                      <div className="text-xs text-neutral-600 dark:text-neutral-400">
-                                        Partial (40-59%)
-                                      </div>
-                                    </div>
+                                    )}
                                   </div>
                                 </div>
                               </div>
