@@ -1610,39 +1610,6 @@ export const SchoolDashboardPage: React.FC = () => {
                                     {jobMatches[job.id].totalMatches} teachers match your role
                                   </h4>
                                 </div>
-                                
-                                {/* Availability Breakdown */}
-                                <div className="mb-3">
-                                  <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                                    Availability:
-                                  </p>
-                                  <div className="grid grid-cols-3 gap-2 text-sm">
-                                    <div className="bg-white dark:bg-neutral-800 rounded p-2">
-                                      <div className="font-semibold text-green-600 dark:text-green-400">
-                                        {jobMatches[job.id].byAvailability.now}
-                                      </div>
-                                      <div className="text-xs text-neutral-600 dark:text-neutral-400">
-                                        Available now
-                                      </div>
-                                    </div>
-                                    <div className="bg-white dark:bg-neutral-800 rounded p-2">
-                                      <div className="font-semibold text-blue-600 dark:text-blue-400">
-                                        {jobMatches[job.id].byAvailability.within30Days}
-                                      </div>
-                                      <div className="text-xs text-neutral-600 dark:text-neutral-400">
-                                        Within 30 days
-                                      </div>
-                                    </div>
-                                    <div className="bg-white dark:bg-neutral-800 rounded p-2">
-                                      <div className="font-semibold text-purple-600 dark:text-purple-400">
-                                        {jobMatches[job.id].byAvailability.within3Months}
-                                      </div>
-                                      <div className="text-xs text-neutral-600 dark:text-neutral-400">
-                                        Within 3 months
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
 
                                 {/* Match Strength Bands */}
                                 <div>
