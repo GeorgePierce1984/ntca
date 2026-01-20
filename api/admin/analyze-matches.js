@@ -430,16 +430,26 @@ export default async function handler(req, res) {
 
     // Analyze each job
     const analyses = school.jobs.map(job => {
+      // Debug: Log raw requirements from database
+      console.log(`Job ${job.id} ("${job.title}") raw requirements:`, job.requirements);
+      console.log(`Job ${job.id} requirements type:`, typeof job.requirements);
+      console.log(`Job ${job.id} requirements is null?:`, job.requirements === null);
+      console.log(`Job ${job.id} requirements is undefined?:`, job.requirements === undefined);
+      
       const match = calculateMatchStrength(job, fullTeacher);
       
       let jobRequirements = {};
       try {
         if (job.requirements) {
-          jobRequirements = JSON.parse(job.requirements);
+          jobRequirements = typeof job.requirements === 'string' 
+            ? JSON.parse(job.requirements) 
+            : job.requirements;
         }
       } catch (e) {
-        // Ignore parse errors
+        console.error(`Error parsing requirements for job ${job.id}:`, e);
       }
+      
+      console.log(`Job ${job.id} parsed requirements:`, JSON.stringify(jobRequirements));
 
       return {
         job: {
