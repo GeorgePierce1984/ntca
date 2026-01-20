@@ -349,41 +349,36 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Find Forest School 2.0
-    const school = await retryOperation(async () => {
-      return await prisma.school.findFirst({
+    // Find the "ESL Teacher" job posting
+    const job = await retryOperation(async () => {
+      return await prisma.job.findFirst({
         where: {
-          name: {
-            contains: "Forest School",
+          title: {
+            contains: "ESL Teacher",
             mode: "insensitive"
-          }
+          },
+          status: "ACTIVE"
         },
         include: {
-          jobs: {
-            where: {
-              status: "ACTIVE"
-            },
-            orderBy: {
-              createdAt: "desc"
-            },
+          school: {
             select: {
               id: true,
-              title: true,
-              city: true,
-              country: true,
-              studentAgeGroupMin: true,
-              studentAgeGroupMax: true,
-              requirements: true,
-              startDate: true,
+              name: true,
             }
           }
+        },
+        orderBy: {
+          createdAt: "desc"
         }
       });
     });
 
-    if (!school) {
-      return res.status(404).json({ error: "Forest School 2.0 not found" });
+    if (!job) {
+      return res.status(404).json({ error: "ESL Teacher job not found" });
     }
+
+    const school = job.school;
+    const jobs = [job];
 
     // Find teacher
     const user = await retryOperation(async () => {
@@ -429,7 +424,7 @@ export default async function handler(req, res) {
     });
 
     // Analyze each job
-    const analyses = school.jobs.map(job => {
+    const analyses = jobs.map(job => {
       // Debug: Log raw requirements from database
       console.log(`Job ${job.id} ("${job.title}") raw requirements:`, job.requirements);
       console.log(`Job ${job.id} requirements type:`, typeof job.requirements);
