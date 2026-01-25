@@ -29,7 +29,7 @@ export const MatchScoreRing: React.FC<MatchScoreRingProps> = ({
   const color = getColor(clampedPercentage);
 
   return (
-    <div className={`relative inline-block ${className}`}>
+    <div className={`relative inline-block ${className}`} style={{ width: size, height: size }}>
       <svg
         width={size}
         height={size}

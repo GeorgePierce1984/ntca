@@ -366,29 +366,29 @@ export const BrowseTeachersPage: React.FC = () => {
       >
         <div className="space-y-4">
           <div className="flex items-center gap-4">
-            <div className="relative flex-shrink-0">
-              <div className="w-16 h-16 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center relative">
-                {/* Match Score Ring - positioned around the photo */}
-                {teacher.matchPercentage !== undefined && (
-                  <div className="absolute -inset-1 z-10">
-                    <MatchScoreRing
-                      percentage={teacher.matchPercentage}
-                      size={68}
-                      strokeWidth={3}
-                    />
-                  </div>
-                )}
-                {teacher.photoUrl ? (
-                  <img
-                    src={teacher.photoUrl}
-                    alt={`${teacher.firstName} ${teacher.lastName}`}
-                    className="w-16 h-16 rounded-full object-cover"
-                  />
-                ) : (
-                  <User className="w-8 h-8 text-primary-600 dark:text-primary-400" />
-                )}
-              </div>
-            </div>
+                          <div className="relative flex-shrink-0">
+                            {/* Match Score Ring - positioned around the photo container */}
+                            {teacher.matchPercentage !== undefined && (
+                              <div className="absolute -inset-1 z-10">
+                                <MatchScoreRing
+                                  percentage={teacher.matchPercentage}
+                                  size={68}
+                                  strokeWidth={3}
+                                />
+                              </div>
+                            )}
+                            <div className="w-16 h-16 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center relative z-0">
+                              {teacher.photoUrl ? (
+                                <img
+                                  src={teacher.photoUrl}
+                                  alt={`${teacher.firstName} ${teacher.lastName}`}
+                                  className="w-16 h-16 rounded-full object-cover"
+                                />
+                              ) : (
+                                <User className="w-8 h-8 text-primary-600 dark:text-primary-400" />
+                              )}
+                            </div>
+                          </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 {getNationalityFlag() && (
