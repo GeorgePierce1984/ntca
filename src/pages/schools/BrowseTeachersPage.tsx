@@ -93,6 +93,7 @@ export const BrowseTeachersPage: React.FC = () => {
     experience: "",
     location: "",
   });
+  const [matchPercentageRange, setMatchPercentageRange] = useState<[number, number]>([0, 100]);
   
   // Job match data state
   const [jobDetails, setJobDetails] = useState<{
@@ -357,6 +358,18 @@ export const BrowseTeachersPage: React.FC = () => {
     }
   }, [isAuthenticated, user, navigate, fetchTeachers, fetchSubscriptionStatus, jobId, fetchJobDetailsAndMatches]);
 
+  // Filter teachers by match percentage range when jobId is present
+  const filteredTeachersByRange = React.useMemo(() => {
+    if (!jobId) {
+      return teachers || [];
+    }
+    return (teachers || []).filter(teacher => {
+      const matchPct = teacher.matchPercentage;
+      if (matchPct === undefined) return false;
+      return matchPct >= matchPercentageRange[0] && matchPct <= matchPercentageRange[1];
+    });
+  }, [teachers, jobId, matchPercentageRange]);
+
   // Group teachers by match strength when jobId is present
   const groupTeachersByMatchStrength = (teachersList: Teacher[]) => {
     if (!jobId) {
@@ -388,7 +401,7 @@ export const BrowseTeachersPage: React.FC = () => {
     return grouped;
   };
 
-  const groupedTeachers = groupTeachersByMatchStrength(teachers || []);
+  const groupedTeachers = groupTeachersByMatchStrength(filteredTeachersByRange);
   const showGrouped = jobId && !matchStrength; // Show grouped view when jobId present but no specific strength filter
 
   // Helper function to render teacher card
@@ -720,27 +733,109 @@ export const BrowseTeachersPage: React.FC = () => {
                 </motion.div>
               )}
 
-              {/* Search and Filters */}
-              <div className="max-w-4xl mx-auto mb-8">
-                <div className="flex gap-4">
-                  <div className="flex-1 relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 w-5 h-5" />
-                    <input
-                      type="text"
-                      placeholder="Search teachers by name..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="input pl-10"
-                    />
+              {/* Match Percentage Range Filter - Show when jobId is present */}
+              {jobId ? (
+                <div className="max-w-4xl mx-auto mb-8">
+                  <div className="card p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                        Filter by Match Percentage
+                      </label>
+                      <span className="text-sm font-semibold text-primary-600 dark:text-primary-400">
+                        {matchPercentageRange[0]}% - {matchPercentageRange[1]}%
+                      </span>
+                    </div>
+                    <div className="relative py-4">
+                      {/* Background track */}
+                      <div className="absolute w-full h-2 bg-neutral-200 dark:bg-neutral-700 rounded-full top-1/2 -translate-y-1/2"></div>
+                      {/* Active range */}
+                      <div 
+                        className="absolute h-2 bg-primary-600 dark:bg-primary-500 rounded-full top-1/2 -translate-y-1/2 transition-all duration-150"
+                        style={{
+                          left: `${matchPercentageRange[0]}%`,
+                          width: `${matchPercentageRange[1] - matchPercentageRange[0]}%`
+                        }}
+                      ></div>
+                      {/* Min slider */}
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        step="1"
+                        value={matchPercentageRange[0]}
+                        onChange={(e) => {
+                          const newMin = parseInt(e.target.value);
+                          if (newMin <= matchPercentageRange[1]) {
+                            setMatchPercentageRange([newMin, matchPercentageRange[1]]);
+                          }
+                        }}
+                        className="absolute w-full h-2 opacity-0 cursor-pointer z-20"
+                        style={{
+                          WebkitAppearance: 'none',
+                          appearance: 'none',
+                        }}
+                      />
+                      {/* Max slider */}
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        step="1"
+                        value={matchPercentageRange[1]}
+                        onChange={(e) => {
+                          const newMax = parseInt(e.target.value);
+                          if (newMax >= matchPercentageRange[0]) {
+                            setMatchPercentageRange([matchPercentageRange[0], newMax]);
+                          }
+                        }}
+                        className="absolute w-full h-2 opacity-0 cursor-pointer z-20"
+                        style={{
+                          WebkitAppearance: 'none',
+                          appearance: 'none',
+                        }}
+                      />
+                      {/* Slider thumbs */}
+                      <div 
+                        className="absolute w-4 h-4 bg-primary-600 dark:bg-primary-500 rounded-full border-2 border-white dark:border-neutral-800 shadow-md top-1/2 -translate-y-1/2 -translate-x-1/2 z-10 cursor-pointer hover:scale-110 transition-transform"
+                        style={{ left: `${matchPercentageRange[0]}%` }}
+                      ></div>
+                      <div 
+                        className="absolute w-4 h-4 bg-primary-600 dark:bg-primary-500 rounded-full border-2 border-white dark:border-neutral-800 shadow-md top-1/2 -translate-y-1/2 -translate-x-1/2 z-10 cursor-pointer hover:scale-110 transition-transform"
+                        style={{ left: `${matchPercentageRange[1]}%` }}
+                      ></div>
+                    </div>
+                    <div className="flex justify-between text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                      <span>0%</span>
+                      <span>100%</span>
+                    </div>
+                    <div className="mt-3 text-xs text-neutral-500 dark:text-neutral-400 text-center">
+                      Showing {filteredTeachersByRange.length} of {teachers.length} matches
+                    </div>
                   </div>
-                  <Button
-                    variant="secondary"
-                    leftIcon={<Filter className="w-4 h-4" />}
-                  >
-                    Filters
-                  </Button>
                 </div>
-              </div>
+              ) : (
+                /* Search and Filters - Show when no jobId */
+                <div className="max-w-4xl mx-auto mb-8">
+                  <div className="flex gap-4">
+                    <div className="flex-1 relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 w-5 h-5" />
+                      <input
+                        type="text"
+                        placeholder="Search teachers by name..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="input pl-10"
+                      />
+                    </div>
+                    <Button
+                      variant="secondary"
+                      leftIcon={<Filter className="w-4 h-4" />}
+                    >
+                      Filters
+                    </Button>
+                  </div>
+                </div>
+              )}
 
               {/* Teachers Grid - Grouped by match strength when jobId is present */}
               {showGrouped ? (
