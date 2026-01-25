@@ -142,8 +142,12 @@ export const BrowseTeachersPage: React.FC = () => {
   // Fetch job details and match data
   const fetchJobDetailsAndMatches = useCallback(async (jobId: string) => {
     const token = localStorage.getItem("authToken");
-    if (!token) return;
+    if (!token) {
+      console.error("No auth token available for fetching job details");
+      return;
+    }
 
+    console.log("Fetching job details and matches for jobId:", jobId);
     setLoadingJobMatchData(true);
     try {
       // Fetch job details
@@ -155,10 +159,14 @@ export const BrowseTeachersPage: React.FC = () => {
 
       if (jobResponse.ok) {
         const jobData = await jobResponse.json();
+        console.log("Job details fetched:", jobData);
         setJobDetails({
           id: jobData.job.id,
           title: jobData.job.title,
         });
+      } else {
+        const errorText = await jobResponse.text();
+        console.error("Failed to fetch job details:", jobResponse.status, errorText);
       }
 
       // Fetch match data
@@ -170,6 +178,7 @@ export const BrowseTeachersPage: React.FC = () => {
 
       if (matchResponse.ok) {
         const matchData = await matchResponse.json();
+        console.log("Match data fetched:", matchData);
         setJobMatchData({
           totalMatches: matchData.totalMatches || 0,
           byStrength: matchData.byStrength || {
@@ -178,9 +187,16 @@ export const BrowseTeachersPage: React.FC = () => {
             partial: 0,
           },
         });
+      } else {
+        const errorText = await matchResponse.text();
+        console.error("Failed to fetch match data:", matchResponse.status, errorText);
       }
     } catch (error) {
       console.error("Error fetching job details and matches:", error);
+      // Log more details for debugging
+      if (error instanceof Error) {
+        console.error("Error details:", error.message, error.stack);
+      }
     } finally {
       setLoadingJobMatchData(false);
     }
@@ -334,7 +350,10 @@ export const BrowseTeachersPage: React.FC = () => {
     
     // If jobId is present, fetch job details and match data
     if (jobId) {
+      console.log("jobId found in URL, fetching job details:", jobId);
       fetchJobDetailsAndMatches(jobId);
+    } else {
+      console.log("No jobId in URL");
     }
   }, [isAuthenticated, user, navigate, fetchTeachers, fetchSubscriptionStatus, jobId, fetchJobDetailsAndMatches]);
 
@@ -597,25 +616,40 @@ export const BrowseTeachersPage: React.FC = () => {
           <div className="section">
             <div className="container-custom">
               {/* Job Match Header - Show when jobId is present */}
-              {jobId && jobDetails && (
+              {jobId && (
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   className="mb-8"
                 >
                   <div className="card p-6">
+                    {/* Debug info - remove in production */}
+                    {process.env.NODE_ENV === 'development' && (
+                      <div className="mb-4 p-2 bg-yellow-100 dark:bg-yellow-900/20 rounded text-xs">
+                        Debug: jobId={jobId}, jobDetails={jobDetails ? 'loaded' : 'null'}, 
+                        loading={loadingJobMatchData ? 'yes' : 'no'}, 
+                        matchData={jobMatchData ? 'loaded' : 'null'}
+                      </div>
+                    )}
+                    
                     {/* Job Title */}
-                    <h2 className="heading-2 mb-6">{jobDetails.title}</h2>
+                    {jobDetails ? (
+                      <h2 className="heading-2 mb-6">{jobDetails.title}</h2>
+                    ) : loadingJobMatchData ? (
+                      <div className="mb-6">
+                        <div className="h-8 w-48 bg-neutral-200 dark:bg-neutral-700 rounded animate-pulse"></div>
+                      </div>
+                    ) : (
+                      <h2 className="heading-2 mb-6">Loading job details...</h2>
+                    )}
                     
                     {/* Match Insights */}
                     {loadingJobMatchData ? (
-                      <div className="card p-4">
-                        <div className="flex items-center gap-2">
-                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-neutral-300 dark:border-neutral-600 border-t-neutral-600 dark:border-t-neutral-400"></div>
-                          <span className="text-sm text-neutral-600 dark:text-neutral-400">
-                            Calculating matches...
-                          </span>
-                        </div>
+                      <div className="flex items-center gap-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-neutral-300 dark:border-neutral-600 border-t-neutral-600 dark:border-t-neutral-400"></div>
+                        <span className="text-sm text-neutral-600 dark:text-neutral-400">
+                          Calculating matches...
+                        </span>
                       </div>
                     ) : jobMatchData ? (
                       <>
@@ -662,6 +696,10 @@ export const BrowseTeachersPage: React.FC = () => {
                           </div>
                         </div>
                       </>
+                    ) : !loadingJobMatchData ? (
+                      <div className="text-sm text-neutral-600 dark:text-neutral-400">
+                        No match data available
+                      </div>
                     ) : null}
                   </div>
                 </motion.div>
