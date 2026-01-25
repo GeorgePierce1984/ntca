@@ -29,10 +29,10 @@ export default function SpeedometerOptionA({
   const shadowId = `needleShadow_${uid}`;
   // Hard filter only - no mode or behavior toggles needed
 
-  // Gauge geometry
+  // Gauge geometry - reduced for compact size
   const cx = 210;
-  const cy = 190;
-  const r = 150;
+  const cy = 150;
+  const r = 120;
   // Top semicircle: left (270°) to right (90°)
   const startAngle = 270;
   const endAngle = 90;
@@ -219,23 +219,24 @@ export default function SpeedometerOptionA({
   return (
     <div className="font-sans text-slate-900 dark:text-slate-100">
       <div
-        className="rounded-2xl border border-slate-900/10 dark:border-slate-100/10 bg-white dark:bg-slate-800 p-4 shadow-[0_8px_24px_rgba(2,6,23,0.06)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.3)]"
+        className="rounded-2xl border border-slate-900/10 dark:border-slate-100/10 bg-white dark:bg-slate-800 p-3 shadow-[0_8px_24px_rgba(2,6,23,0.06)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.3)]"
         style={{ width, maxWidth: "100%" }}
       >
         <div className="flex items-end justify-between gap-3">
           <div>
-            <div className="text-[16px] font-extrabold">{title}</div>
-            <div className="text-[12px] text-slate-900/60 dark:text-slate-400">{subtitle}</div>
+            <div className="text-[14px] font-extrabold">{title}</div>
+            <div className="text-[11px] text-slate-900/60 dark:text-slate-400">{subtitle}</div>
           </div>
         </div>
 
         {/* Gauge */}
-        <div className="relative mt-4">
+        <div className="relative mt-2">
           <svg
-            viewBox="0 0 420 220"
+            viewBox="0 0 420 180"
             className="block h-auto w-full"
             aria-label="Speedometer"
             role="img"
+            style={{ maxHeight: "140px" }}
           >
             <defs>
               <linearGradient id={gradId} x1="60" y1="0" x2="360" y2="0" gradientUnits="userSpaceOnUse">
@@ -286,20 +287,20 @@ export default function SpeedometerOptionA({
           </svg>
 
           {/* Readout */}
-          <div className="pointer-events-none absolute left-0 right-0 top-[58px] text-center">
+          <div className="pointer-events-none absolute left-0 right-0 top-[45px] text-center">
             {threshold == null ? (
-              <div className="text-[38px] font-black tracking-tight text-slate-900/90 dark:text-slate-100/90">Any</div>
+              <div className="text-[28px] font-black tracking-tight text-slate-900/90 dark:text-slate-100/90">Any</div>
             ) : (
-              <div className="text-[44px] font-black tracking-tight text-slate-900/90 dark:text-slate-100/90">
+              <div className="text-[32px] font-black tracking-tight text-slate-900/90 dark:text-slate-100/90">
                 {readout.main}
-                <span className="ml-1 text-[18px] font-extrabold text-slate-900/60 dark:text-slate-100/60">{readout.suffix}</span>
+                <span className="ml-1 text-[14px] font-extrabold text-slate-900/60 dark:text-slate-100/60">{readout.suffix}</span>
               </div>
             )}
           </div>
         </div>
 
         {/* Snap buttons */}
-        <div className="mt-3 flex flex-wrap gap-2">
+        <div className="mt-2 flex flex-wrap gap-1.5">
           {snapThresholds.map((v, idx) => {
             const label = v == null ? "Any" : `${v}+`;
             const active = v === threshold;
@@ -309,7 +310,7 @@ export default function SpeedometerOptionA({
                 type="button"
                 onClick={() => setAll({ threshold: v })}
                 className={
-                  "select-none rounded-xl border px-3 py-2 text-[13px] font-extrabold transition active:scale-[0.98] " +
+                  "select-none rounded-xl border px-2.5 py-1.5 text-[12px] font-extrabold transition active:scale-[0.98] " +
                   (active
                     ? "border-blue-600/40 dark:border-blue-400/40 bg-blue-600/10 dark:bg-blue-400/10 text-blue-800 dark:text-blue-300"
                     : "border-slate-900/15 dark:border-slate-100/15 bg-white dark:bg-slate-700 text-slate-900/90 dark:text-slate-100/90 hover:border-slate-900/25 dark:hover:border-slate-100/25")
