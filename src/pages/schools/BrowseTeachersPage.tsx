@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/Button";
 import { Paywall } from "@/components/paywall/Paywall";
 import { TeacherDetailModal } from "@/components/schools/TeacherDetailModal";
 import { MatchScoreRing } from "@/components/schools/MatchScoreRing";
-import { SpeedometerFilter } from "@/components/schools/SpeedometerFilter";
+import SpeedometerOptionA from "@/components/schools/SpeedometerFilter";
 import { canAccessPremiumFeatures } from "@/utils/subscription";
 import { motion } from "framer-motion";
 import { getCountryByName } from "@/data/countries";
@@ -777,7 +777,7 @@ export const BrowseTeachersPage: React.FC = () => {
               {/* Option A: Tap-to-Snap Speedometer - Show when jobId is present */}
               {jobId ? (
                 <div className="max-w-4xl mx-auto mb-8 flex justify-center">
-                  <SpeedometerFilter
+                  <SpeedometerOptionA
                     initialThreshold={80}
                     snapThresholds={[null, 60, 70, 80, 95]}
                     onChange={setSpeedometerState}
