@@ -736,8 +736,8 @@ export const BrowseTeachersPage: React.FC = () => {
               {/* Match Percentage Range Filter - Show when jobId is present */}
               {jobId ? (
                 <div className="max-w-4xl mx-auto mb-8">
-                  <div className="card p-6">
-                    <div className="flex items-center justify-between mb-4">
+                  <div className="card p-3">
+                    <div className="flex items-center justify-between mb-2">
                       <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
                         Filter by Minimum Match Percentage
                       </label>
@@ -745,12 +745,12 @@ export const BrowseTeachersPage: React.FC = () => {
                         {minMatchPercentage}% - 100%
                       </span>
                     </div>
-                    <div className="relative py-4">
+                    <div className="relative py-2">
                       {/* Background track */}
-                      <div className="absolute w-full h-2 bg-neutral-200 dark:bg-neutral-700 rounded-full top-1/2 -translate-y-1/2"></div>
+                      <div className="absolute w-full h-1.5 bg-neutral-200 dark:bg-neutral-700 rounded-full top-1/2 -translate-y-1/2"></div>
                       {/* Active range - from min to 100% */}
                       <div 
-                        className="absolute h-2 bg-primary-600 dark:bg-primary-500 rounded-full top-1/2 -translate-y-1/2 transition-all duration-150"
+                        className="absolute h-1.5 bg-primary-600 dark:bg-primary-500 rounded-full top-1/2 -translate-y-1/2 transition-all duration-150"
                         style={{
                           left: `${minMatchPercentage}%`,
                           width: `${100 - minMatchPercentage}%`
@@ -766,23 +766,28 @@ export const BrowseTeachersPage: React.FC = () => {
                         onChange={(e) => {
                           setMinMatchPercentage(parseInt(e.target.value));
                         }}
-                        className="w-full h-2 bg-transparent appearance-none cursor-pointer z-20"
+                        className="w-full h-1.5 bg-transparent appearance-none cursor-pointer z-20 relative"
                         style={{
                           WebkitAppearance: 'none',
                           appearance: 'none',
+                          padding: '0',
+                          margin: '0',
                         }}
                       />
-                      {/* Slider thumb */}
+                      {/* Slider thumb - positioned correctly */}
                       <div 
-                        className="absolute w-4 h-4 bg-primary-600 dark:bg-primary-500 rounded-full border-2 border-white dark:border-neutral-800 shadow-md top-1/2 -translate-y-1/2 -translate-x-1/2 z-10 pointer-events-none transition-all duration-150"
-                        style={{ left: `${minMatchPercentage}%` }}
+                        className="absolute w-3 h-3 bg-primary-600 dark:bg-primary-500 rounded-full border-2 border-white dark:border-neutral-800 shadow-md top-1/2 pointer-events-none transition-all duration-150"
+                        style={{ 
+                          left: `calc(${minMatchPercentage}% - 5.5px)`,
+                          transform: 'translateY(-50%)'
+                        }}
                       ></div>
                     </div>
                     <div className="flex justify-between text-xs text-neutral-500 dark:text-neutral-400 mt-1">
                       <span>0%</span>
                       <span>100%</span>
                     </div>
-                    <div className="mt-3 text-xs text-neutral-500 dark:text-neutral-400 text-center">
+                    <div className="mt-2 text-xs text-neutral-500 dark:text-neutral-400 text-center">
                       Showing {filteredTeachersByRange.length} of {teachers.length} matches
                     </div>
                   </div>
