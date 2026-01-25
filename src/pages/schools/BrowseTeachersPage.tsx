@@ -649,10 +649,10 @@ export const BrowseTeachersPage: React.FC = () => {
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="mt-4 mb-4 flex items-end gap-4"
+                  className="mt-4 mb-4 flex items-stretch gap-4"
                 >
                   {/* Title Box - Left */}
-                  <div className="flex-1 card p-10">
+                  <div className="flex-1 card p-10 flex flex-col">
                     {/* Debug info - remove in production */}
                     {process.env.NODE_ENV === 'development' && (
                       <div className="mb-4 p-2 bg-yellow-100 dark:bg-yellow-900/20 rounded text-xs">
