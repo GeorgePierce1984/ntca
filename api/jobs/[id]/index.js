@@ -165,7 +165,7 @@ export default async function handler(req, res) {
           requirements,
           status
         }
-      });
+      }));
 
       // Log activity
       await retryOperation(() => prisma.activityLog.create({
