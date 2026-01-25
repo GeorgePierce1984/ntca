@@ -164,8 +164,15 @@ export default function SpeedometerOptionA({
     }
     // Case 3: Normal progression - smaller to larger (clockwise)
     // e.g., 18° → 36° → 54° → 81° → 90°
+    // Need to ensure cumulative increases to force clockwise
     else if (targetNormalized > currentNormalized) {
-      nextRotation = targetAngle;
+      // If current cumulative is already > 360°, we need to add 360° to target
+      // to ensure cumulative continues increasing (clockwise)
+      if (currentCumulative >= 360) {
+        nextRotation = targetAngle + 360;
+      } else {
+        nextRotation = targetAngle;
+      }
     }
     // Case 4: Larger to smaller (but not the Any case) - should go clockwise through 360°
     else {
