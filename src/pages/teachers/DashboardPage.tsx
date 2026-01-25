@@ -194,6 +194,18 @@ const TeacherDashboard: React.FC = () => {
   });
   const [applying, setApplying] = useState(false);
 
+  // Function to open application modal and pre-fill with teacher profile data
+  const openApplicationModal = (job: Job) => {
+    setSelectedJob(job);
+    // Pre-fill form with teacher profile data (except cover letter)
+    setApplicationForm({
+      coverLetter: "",
+      resumeUrl: teacher?.resumeUrl || "",
+      portfolioUrl: teacher?.portfolioUrl || "",
+    });
+    setShowApplicationModal(true);
+  };
+
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -1810,10 +1822,7 @@ const TeacherDashboard: React.FC = () => {
                           ) : (
                             <Button
                               size="sm"
-                              onClick={() => {
-                                setSelectedJob(job);
-                                setShowApplicationModal(true);
-                              }}
+                              onClick={() => openApplicationModal(job)}
                             >
                               Apply
                             </Button>
@@ -2014,10 +2023,7 @@ const TeacherDashboard: React.FC = () => {
                             ) : (
                               <Button
                                 size="sm"
-                                onClick={() => {
-                                  setSelectedJob(savedJob.job);
-                                  setShowApplicationModal(true);
-                                }}
+                                onClick={() => openApplicationModal(savedJob.job)}
                               >
                                 Apply
                               </Button>

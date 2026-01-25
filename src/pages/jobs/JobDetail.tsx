@@ -115,6 +115,7 @@ const JobDetail: React.FC = () => {
   const [messageContent, setMessageContent] = useState("");
   const [sendingMessage, setSendingMessage] = useState(false);
   const [showSchoolProfile, setShowSchoolProfile] = useState(false);
+  const [teacherProfile, setTeacherProfile] = useState<any>(null);
   const [guestForm, setGuestForm] = useState({
     firstName: "",
     lastName: "",
@@ -131,8 +132,31 @@ const JobDetail: React.FC = () => {
     fetchJobDetails();
     if (user?.userType === "TEACHER") {
       checkIfSaved();
+      fetchTeacherProfile();
     }
-  }, [id]);
+  }, [id, user]);
+
+  const fetchTeacherProfile = async () => {
+    if (!user || user.userType !== "TEACHER") return;
+    
+    try {
+      const token = localStorage.getItem("authToken");
+      const response = await fetch("/api/teachers/profile", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.teacher) {
+          setTeacherProfile(data.teacher);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching teacher profile:", error);
+    }
+  };
 
   const fetchJobDetails = async () => {
     try {
@@ -201,6 +225,33 @@ const JobDetail: React.FC = () => {
   };
 
   const handleApply = () => {
+    // Pre-fill form if teacher is logged in (except cover letter)
+    if (user?.userType === "TEACHER" && teacherProfile) {
+      setGuestForm({
+        firstName: teacherProfile.firstName || "",
+        lastName: teacherProfile.lastName || "",
+        email: user.email || "",
+        phone: teacherProfile.phone || "",
+        city: teacherProfile.city || "",
+        country: teacherProfile.country || "",
+        coverLetter: "",
+        cv: null,
+        createAccount: false,
+      });
+    } else {
+      // Reset form for guests
+      setGuestForm({
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: "",
+        city: "",
+        country: "",
+        coverLetter: "",
+        cv: null,
+        createAccount: false,
+      });
+    }
     // Open application form for everyone (both authenticated teachers and guests)
     setShowApplicationForm(true);
   };
@@ -293,6 +344,47 @@ const JobDetail: React.FC = () => {
     setApplying(true);
 
     try {
+      // If teacher is logged in, use the teacher application endpoint
+      if (user?.userType === "TEACHER" && token) {
+        const formData = new FormData();
+        formData.append("jobId", id!);
+        if (guestForm.coverLetter) formData.append("coverLetter", guestForm.coverLetter);
+        if (guestForm.cv) formData.append("cv", guestForm.cv);
+
+        const response = await fetch("/api/applications/create", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || "Failed to submit application");
+        }
+
+        toast.success("Application submitted successfully!");
+        setShowApplicationForm(false);
+        
+        // Reset form
+        setGuestForm({
+          firstName: "",
+          lastName: "",
+          email: "",
+          phone: "",
+          city: "",
+          country: "",
+          coverLetter: "",
+          cv: null,
+          createAccount: false,
+        });
+        setApplying(false);
+        return;
+      }
+
+      // Guest application flow
       const formData = new FormData();
       formData.append("jobId", id!);
       formData.append("firstName", guestForm.firstName);
