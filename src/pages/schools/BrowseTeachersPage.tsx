@@ -736,7 +736,7 @@ export const BrowseTeachersPage: React.FC = () => {
                 </motion.div>
               )}
 
-              {/* Match Percentage Circular Dial Filter - Show when jobId is present */}
+              {/* Match Percentage Car Odometer Style Dial - Show when jobId is present */}
               {jobId ? (
                 <div className="max-w-4xl mx-auto mb-8">
                   <div className="card p-6">
@@ -749,133 +749,142 @@ export const BrowseTeachersPage: React.FC = () => {
                       </span>
                     </div>
                     
-                    {/* Circular Thermometer/Dial */}
+                    {/* Car Odometer Style Circular Dial */}
                     <div className="flex flex-col items-center">
-                      <div className="relative w-full max-w-md mb-6">
-                        {/* Circular arc background */}
-                        <svg className="w-full h-32" viewBox="0 0 400 120" preserveAspectRatio="none">
-                          {/* Background arc */}
-                          <path
-                            d="M 50 100 Q 200 20, 350 100"
+                      <div className="relative w-80 h-80 mb-4">
+                        {/* Outer ring with color gradient */}
+                        <svg className="absolute inset-0 w-full h-full" viewBox="0 0 200 200">
+                          <defs>
+                            <linearGradient id="colorGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                              <stop offset="0%" stopColor="#ef4444" /> {/* Red */}
+                              <stop offset="30%" stopColor="#f97316" /> {/* Orange */}
+                              <stop offset="50%" stopColor="#eab308" /> {/* Yellow */}
+                              <stop offset="70%" stopColor="#fbbf24" /> {/* Light Yellow */}
+                              <stop offset="100%" stopColor="#22c55e" /> {/* Green */}
+                            </linearGradient>
+                          </defs>
+                          
+                          {/* Background circle */}
+                          <circle
+                            cx="100"
+                            cy="100"
+                            r="85"
                             fill="none"
                             stroke="#e5e7eb"
-                            strokeWidth="20"
-                            strokeLinecap="round"
+                            strokeWidth="8"
                             className="dark:stroke-neutral-700"
                           />
                           
-                          {/* Color-coded segments */}
-                          {[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map((value, index) => {
-                            const startAngle = 180 - (value / 100) * 180; // 0% = 180°, 100% = 0°
-                            const endAngle = 180 - ((value + 10) / 100) * 180;
-                            
-                            // Convert angles to path coordinates
-                            const radius = 150;
-                            const centerX = 200;
-                            const centerY = 100;
-                            
-                            const startX = centerX + radius * Math.cos((startAngle * Math.PI) / 180);
-                            const startY = centerY - radius * Math.sin((startAngle * Math.PI) / 180);
-                            const endX = centerX + radius * Math.cos((endAngle * Math.PI) / 180);
-                                const endY = centerY - radius * Math.sin((endAngle * Math.PI) / 180);
-                            
-                            // Color gradient
-                            let strokeColor = '';
-                            if (value <= 30) {
-                              strokeColor = '#ef4444'; // red
-                            } else if (value <= 50) {
-                              strokeColor = '#f97316'; // orange
-                            } else if (value <= 70) {
-                              strokeColor = '#eab308'; // yellow
-                            } else {
-                              strokeColor = '#22c55e'; // green
-                            }
-                            
-                            const isSelected = roundedMinPercentage <= value;
-                            const isActive = roundedMinPercentage === value;
-                            
-                            if (!isSelected) return null;
-                            
-                            return (
-                              <path
-                                key={value}
-                                d={`M ${startX} ${startY} Q ${centerX} ${centerY - radius}, ${endX} ${endY}`}
-                                fill="none"
-                                stroke={strokeColor}
-                                strokeWidth={isActive ? "24" : "20"}
-                                strokeLinecap="round"
-                                className="transition-all duration-200"
-                                style={{
-                                  filter: isActive ? 'drop-shadow(0 4px 6px rgba(0,0,0,0.2))' : 'none',
-                                }}
-                              />
-                            );
-                          })}
+                          {/* Color-coded arc based on selection */}
+                          <circle
+                            cx="100"
+                            cy="100"
+                            r="85"
+                            fill="none"
+                            stroke="url(#colorGradient)"
+                            strokeWidth="8"
+                            strokeDasharray={`${(roundedMinPercentage / 100) * 534} 534`}
+                            strokeDashoffset="133.5"
+                            strokeLinecap="round"
+                            className="transition-all duration-300"
+                            transform="rotate(-90 100 100)"
+                          />
                         </svg>
                         
-                        {/* Clickable segments overlay */}
-                        <div className="absolute inset-0 flex items-end justify-between px-8 pb-2">
-                          {[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map((value, index) => {
-                            const angle = 180 - (value / 100) * 180;
-                            const radius = 150;
-                            const centerX = 200;
-                            const centerY = 100;
-                            
-                            // Calculate position for clickable area
-                            const x = (index / 10) * 100; // Distribute evenly across width
-                            
-                            const isActive = roundedMinPercentage === value;
-                            
-                            // Color for label
-                            let textColor = '';
-                            if (value <= 30) {
-                              textColor = 'text-red-600 dark:text-red-400';
-                            } else if (value <= 50) {
-                              textColor = 'text-orange-600 dark:text-orange-400';
-                            } else if (value <= 70) {
-                              textColor = 'text-yellow-600 dark:text-yellow-400';
-                            } else {
-                              textColor = 'text-green-600 dark:text-green-400';
-                            }
-                            
-                            return (
-                              <button
-                                key={value}
-                                onClick={() => setMinMatchPercentage(value)}
-                                className={`
-                                  absolute transform -translate-x-1/2 transition-all duration-200
-                                  ${isActive 
-                                    ? 'scale-125 font-bold' 
-                                    : 'hover:scale-110 font-semibold'
-                                  }
-                                  ${textColor}
-                                `}
-                                style={{
-                                  left: `${x}%`,
-                                  bottom: '8px',
-                                }}
-                                title={`Filter: ${value}% - 100%`}
-                              >
-                                <div className={`
-                                  w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs
-                                  ${isActive 
-                                    ? 'border-neutral-900 dark:border-neutral-100 bg-white dark:bg-neutral-800 shadow-lg' 
-                                    : 'border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 hover:border-neutral-500 dark:hover:border-neutral-400'
-                                  }
-                                `}>
-                                  {value}
-                                </div>
-                              </button>
-                            );
-                          })}
+                        {/* Numbers arranged in circle */}
+                        {[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map((value) => {
+                          const angle = (value / 100) * 360 - 90; // Start from top, go clockwise
+                          const radius = 70;
+                          const centerX = 100;
+                          const centerY = 100;
+                          
+                          const x = centerX + radius * Math.cos((angle * Math.PI) / 180);
+                          const y = centerY + radius * Math.sin((angle * Math.PI) / 180);
+                          
+                          const isSelected = roundedMinPercentage <= value;
+                          const isActive = roundedMinPercentage === value;
+                          
+                          // Color for number
+                          let textColor = '';
+                          if (value <= 30) {
+                            textColor = 'text-red-600 dark:text-red-400';
+                          } else if (value <= 50) {
+                            textColor = 'text-orange-600 dark:text-orange-400';
+                          } else if (value <= 70) {
+                            textColor = 'text-yellow-600 dark:text-yellow-400';
+                          } else {
+                            textColor = 'text-green-600 dark:text-green-400';
+                          }
+                          
+                          return (
+                            <button
+                              key={value}
+                              onClick={() => setMinMatchPercentage(value)}
+                              className={`
+                                absolute transform -translate-x-1/2 -translate-y-1/2 transition-all duration-200
+                                ${isActive 
+                                  ? 'scale-125 font-bold z-10' 
+                                  : isSelected
+                                  ? 'scale-110 font-semibold z-5'
+                                  : 'hover:scale-110 font-medium opacity-50'
+                                }
+                                ${isSelected ? textColor : 'text-neutral-400 dark:text-neutral-500'}
+                              `}
+                              style={{
+                                left: `${x}px`,
+                                top: `${y}px`,
+                              }}
+                              title={`Filter: ${value}% - 100%`}
+                            >
+                              <div className={`
+                                w-10 h-10 rounded-full flex items-center justify-center text-sm
+                                ${isActive 
+                                  ? 'bg-white dark:bg-neutral-800 border-2 border-neutral-900 dark:border-neutral-100 shadow-lg' 
+                                  : isSelected
+                                  ? 'bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 shadow'
+                                  : 'bg-transparent'
+                                }
+                              `}>
+                                {value}
+                              </div>
+                            </button>
+                          );
+                        })}
+                        
+                        {/* Center pointer/indicator */}
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="relative">
+                            {/* Pointer line */}
+                            <div 
+                              className="absolute w-1 bg-neutral-900 dark:bg-neutral-100 origin-bottom transition-transform duration-300"
+                              style={{
+                                height: '60px',
+                                transform: `rotate(${(roundedMinPercentage / 100) * 360 - 90}deg)`,
+                                transformOrigin: 'bottom center',
+                                left: '50%',
+                                top: '50%',
+                                marginLeft: '-2px',
+                                marginTop: '-60px',
+                              }}
+                            />
+                            {/* Center dot */}
+                            <div className="w-4 h-4 rounded-full bg-neutral-900 dark:bg-neutral-100 border-2 border-white dark:border-neutral-800 shadow-lg"></div>
+                          </div>
                         </div>
                       </div>
                       
-                      {/* Percentage labels below */}
-                      <div className="flex justify-between w-full max-w-md px-8 text-xs text-neutral-500 dark:text-neutral-400">
-                        <span>0%</span>
-                        <span>50%</span>
-                        <span>100%</span>
+                      {/* Current selection display */}
+                      <div className="text-center">
+                        <div className="text-3xl font-bold mb-1" style={{
+                          color: roundedMinPercentage <= 30 ? '#ef4444' : 
+                                 roundedMinPercentage <= 50 ? '#f97316' : 
+                                 roundedMinPercentage <= 70 ? '#eab308' : '#22c55e'
+                        }}>
+                          {roundedMinPercentage}%
+                        </div>
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400">
+                          Minimum Match Threshold
+                        </div>
                       </div>
                     </div>
                     
