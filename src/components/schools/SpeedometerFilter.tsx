@@ -31,9 +31,9 @@ export default function SpeedometerOptionA({
   const cx = 210;
   const cy = 190;
   const r = 150;
-  // Top semicircle: left (270°) to right (90°)
-  const startAngle = 270;
-  const endAngle = 90;
+  // Top semicircle: left (90°) to right (270°) - flipped to correct orientation
+  const startAngle = 90;
+  const endAngle = 270;
 
   const polarToCartesian = useCallback((centerX: number, centerY: number, radius: number, angleDeg: number) => {
     const a = ((angleDeg - 90) * Math.PI) / 180;
