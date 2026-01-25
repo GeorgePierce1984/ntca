@@ -75,20 +75,50 @@ export default function SpeedometerOptionA({
 
   const thresholdToNeedleRotation = useCallback(
     (t: number | null) => {
-      // Needle line points upward (towards 0°) when rotation = 0deg.
-      // The arc goes from 270° (left) clockwise to 90° (right)
-      // In SVG rotation: 0° = up, 90° = right, 180° = down, 270° = left
-      // We want: 270° (left) → 270° rotation, 90° (right) → 90° rotation
-      const norm = t == null ? 0 : clamp01(Number(t) / 100);
-      const ang = startAngle + (endAngle - startAngle) * norm;
-      // Needle starts pointing up (0°), needs to rotate to point at angle on arc
-      // Since needle points up at 0°, and we want it to point at 'ang':
-      // - 270° (left) → rotate 270° clockwise
-      // - 90° (right) → rotate 90° clockwise
-      const rot = ang;
+      // User requirements (angles measured from left/270°):
+      // 0% (Any) = 270° (left) ✓
+      // 60% = 18° from left = 270° + 18° = 288°
+      // 70% = 36° from left = 270° + 36° = 306°
+      // 80% = 54° from left = 270° + 54° = 324°
+      // 95% = 81° from left = 270° + 81° = 351°
+      // 100% = 90° from left = 270° + 90° = 360° = 0°
+      // Pattern analysis:
+      // - 60% → 18°: 18/60 = 0.3
+      // - 70% → 36°: 36/70 ≈ 0.514
+      // - 80% → 54°: 54/80 = 0.675
+      // - 95% → 81°: 81/95 ≈ 0.852
+      // - 100% → 90°: 90/100 = 0.9
+      // The relationship is non-linear. Using interpolation:
+      if (t == null || t === 0) {
+        return 270; // Any/0% points left (270°)
+      }
+      const p = Number(t);
+      let angleOffset: number;
+      
+      // Piecewise linear interpolation based on known points
+      if (p <= 60) {
+        // 0% → 0°, 60% → 18°
+        angleOffset = (p / 60) * 18;
+      } else if (p <= 70) {
+        // 60% → 18°, 70% → 36°
+        angleOffset = 18 + ((p - 60) / 10) * (36 - 18);
+      } else if (p <= 80) {
+        // 70% → 36°, 80% → 54°
+        angleOffset = 36 + ((p - 70) / 10) * (54 - 36);
+      } else if (p <= 95) {
+        // 80% → 54°, 95% → 81°
+        angleOffset = 54 + ((p - 80) / 15) * (81 - 54);
+      } else {
+        // 95% → 81°, 100% → 90°
+        angleOffset = 81 + ((p - 95) / 5) * (90 - 81);
+      }
+      
+      const ang = 270 + angleOffset;
+      // Normalize to 0-360 range
+      const rot = ang >= 360 ? ang - 360 : ang;
       return rot;
     },
-    [startAngle, endAngle]
+    []
   );
 
   const rotation = useMemo(() => thresholdToNeedleRotation(threshold), [thresholdToNeedleRotation, threshold]);
@@ -216,8 +246,8 @@ export default function SpeedometerOptionA({
               }}
               aria-hidden="true"
             >
-              {/* Needle line pointing upward initially (towards 0°), will rotate to point along arc */}
-              <line x1={cx} y1={cy} x2={cx} y2={cy - r} stroke="#0f172a" strokeWidth="6" strokeLinecap="round" className="dark:stroke-slate-100" />
+              {/* Needle line pointing left initially (towards 270°), will rotate clockwise along arc */}
+              <line x1={cx} y1={cy} x2={cx - r} y2={cy} stroke="#0f172a" strokeWidth="6" strokeLinecap="round" className="dark:stroke-slate-100" />
               <circle cx={cx} cy={cy} r={16} fill="#0f172a" className="dark:fill-slate-100" />
               <circle cx={cx} cy={cy} r={9} fill="white" opacity="0.12" />
             </g>
