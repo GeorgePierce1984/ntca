@@ -5,6 +5,7 @@ interface MatchScoreRingProps {
   size?: number;
   strokeWidth?: number;
   className?: string;
+  showText?: boolean;
 }
 
 export const MatchScoreRing: React.FC<MatchScoreRingProps> = ({
@@ -12,6 +13,7 @@ export const MatchScoreRing: React.FC<MatchScoreRingProps> = ({
   size = 64,
   strokeWidth = 4,
   className = "",
+  showText = true,
 }) => {
   // Clamp percentage between 0 and 100
   const clampedPercentage = Math.max(0, Math.min(100, percentage));
@@ -60,13 +62,15 @@ export const MatchScoreRing: React.FC<MatchScoreRingProps> = ({
           className="transition-all duration-500 ease-out"
         />
       </svg>
-      {/* Percentage text */}
-      <div
-        className="absolute inset-0 flex items-center justify-center text-xs font-bold"
-        style={{ color }}
-      >
-        {Math.round(clampedPercentage)}%
-      </div>
+      {/* Percentage text - only show if showText is true */}
+      {showText && (
+        <div
+          className="absolute inset-0 flex items-center justify-center text-xs font-bold"
+          style={{ color }}
+        >
+          {Math.round(clampedPercentage)}%
+        </div>
+      )}
     </div>
   );
 };

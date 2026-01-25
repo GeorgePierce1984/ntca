@@ -369,13 +369,28 @@ export const BrowseTeachersPage: React.FC = () => {
                           <div className="relative flex-shrink-0">
                             {/* Match Score Ring - positioned around the photo container */}
                             {teacher.matchPercentage !== undefined && (
-                              <div className="absolute -inset-1 z-10">
-                                <MatchScoreRing
-                                  percentage={teacher.matchPercentage}
-                                  size={68}
-                                  strokeWidth={3}
-                                />
-                              </div>
+                              <>
+                                <div className="absolute -inset-0.5 z-10" style={{ top: '-2px', left: '-2px' }}>
+                                  <MatchScoreRing
+                                    percentage={teacher.matchPercentage}
+                                    size={68}
+                                    strokeWidth={3}
+                                    showText={false}
+                                  />
+                                </div>
+                                {/* Percentage text - top left outside image */}
+                                <div 
+                                  className="absolute -top-1 -left-1 z-20 bg-white dark:bg-neutral-800 rounded-full px-1.5 py-0.5 border border-neutral-200 dark:border-neutral-700 shadow-sm"
+                                  style={{ 
+                                    color: teacher.matchPercentage >= 80 ? '#22c55e' : teacher.matchPercentage >= 60 ? '#eab308' : '#9ca3af',
+                                    fontSize: '10px',
+                                    fontWeight: 'bold',
+                                    lineHeight: '1'
+                                  }}
+                                >
+                                  {Math.round(teacher.matchPercentage)}%
+                                </div>
+                              </>
                             )}
                             <div className="w-16 h-16 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center relative z-0">
                               {teacher.photoUrl ? (
