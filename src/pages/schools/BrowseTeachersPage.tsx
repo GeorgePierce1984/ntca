@@ -96,17 +96,16 @@ export const BrowseTeachersPage: React.FC = () => {
   });
   const [speedometerState, setSpeedometerState] = useState<{
     threshold: number | null;
-    mode: "filter" | "sort";
-    behavior: "hard" | "soft";
+    mode: "filter";
+    behavior: "hard";
   }>({
-    threshold: 80,
+    threshold: null,
     mode: "filter",
     behavior: "hard",
   });
   
   // Use threshold from speedometer, defaulting to 0 if null
   const roundedMinPercentage = speedometerState.threshold ?? 0;
-  const filterMode = speedometerState.behavior;
   
   // Job match data state
   const [jobDetails, setJobDetails] = useState<{
@@ -372,6 +371,7 @@ export const BrowseTeachersPage: React.FC = () => {
   }, [isAuthenticated, user, navigate, fetchTeachers, fetchSubscriptionStatus, jobId, fetchJobDetailsAndMatches]);
 
   // Filter teachers by match percentage range when jobId is present
+  // Hard filter only: hide teachers below threshold
   const filteredTeachersByRange = React.useMemo(() => {
     if (!jobId) {
       return teachers || [];
@@ -379,37 +379,12 @@ export const BrowseTeachersPage: React.FC = () => {
     
     const teachersWithMatches = (teachers || []).filter(teacher => teacher.matchPercentage !== undefined);
     
-    if (speedometerState.mode === "sort") {
-      // Sort mode: sort by match percentage descending, show all
-      return teachersWithMatches.sort((a, b) => {
-        const aPct = a.matchPercentage!;
-        const bPct = b.matchPercentage!;
-        return bPct - aPct;
-      });
-    } else if (speedometerState.behavior === "hard") {
-      // Hard filter: hide below threshold
-      return teachersWithMatches.filter(teacher => {
-        const matchPct = teacher.matchPercentage!;
-        return matchPct >= roundedMinPercentage && matchPct <= 100;
-      });
-    } else {
-      // Soft boost: sort higher matches first, but show all
-      return teachersWithMatches.sort((a, b) => {
-        const aPct = a.matchPercentage!;
-        const bPct = b.matchPercentage!;
-        
-        // If both are above threshold, sort by percentage descending
-        if (aPct >= roundedMinPercentage && bPct >= roundedMinPercentage) {
-          return bPct - aPct;
-        }
-        // If only one is above threshold, prioritize it
-        if (aPct >= roundedMinPercentage) return -1;
-        if (bPct >= roundedMinPercentage) return 1;
-        // Both below threshold, sort by percentage descending
-        return bPct - aPct;
-      });
-    }
-  }, [teachers, jobId, roundedMinPercentage, speedometerState.mode, speedometerState.behavior]);
+    // Hard filter: hide below threshold
+    return teachersWithMatches.filter(teacher => {
+      const matchPct = teacher.matchPercentage!;
+      return matchPct >= roundedMinPercentage && matchPct <= 100;
+    });
+  }, [teachers, jobId, roundedMinPercentage]);
 
   // Group teachers by match strength when jobId is present
   const groupTeachersByMatchStrength = (teachersList: Teacher[]) => {

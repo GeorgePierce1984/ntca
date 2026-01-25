@@ -27,8 +27,7 @@ export default function SpeedometerOptionA({
   const uid = React.useId();
   const gradId = `spdA_grad_${uid}`;
   const shadowId = `needleShadow_${uid}`;
-  const [mode, setMode] = useState<"filter" | "sort">("filter"); // 'filter' | 'sort'
-  const [behavior, setBehavior] = useState<"hard" | "soft">("hard"); // 'hard' | 'soft'
+  // Hard filter only - no mode or behavior toggles needed
 
   // Gauge geometry
   const cx = 210;
@@ -186,40 +185,31 @@ export default function SpeedometerOptionA({
     return { main: String(threshold), suffix: "%+" };
   }, [threshold]);
 
-  const note = useMemo(() => {
-    if (mode === "sort") return "Sorting matches by score";
-    return behavior === "hard" ? "Hiding matches below threshold" : "Boosting stronger matches first";
-  }, [mode, behavior]);
+  // Hard filter only - no note needed
 
   const emit = useCallback(
-    (next: { threshold: number | null; mode: "filter" | "sort"; behavior: "hard" | "soft" }) => {
+    (next: { threshold: number | null; mode: "filter"; behavior: "hard" }) => {
       if (typeof onChange === "function") onChange(next);
     },
     [onChange]
   );
 
   const setAll = useCallback(
-    (next: Partial<{ threshold: number | null; mode: "filter" | "sort"; behavior: "hard" | "soft" }>) => {
-      // next: partial
+    (next: Partial<{ threshold: number | null }>) => {
+      // next: partial - only threshold needed for hard filter
       const nextState = {
         threshold: next.threshold !== undefined ? next.threshold : threshold,
-        mode: next.mode !== undefined ? next.mode : mode,
-        behavior: next.behavior !== undefined ? next.behavior : behavior,
+        mode: "filter" as const,
+        behavior: "hard" as const,
       };
       // Always update state and emit, even if value appears the same (handles null case)
       if (next.threshold !== undefined) {
         setThreshold(next.threshold);
       }
-      if (next.mode !== undefined) {
-        setMode(next.mode);
-      }
-      if (next.behavior !== undefined) {
-        setBehavior(next.behavior);
-      }
-      // Always emit the new state
+      // Always emit the new state with hard filter mode
       emit(nextState);
     },
-    [threshold, mode, behavior, emit]
+    [threshold, emit]
   );
 
   return (
@@ -232,34 +222,6 @@ export default function SpeedometerOptionA({
           <div>
             <div className="text-[16px] font-extrabold">{title}</div>
             <div className="text-[12px] text-slate-900/60 dark:text-slate-400">{subtitle}</div>
-          </div>
-
-          {/* Mode toggle */}
-          <div className="flex rounded-full border border-slate-900/10 dark:border-slate-100/10 bg-slate-900/[0.02] dark:bg-slate-100/[0.02] p-1">
-            <button
-              type="button"
-              onClick={() => setAll({ mode: "filter" })}
-              className={
-                "rounded-full px-3 py-2 text-[13px] font-extrabold transition " +
-                (mode === "filter"
-                  ? "bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900"
-                  : "bg-transparent text-slate-900/60 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200")
-              }
-            >
-              Filter
-            </button>
-            <button
-              type="button"
-              onClick={() => setAll({ mode: "sort" })}
-              className={
-                "rounded-full px-3 py-2 text-[13px] font-extrabold transition " +
-                (mode === "sort"
-                  ? "bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900"
-                  : "bg-transparent text-slate-900/60 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200")
-              }
-            >
-              Sort
-            </button>
           </div>
         </div>
 
@@ -355,35 +317,6 @@ export default function SpeedometerOptionA({
           })}
         </div>
 
-        {/* Hard vs Soft */}
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-          <button
-            type="button"
-            onClick={() => setAll({ behavior: "hard" })}
-            className={
-              "rounded-full border px-3 py-2 text-[13px] font-extrabold transition " +
-              (behavior === "hard"
-                ? "border-emerald-600/40 dark:border-emerald-400/40 bg-emerald-600/10 dark:bg-emerald-400/10 text-emerald-700 dark:text-emerald-300"
-                : "border-slate-900/10 dark:border-slate-100/10 bg-white dark:bg-slate-700 text-slate-900/80 dark:text-slate-100/80 hover:border-slate-900/20 dark:hover:border-slate-100/20")
-            }
-          >
-            • Hard Filter
-          </button>
-          <button
-            type="button"
-            onClick={() => setAll({ behavior: "soft" })}
-            className={
-              "rounded-full border px-3 py-2 text-[13px] font-extrabold transition " +
-              (behavior === "soft"
-                ? "border-emerald-600/40 dark:border-emerald-400/40 bg-emerald-600/10 dark:bg-emerald-400/10 text-emerald-700 dark:text-emerald-300"
-                : "border-slate-900/10 dark:border-slate-100/10 bg-white dark:bg-slate-700 text-slate-900/80 dark:text-slate-100/80 hover:border-slate-900/20 dark:hover:border-slate-100/20")
-            }
-          >
-            Soft Boost
-          </button>
-
-          <div className="text-[12px] text-slate-900/60 dark:text-slate-400">{note}</div>
-        </div>
       </div>
     </div>
   );
@@ -393,11 +326,11 @@ export default function SpeedometerOptionA({
  * Usage
  *
  * <SpeedometerOptionA
- *   initialThreshold={80}
- *   snapThresholds={[null, 60, 70, 80, 90, 95]}
+ *   initialThreshold={null}
+ *   snapThresholds={[null, 60, 70, 80, 95]}
  *   onChange={({threshold, mode, behavior}) => {
  *     // threshold is number|null
- *     // mode: 'filter' | 'sort'
- *     // behavior: 'hard' | 'soft'
+ *     // mode: always 'filter'
+ *     // behavior: always 'hard'
  *   }}
  * */
