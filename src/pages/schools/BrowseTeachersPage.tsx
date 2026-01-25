@@ -778,7 +778,7 @@ export const BrowseTeachersPage: React.FC = () => {
               {jobId ? (
                 <div className="max-w-4xl mx-auto mb-8 flex justify-center">
                   <SpeedometerOptionA
-                    initialThreshold={80}
+                    initialThreshold={null}
                     snapThresholds={[null, 60, 70, 80, 95]}
                     onChange={setSpeedometerState}
                   />

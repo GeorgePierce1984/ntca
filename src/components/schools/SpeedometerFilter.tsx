@@ -11,14 +11,14 @@ import React, { useMemo, useState, useCallback } from "react";
  * - width: number (px) (default 420)  // container width; scales SVG
  */
 export default function SpeedometerOptionA({
-  initialThreshold = 80,
+  initialThreshold = null,
   snapThresholds = [null, 60, 70, 80, 95],
   onChange,
   title = "Match Threshold",
   subtitle = "Tap a snap point to filter quickly",
   width = 420,
 }) {
-  const [threshold, setThreshold] = useState(initialThreshold);
+  const [threshold, setThreshold] = useState<number | null>(initialThreshold);
 
   // Unique ids so gradients/filters don't collide if you render multiple gauges
   const uid = React.useId();
