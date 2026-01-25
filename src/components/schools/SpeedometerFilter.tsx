@@ -19,6 +19,11 @@ export default function SpeedometerOptionA({
   width = 420,
 }) {
   const [threshold, setThreshold] = useState(initialThreshold);
+
+  // Unique ids so gradients/filters don't collide if you render multiple gauges
+  const uid = React.useId();
+  const gradId = `spdA_grad_${uid}`;
+  const shadowId = `needleShadow_${uid}`;
   const [mode, setMode] = useState<"filter" | "sort">("filter"); // 'filter' | 'sort'
   const [behavior, setBehavior] = useState<"hard" | "soft">("hard"); // 'hard' | 'soft'
 
@@ -26,8 +31,9 @@ export default function SpeedometerOptionA({
   const cx = 210;
   const cy = 190;
   const r = 150;
-  const startAngle = 225;
-  const endAngle = -45;
+  // Top semicircle: left (270°) to right (90°)
+  const startAngle = 270;
+  const endAngle = 90;
 
   const polarToCartesian = useCallback((centerX: number, centerY: number, radius: number, angleDeg: number) => {
     const a = ((angleDeg - 90) * Math.PI) / 180;
@@ -41,8 +47,11 @@ export default function SpeedometerOptionA({
     (centerX: number, centerY: number, radius: number, startAng: number, endAng: number) => {
       const start = polarToCartesian(centerX, centerY, radius, startAng);
       const end = polarToCartesian(centerX, centerY, radius, endAng);
+      // For our top semicircle (270 -> 90), we want the shorter arc (largeArcFlag=0)
+      // and we want the arc to sweep counterclockwise (sweepFlag=0).
       const largeArcFlag = 0;
-      return `M ${start.x} ${start.y} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${end.x} ${end.y}`;
+      const sweepFlag = 0;
+      return `M ${start.x} ${start.y} A ${radius} ${radius} 0 ${largeArcFlag} ${sweepFlag} ${end.x} ${end.y}`;
     },
     [polarToCartesian]
   );
@@ -87,20 +96,6 @@ export default function SpeedometerOptionA({
     if (mode === "sort") return "Sorting matches by score";
     return behavior === "hard" ? "Hiding matches below threshold" : "Boosting stronger matches first";
   }, [mode, behavior]);
-
-  // Colored arc - fills from threshold position to end (right side)
-  // Shows the range that matches the threshold
-  const coloredArcD = useMemo(() => {
-    // If threshold is null or 0, show full arc
-    if (threshold == null || threshold === 0) {
-      return arcPath(cx, cy, r, startAngle, endAngle);
-    }
-    // Calculate angle for threshold position
-    const norm = clamp01(Number(threshold) / 100);
-    const thresholdAngle = startAngle + (endAngle - startAngle) * norm;
-    // Arc from threshold position to end (right side)
-    return arcPath(cx, cy, r, thresholdAngle, endAngle);
-  }, [threshold, arcPath]);
 
   const emit = useCallback(
     (next: { threshold: number | null; mode: "filter" | "sort"; behavior: "hard" | "soft" }) => {
@@ -175,19 +170,19 @@ export default function SpeedometerOptionA({
             role="img"
           >
             <defs>
-              <linearGradient id="spdA_grad" x1="60" y1="0" x2="360" y2="0" gradientUnits="userSpaceOnUse">
+              <linearGradient id={gradId} x1="60" y1="0" x2="360" y2="0" gradientUnits="userSpaceOnUse">
                 <stop offset="0" stopColor="#ef4444" />
                 <stop offset="0.35" stopColor="#f59e0b" />
                 <stop offset="0.65" stopColor="#22c55e" />
                 <stop offset="1" stopColor="#2563eb" />
               </linearGradient>
-              <filter id="needleShadow" x="-50%" y="-50%" width="200%" height="200%">
+              <filter id={shadowId} x="-50%" y="-50%" width="200%" height="200%">
                 <feDropShadow dx="0" dy="6" stdDeviation="4" floodColor="rgba(2,6,23,0.18)" />
               </filter>
             </defs>
 
             <path d={arcD} stroke="rgba(15,23,42,0.08)" strokeWidth="18" fill="none" className="dark:stroke-slate-100/10" />
-            <path d={coloredArcD} stroke="url(#spdA_grad)" strokeWidth="18" fill="none" strokeLinecap="round" />
+            <path d={arcD} stroke={`url(#${gradId})`} strokeWidth="18" fill="none" strokeLinecap="round" />
 
             {/* ticks */}
             <g>
@@ -211,7 +206,7 @@ export default function SpeedometerOptionA({
                 transformOrigin: `${cx}px ${cy}px`,
                 transform: `rotate(${rotation}deg)`,
                 transition: "transform 220ms cubic-bezier(.2,.8,.2,1)",
-                filter: "url(#needleShadow)",
+                filter: `url(#${shadowId})`,
               }}
               aria-hidden="true"
             >
@@ -302,5 +297,4 @@ export default function SpeedometerOptionA({
  *     // mode: 'filter' | 'sort'
  *     // behavior: 'hard' | 'soft'
  *   }}
- * />
- */
+ * */
