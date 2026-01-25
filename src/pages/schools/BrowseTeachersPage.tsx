@@ -825,17 +825,21 @@ export const BrowseTeachersPage: React.FC = () => {
                             );
                           })}
                           
-                          {/* Segment dividers */}
+                          {/* Segment dividers - full lines through the arc */}
                           {[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map((value) => {
                             const angle = 180 - (value / 100) * 180;
                             const radius = 150;
                             const centerX = 200;
                             const centerY = 180;
                             
+                            // Calculate points on the arc
                             const x1 = centerX + radius * Math.cos((angle * Math.PI) / 180);
                             const y1 = centerY - radius * Math.sin((angle * Math.PI) / 180);
-                            const x2 = centerX + (radius - 20) * Math.cos((angle * Math.PI) / 180);
-                            const y2 = centerY - (radius - 20) * Math.sin((angle * Math.PI) / 180);
+                            
+                            // Extend line through center and beyond
+                            const lineLength = radius + 30; // Extend beyond the arc
+                            const x2 = centerX + lineLength * Math.cos((angle * Math.PI) / 180);
+                            const y2 = centerY - lineLength * Math.sin((angle * Math.PI) / 180);
                             
                             return (
                               <line
@@ -846,70 +850,71 @@ export const BrowseTeachersPage: React.FC = () => {
                                 y2={y2}
                                 stroke="#ffffff"
                                 strokeWidth="2"
-                                opacity="0.8"
+                                opacity="0.6"
                               />
+                            );
+                          })}
+                          
+                          {/* Percentage labels at key points */}
+                          {[0, 25, 50, 75, 100].map((value) => {
+                            const angle = 180 - (value / 100) * 180;
+                            const radius = 140; // Position labels slightly outside the arc
+                            const centerX = 200;
+                            const centerY = 180;
+                            
+                            const x = centerX + radius * Math.cos((angle * Math.PI) / 180);
+                            const y = centerY - radius * Math.sin((angle * Math.PI) / 180);
+                            
+                            const isEmphasized = value === 0 || value === 50 || value === 100;
+                            
+                            return (
+                              <text
+                                key={`label-${value}`}
+                                x={x}
+                                y={y}
+                                textAnchor="middle"
+                                dominantBaseline="middle"
+                                fill={isEmphasized ? "#1f2937" : "#9ca3af"}
+                                className="dark:fill-neutral-300 dark:fill-neutral-500"
+                                fontSize={isEmphasized ? "16" : "12"}
+                                fontWeight={isEmphasized ? "bold" : "normal"}
+                                opacity={isEmphasized ? "1" : "0.7"}
+                                style={{
+                                  pointerEvents: 'none',
+                                  userSelect: 'none',
+                                }}
+                              >
+                                {value}%
+                              </text>
                             );
                           })}
                         </svg>
                         
-                        {/* Clickable number buttons positioned along the arc */}
-                        {[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map((value) => {
-                          const angle = 180 - (value / 100) * 180; // 0% = 180° (left), 100% = 0° (right)
-                          const radius = 120; // Position numbers slightly inside the arc
-                          const centerX = 200;
-                          const centerY = 180;
-                          
-                          const x = centerX + radius * Math.cos((angle * Math.PI) / 180);
-                          const y = centerY - radius * Math.sin((angle * Math.PI) / 180);
-                          
-                          const isActive = roundedMinPercentage === value;
-                          
-                          // Color for number
-                          let textColor = '';
-                          if (value <= 30) {
-                            textColor = '#ef4444'; // red
-                          } else if (value <= 50) {
-                            textColor = '#f97316'; // orange
-                          } else if (value <= 70) {
-                            textColor = '#eab308'; // yellow
-                          } else {
-                            textColor = '#22c55e'; // green
-                          }
-                          
-                          return (
-                            <button
-                              key={value}
-                              onClick={() => setMinMatchPercentage(value)}
-                              className={`
-                                absolute transform -translate-x-1/2 -translate-y-1/2 transition-all duration-200
-                                ${isActive 
-                                  ? 'scale-125 font-bold z-10' 
-                                  : 'hover:scale-110 font-semibold'
-                                }
-                              `}
-                              style={{
-                                left: `${(x / 400) * 100}%`,
-                                top: `${(y / 200) * 100}%`,
-                                color: textColor,
-                              }}
-                              title={`Filter: ${value}% - 100%`}
-                            >
-                              <div className={`
-                                w-10 h-10 rounded-full flex items-center justify-center text-sm
-                                ${isActive 
-                                  ? 'bg-white dark:bg-neutral-800 border-2 shadow-lg' 
-                                  : 'bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 shadow'
-                                }
-                              `}
-                              style={{
-                                borderColor: isActive ? textColor : undefined,
-                              }}
-                              >
-                                {value}
-                              </div>
-                            </button>
-                          );
-                        })}
+                        {/* Clickable area for selecting percentage */}
+                        <div className="absolute inset-0">
+                          {[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map((value) => {
+                            const angle = 180 - (value / 100) * 180;
+                            const radius = 120;
+                            const centerX = 200;
+                            const centerY = 180;
+                            
+                            const x = centerX + radius * Math.cos((angle * Math.PI) / 180);
+                            const y = centerY - radius * Math.sin((angle * Math.PI) / 180);
+                            
+                            return (
+                              <button
+                                key={value}
+                                onClick={() => setMinMatchPercentage(value)}
+                                className="absolute transform -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-full hover:bg-white/20 dark:hover:bg-white/10 transition-all duration-200"
+                                style={{
+                                  left: `${(x / 400) * 100}%`,
+                                  top: `${(y / 200) * 100}%`,
+                                }}
+                                title={`Filter: ${value}% - 100%`}
+                              />
+                            );
+                          })}
+                        </div>
                       </div>
                       
                       {/* Current selection display */}
