@@ -93,7 +93,7 @@ export const BrowseTeachersPage: React.FC = () => {
     experience: "",
     location: "",
   });
-  const [matchPercentageRange, setMatchPercentageRange] = useState<[number, number]>([0, 100]);
+  const [minMatchPercentage, setMinMatchPercentage] = useState(0);
   
   // Job match data state
   const [jobDetails, setJobDetails] = useState<{
@@ -366,9 +366,9 @@ export const BrowseTeachersPage: React.FC = () => {
     return (teachers || []).filter(teacher => {
       const matchPct = teacher.matchPercentage;
       if (matchPct === undefined) return false;
-      return matchPct >= matchPercentageRange[0] && matchPct <= matchPercentageRange[1];
+      return matchPct >= minMatchPercentage && matchPct <= 100;
     });
-  }, [teachers, jobId, matchPercentageRange]);
+  }, [teachers, jobId, minMatchPercentage]);
 
   // Group teachers by match strength when jobId is present
   const groupTeachersByMatchStrength = (teachersList: Teacher[]) => {
@@ -739,69 +739,43 @@ export const BrowseTeachersPage: React.FC = () => {
                   <div className="card p-6">
                     <div className="flex items-center justify-between mb-4">
                       <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                        Filter by Match Percentage
+                        Filter by Minimum Match Percentage
                       </label>
                       <span className="text-sm font-semibold text-primary-600 dark:text-primary-400">
-                        {matchPercentageRange[0]}% - {matchPercentageRange[1]}%
+                        {minMatchPercentage}% - 100%
                       </span>
                     </div>
                     <div className="relative py-4">
                       {/* Background track */}
                       <div className="absolute w-full h-2 bg-neutral-200 dark:bg-neutral-700 rounded-full top-1/2 -translate-y-1/2"></div>
-                      {/* Active range */}
+                      {/* Active range - from min to 100% */}
                       <div 
                         className="absolute h-2 bg-primary-600 dark:bg-primary-500 rounded-full top-1/2 -translate-y-1/2 transition-all duration-150"
                         style={{
-                          left: `${matchPercentageRange[0]}%`,
-                          width: `${matchPercentageRange[1] - matchPercentageRange[0]}%`
+                          left: `${minMatchPercentage}%`,
+                          width: `${100 - minMatchPercentage}%`
                         }}
                       ></div>
-                      {/* Min slider */}
+                      {/* Single slider for minimum percentage */}
                       <input
                         type="range"
                         min="0"
                         max="100"
                         step="1"
-                        value={matchPercentageRange[0]}
+                        value={minMatchPercentage}
                         onChange={(e) => {
-                          const newMin = parseInt(e.target.value);
-                          if (newMin <= matchPercentageRange[1]) {
-                            setMatchPercentageRange([newMin, matchPercentageRange[1]]);
-                          }
+                          setMinMatchPercentage(parseInt(e.target.value));
                         }}
-                        className="absolute w-full h-2 opacity-0 cursor-pointer z-20"
+                        className="w-full h-2 bg-transparent appearance-none cursor-pointer z-20"
                         style={{
                           WebkitAppearance: 'none',
                           appearance: 'none',
                         }}
                       />
-                      {/* Max slider */}
-                      <input
-                        type="range"
-                        min="0"
-                        max="100"
-                        step="1"
-                        value={matchPercentageRange[1]}
-                        onChange={(e) => {
-                          const newMax = parseInt(e.target.value);
-                          if (newMax >= matchPercentageRange[0]) {
-                            setMatchPercentageRange([matchPercentageRange[0], newMax]);
-                          }
-                        }}
-                        className="absolute w-full h-2 opacity-0 cursor-pointer z-20"
-                        style={{
-                          WebkitAppearance: 'none',
-                          appearance: 'none',
-                        }}
-                      />
-                      {/* Slider thumbs */}
+                      {/* Slider thumb */}
                       <div 
-                        className="absolute w-4 h-4 bg-primary-600 dark:bg-primary-500 rounded-full border-2 border-white dark:border-neutral-800 shadow-md top-1/2 -translate-y-1/2 -translate-x-1/2 z-10 cursor-pointer hover:scale-110 transition-transform"
-                        style={{ left: `${matchPercentageRange[0]}%` }}
-                      ></div>
-                      <div 
-                        className="absolute w-4 h-4 bg-primary-600 dark:bg-primary-500 rounded-full border-2 border-white dark:border-neutral-800 shadow-md top-1/2 -translate-y-1/2 -translate-x-1/2 z-10 cursor-pointer hover:scale-110 transition-transform"
-                        style={{ left: `${matchPercentageRange[1]}%` }}
+                        className="absolute w-4 h-4 bg-primary-600 dark:bg-primary-500 rounded-full border-2 border-white dark:border-neutral-800 shadow-md top-1/2 -translate-y-1/2 -translate-x-1/2 z-10 pointer-events-none transition-all duration-150"
+                        style={{ left: `${minMatchPercentage}%` }}
                       ></div>
                     </div>
                     <div className="flex justify-between text-xs text-neutral-500 dark:text-neutral-400 mt-1">
