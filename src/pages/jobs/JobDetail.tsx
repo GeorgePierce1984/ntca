@@ -117,6 +117,7 @@ const JobDetail: React.FC = () => {
   const [showSchoolProfile, setShowSchoolProfile] = useState(false);
   const [teacherProfile, setTeacherProfile] = useState<any>(null);
   const [loadingTeacherProfile, setLoadingTeacherProfile] = useState(false);
+  const [usingExistingCV, setUsingExistingCV] = useState(false);
   const [guestForm, setGuestForm] = useState({
     firstName: "",
     lastName: "",
@@ -137,6 +138,27 @@ const JobDetail: React.FC = () => {
     }
   }, [id, user]);
 
+  // Update form when teacher profile loads and form is open
+  useEffect(() => {
+    if (showApplicationForm && teacherProfile && user?.userType === "TEACHER") {
+      setGuestForm(prev => ({
+        firstName: teacherProfile.firstName || prev.firstName,
+        lastName: teacherProfile.lastName || prev.lastName,
+        email: user.email || prev.email,
+        phone: teacherProfile.phone || prev.phone,
+        city: teacherProfile.city || prev.city,
+        country: teacherProfile.country || prev.country,
+        coverLetter: prev.coverLetter, // Preserve any entered cover letter
+        cv: prev.cv, // Preserve any uploaded CV
+        createAccount: false,
+      }));
+      // Set using existing CV if available and no new CV uploaded
+      if (teacherProfile.resumeUrl && !prev.cv) {
+        setUsingExistingCV(true);
+      }
+    }
+  }, [teacherProfile, showApplicationForm, user]);
+
   const fetchTeacherProfile = async () => {
     if (!user || user.userType !== "TEACHER") return;
     
@@ -153,6 +175,21 @@ const JobDetail: React.FC = () => {
         const data = await response.json();
         if (data.teacher) {
           setTeacherProfile(data.teacher);
+          // Update form if it's already open
+          if (showApplicationForm) {
+            setGuestForm({
+              firstName: data.teacher.firstName || "",
+              lastName: data.teacher.lastName || "",
+              email: user.email || "",
+              phone: data.teacher.phone || "",
+              city: data.teacher.city || "",
+              country: data.teacher.country || "",
+              coverLetter: guestForm.coverLetter, // Preserve any entered cover letter
+              cv: guestForm.cv, // Preserve any uploaded CV
+              createAccount: false,
+            });
+            setUsingExistingCV(!!data.teacher.resumeUrl);
+          }
         }
       }
     } catch (error) {
@@ -235,18 +272,16 @@ const JobDetail: React.FC = () => {
       return;
     }
 
-    // Ensure teacher profile is loaded before opening form
+    // Open form immediately
+    setShowApplicationForm(true);
+
+    // Ensure teacher profile is loaded
     if (!teacherProfile && !loadingTeacherProfile) {
       await fetchTeacherProfile();
     }
 
-    // Wait for profile to load
-    if (loadingTeacherProfile) {
-      // Show loading state - form will open once profile is loaded
-      return;
-    }
-
     // Pre-fill form with teacher profile data (except cover letter)
+    // This will update when profile loads
     if (teacherProfile) {
       setGuestForm({
         firstName: teacherProfile.firstName || "",
@@ -256,9 +291,11 @@ const JobDetail: React.FC = () => {
         city: teacherProfile.city || "",
         country: teacherProfile.country || "",
         coverLetter: "",
-        cv: null, // CV file upload - will use existing resumeUrl if available
+        cv: null,
         createAccount: false,
       });
+      // Set using existing CV if available
+      setUsingExistingCV(!!teacherProfile.resumeUrl);
     } else {
       // Reset form if profile not available
       setGuestForm({
@@ -272,9 +309,8 @@ const JobDetail: React.FC = () => {
         cv: null,
         createAccount: false,
       });
+      setUsingExistingCV(false);
     }
-    // Open application form
-    setShowApplicationForm(true);
   };
 
   const handleViewApplicants = () => {
@@ -357,14 +393,20 @@ const JobDetail: React.FC = () => {
       }
       
       setGuestForm({ ...guestForm, cv: file });
+      setUsingExistingCV(false); // Clear existing CV flag when new file is uploaded
     }
+  };
+
+  const handleRemoveExistingCV = () => {
+    setUsingExistingCV(false);
+    // User will need to upload a new CV
   };
 
   const handleGuestApplication = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate CV is uploaded or teacher has existing CV
-    if (!guestForm.cv && !teacherProfile?.resumeUrl) {
+    // Validate CV is uploaded or teacher is using existing CV
+    if (!guestForm.cv && !usingExistingCV) {
       toast.error("Please upload your CV/Resume to continue");
       return;
     }
@@ -380,8 +422,8 @@ const JobDetail: React.FC = () => {
         if (guestForm.cv) {
           formData.append("cv", guestForm.cv);
         }
-        // If no new CV uploaded but teacher has existing resumeUrl, indicate to use existing
-        if (!guestForm.cv && teacherProfile?.resumeUrl) {
+        // If no new CV uploaded but teacher is using existing resumeUrl, indicate to use existing
+        if (!guestForm.cv && usingExistingCV) {
           formData.append("useExistingResume", "true");
         }
 
@@ -1635,48 +1677,99 @@ const JobDetail: React.FC = () => {
                 <label className="block text-sm font-medium mb-2">
                   Upload CV/Resume <span className="text-red-500">*</span>
                 </label>
-                {teacherProfile?.resumeUrl && !guestForm.cv && (
-                  <div className="mb-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                    <p className="text-sm text-blue-800 dark:text-blue-200">
-                      ✓ You have a CV on file. You can use it or upload a new one below.
-                    </p>
+                
+                {/* Show existing CV as file attachment */}
+                {usingExistingCV && teacherProfile?.resumeUrl && !guestForm.cv && (
+                  <div className="mb-3 flex items-center justify-between bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                    <div className="flex items-center gap-3">
+                      <FileText className="w-8 h-8 text-green-600 dark:text-green-400 flex-shrink-0" />
+                      <div>
+                        <p className="text-sm font-medium text-green-800 dark:text-green-200">
+                          CV on file
+                        </p>
+                        <p className="text-xs text-green-600 dark:text-green-400">
+                          Your existing CV will be used
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <a
+                        href={teacherProfile.resumeUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-green-700 dark:text-green-300 hover:underline"
+                      >
+                        View
+                      </a>
+                      <button
+                        type="button"
+                        onClick={handleRemoveExistingCV}
+                        className="p-1 hover:bg-green-100 dark:hover:bg-green-900/40 rounded-full transition-colors"
+                        title="Remove and upload different CV"
+                      >
+                        <X className="w-5 h-5 text-red-600 dark:text-red-400" />
+                      </button>
+                    </div>
                   </div>
                 )}
-                <div className="border-2 border-dashed border-neutral-300 dark:border-neutral-600 rounded-lg p-6 text-center">
-                  <input
-                    type="file"
-                    id="cv-upload"
-                    accept=".pdf,.doc,.docx"
-                    onChange={handleCVUpload}
-                    className="hidden"
-                    required={!teacherProfile?.resumeUrl}
-                  />
-                  <label
-                    htmlFor="cv-upload"
-                    className="cursor-pointer flex flex-col items-center gap-2"
-                  >
-                    <FileText className="w-8 h-8 text-neutral-400" />
-                    <span className="text-sm font-medium">
-                      {guestForm.cv ? guestForm.cv.name : "Click to upload your CV"}
-                    </span>
-                    <span className="text-xs text-neutral-500">
-                      PDF, DOC, or DOCX (max 10MB)
-                    </span>
-                  </label>
-                </div>
+
+                {/* Upload area - only show if not using existing CV */}
+                {(!usingExistingCV || guestForm.cv) && (
+                  <div className="border-2 border-dashed border-neutral-300 dark:border-neutral-600 rounded-lg p-6 text-center">
+                    <input
+                      type="file"
+                      id="cv-upload"
+                      accept=".pdf,.doc,.docx"
+                      onChange={handleCVUpload}
+                      className="hidden"
+                      required={!usingExistingCV}
+                    />
+                    <label
+                      htmlFor="cv-upload"
+                      className="cursor-pointer flex flex-col items-center gap-2"
+                    >
+                      <FileText className="w-8 h-8 text-neutral-400" />
+                      <span className="text-sm font-medium">
+                        {guestForm.cv ? guestForm.cv.name : "Click to upload your CV"}
+                      </span>
+                      <span className="text-xs text-neutral-500">
+                        PDF, DOC, or DOCX (max 10MB)
+                      </span>
+                    </label>
+                  </div>
+                )}
+
+                {/* Show uploaded file */}
                 {guestForm.cv && (
                   <div className="mt-2 flex items-center justify-between bg-neutral-50 dark:bg-neutral-700 p-3 rounded-lg">
-                    <span className="text-sm">{guestForm.cv.name}</span>
+                    <div className="flex items-center gap-3">
+                      <FileText className="w-6 h-6 text-blue-500 flex-shrink-0" />
+                      <div>
+                        <p className="text-sm font-medium">{guestForm.cv.name}</p>
+                        <p className="text-xs text-neutral-500">
+                          {(guestForm.cv.size / 1024 / 1024).toFixed(2)} MB
+                        </p>
+                      </div>
+                    </div>
                     <button
                       type="button"
-                      onClick={() => setGuestForm({...guestForm, cv: null})}
-                      className="text-red-600 hover:text-red-700"
+                      onClick={() => {
+                        setGuestForm({...guestForm, cv: null});
+                        // If teacher has existing CV, restore it
+                        if (teacherProfile?.resumeUrl) {
+                          setUsingExistingCV(true);
+                        }
+                      }}
+                      className="p-1 hover:bg-neutral-100 dark:hover:bg-neutral-600 rounded-full transition-colors"
+                      title="Remove uploaded CV"
                     >
-                      <X className="w-4 h-4" />
+                      <X className="w-5 h-5 text-red-600 dark:text-red-400" />
                     </button>
                   </div>
                 )}
-                {!guestForm.cv && !teacherProfile?.resumeUrl && (
+
+                {/* Error message if no CV */}
+                {!guestForm.cv && !usingExistingCV && (
                   <p className="text-red-500 text-sm mt-1">
                     CV/Resume is required
                   </p>
@@ -1697,7 +1790,7 @@ const JobDetail: React.FC = () => {
                 <Button
                   type="submit"
                   variant="gradient"
-                  disabled={applying || (!guestForm.cv && !teacherProfile?.resumeUrl)}
+                  disabled={applying || (!guestForm.cv && !usingExistingCV)}
                   className="flex-1"
                 >
                   {applying ? "Submitting..." : "Submit Application"}
