@@ -736,7 +736,7 @@ export const BrowseTeachersPage: React.FC = () => {
                 </motion.div>
               )}
 
-              {/* Match Percentage Car Odometer Style Dial - Show when jobId is present */}
+              {/* Match Percentage Semi-Circular Dial Filter - Show when jobId is present */}
               {jobId ? (
                 <div className="max-w-4xl mx-auto mb-8">
                   <div className="card p-6">
@@ -749,71 +749,126 @@ export const BrowseTeachersPage: React.FC = () => {
                       </span>
                     </div>
                     
-                    {/* Car Odometer Style Circular Dial */}
+                    {/* Semi-Circular Dial Gauge */}
                     <div className="flex flex-col items-center">
-                      <div className="relative w-80 h-80 mb-4">
-                        {/* Outer ring with color gradient */}
-                        <svg className="absolute inset-0 w-full h-full" viewBox="0 0 200 200">
+                      <div className="relative w-full max-w-lg mb-6">
+                        <svg className="w-full h-64" viewBox="0 0 400 200" preserveAspectRatio="xMidYMid meet">
                           <defs>
-                            <linearGradient id="colorGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                              <stop offset="0%" stopColor="#ef4444" /> {/* Red */}
+                            <linearGradient id="dialGradient" x1="0%" y1="100%" x2="100%" y1="100%">
+                              <stop offset="0%" stopColor="#ef4444" /> {/* Red - bottom left */}
                               <stop offset="30%" stopColor="#f97316" /> {/* Orange */}
                               <stop offset="50%" stopColor="#eab308" /> {/* Yellow */}
                               <stop offset="70%" stopColor="#fbbf24" /> {/* Light Yellow */}
-                              <stop offset="100%" stopColor="#22c55e" /> {/* Green */}
+                              <stop offset="100%" stopColor="#22c55e" /> {/* Green - top right */}
                             </linearGradient>
                           </defs>
                           
-                          {/* Background circle */}
-                          <circle
-                            cx="100"
-                            cy="100"
-                            r="85"
+                          {/* Background semi-circle */}
+                          <path
+                            d="M 50 180 A 150 150 0 0 1 350 180"
                             fill="none"
                             stroke="#e5e7eb"
-                            strokeWidth="8"
+                            strokeWidth="20"
+                            strokeLinecap="round"
                             className="dark:stroke-neutral-700"
                           />
                           
-                          {/* Color-coded arc based on selection */}
-                          <circle
-                            cx="100"
-                            cy="100"
-                            r="85"
-                            fill="none"
-                            stroke="url(#colorGradient)"
-                            strokeWidth="8"
-                            strokeDasharray={`${(roundedMinPercentage / 100) * 534} 534`}
-                            strokeDashoffset="133.5"
-                            strokeLinecap="round"
-                            className="transition-all duration-300"
-                            transform="rotate(-90 100 100)"
-                          />
+                          {/* Color-coded segments - filled from left to right */}
+                          {[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map((value) => {
+                            const startAngle = 180 - (value / 100) * 180; // 0% = 180° (left), 100% = 0° (right)
+                            const endAngle = 180 - ((value + 10) / 100) * 180;
+                            
+                            const radius = 150;
+                            const centerX = 200;
+                            const centerY = 180;
+                            
+                            const startX = centerX + radius * Math.cos((startAngle * Math.PI) / 180);
+                            const startY = centerY - radius * Math.sin((startAngle * Math.PI) / 180);
+                            const endX = centerX + radius * Math.cos((endAngle * Math.PI) / 180);
+                            const endY = centerY - radius * Math.sin((endAngle * Math.PI) / 180);
+                            
+                            // Color for this segment
+                            let segmentColor = '';
+                            if (value <= 30) {
+                              segmentColor = '#ef4444'; // red
+                            } else if (value <= 50) {
+                              segmentColor = '#f97316'; // orange
+                            } else if (value <= 70) {
+                              segmentColor = '#eab308'; // yellow
+                            } else {
+                              segmentColor = '#22c55e'; // green
+                            }
+                            
+                            const isSelected = roundedMinPercentage <= value;
+                            const isActive = roundedMinPercentage === value;
+                            
+                            if (!isSelected) return null;
+                            
+                            return (
+                              <path
+                                key={value}
+                                d={`M ${startX} ${startY} A ${radius} ${radius} 0 0 0 ${endX} ${endY}`}
+                                fill="none"
+                                stroke={segmentColor}
+                                strokeWidth={isActive ? "24" : "20"}
+                                strokeLinecap="round"
+                                className="transition-all duration-200"
+                                style={{
+                                  filter: isActive ? 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' : 'none',
+                                }}
+                              />
+                            );
+                          })}
+                          
+                          {/* Segment dividers */}
+                          {[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map((value) => {
+                            const angle = 180 - (value / 100) * 180;
+                            const radius = 150;
+                            const centerX = 200;
+                            const centerY = 180;
+                            
+                            const x1 = centerX + radius * Math.cos((angle * Math.PI) / 180);
+                            const y1 = centerY - radius * Math.sin((angle * Math.PI) / 180);
+                            const x2 = centerX + (radius - 20) * Math.cos((angle * Math.PI) / 180);
+                            const y2 = centerY - (radius - 20) * Math.sin((angle * Math.PI) / 180);
+                            
+                            return (
+                              <line
+                                key={`divider-${value}`}
+                                x1={x1}
+                                y1={y1}
+                                x2={x2}
+                                y2={y2}
+                                stroke="#ffffff"
+                                strokeWidth="2"
+                                opacity="0.8"
+                              />
+                            );
+                          })}
                         </svg>
                         
-                        {/* Numbers arranged in circle */}
+                        {/* Clickable number buttons positioned along the arc */}
                         {[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map((value) => {
-                          const angle = (value / 100) * 360 - 90; // Start from top, go clockwise
-                          const radius = 70;
-                          const centerX = 100;
-                          const centerY = 100;
+                          const angle = 180 - (value / 100) * 180; // 0% = 180° (left), 100% = 0° (right)
+                          const radius = 120; // Position numbers slightly inside the arc
+                          const centerX = 200;
+                          const centerY = 180;
                           
                           const x = centerX + radius * Math.cos((angle * Math.PI) / 180);
-                          const y = centerY + radius * Math.sin((angle * Math.PI) / 180);
+                          const y = centerY - radius * Math.sin((angle * Math.PI) / 180);
                           
-                          const isSelected = roundedMinPercentage <= value;
                           const isActive = roundedMinPercentage === value;
                           
                           // Color for number
                           let textColor = '';
                           if (value <= 30) {
-                            textColor = 'text-red-600 dark:text-red-400';
+                            textColor = '#ef4444'; // red
                           } else if (value <= 50) {
-                            textColor = 'text-orange-600 dark:text-orange-400';
+                            textColor = '#f97316'; // orange
                           } else if (value <= 70) {
-                            textColor = 'text-yellow-600 dark:text-yellow-400';
+                            textColor = '#eab308'; // yellow
                           } else {
-                            textColor = 'text-green-600 dark:text-green-400';
+                            textColor = '#22c55e'; // green
                           }
                           
                           return (
@@ -824,57 +879,36 @@ export const BrowseTeachersPage: React.FC = () => {
                                 absolute transform -translate-x-1/2 -translate-y-1/2 transition-all duration-200
                                 ${isActive 
                                   ? 'scale-125 font-bold z-10' 
-                                  : isSelected
-                                  ? 'scale-110 font-semibold z-5'
-                                  : 'hover:scale-110 font-medium opacity-50'
+                                  : 'hover:scale-110 font-semibold'
                                 }
-                                ${isSelected ? textColor : 'text-neutral-400 dark:text-neutral-500'}
                               `}
                               style={{
-                                left: `${x}px`,
-                                top: `${y}px`,
+                                left: `${(x / 400) * 100}%`,
+                                top: `${(y / 200) * 100}%`,
+                                color: textColor,
                               }}
                               title={`Filter: ${value}% - 100%`}
                             >
                               <div className={`
                                 w-10 h-10 rounded-full flex items-center justify-center text-sm
                                 ${isActive 
-                                  ? 'bg-white dark:bg-neutral-800 border-2 border-neutral-900 dark:border-neutral-100 shadow-lg' 
-                                  : isSelected
-                                  ? 'bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 shadow'
-                                  : 'bg-transparent'
+                                  ? 'bg-white dark:bg-neutral-800 border-2 shadow-lg' 
+                                  : 'bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 shadow'
                                 }
-                              `}>
+                              `}
+                              style={{
+                                borderColor: isActive ? textColor : undefined,
+                              }}
+                              >
                                 {value}
                               </div>
                             </button>
                           );
                         })}
-                        
-                        {/* Center pointer/indicator */}
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="relative">
-                            {/* Pointer line */}
-                            <div 
-                              className="absolute w-1 bg-neutral-900 dark:bg-neutral-100 origin-bottom transition-transform duration-300"
-                              style={{
-                                height: '60px',
-                                transform: `rotate(${(roundedMinPercentage / 100) * 360 - 90}deg)`,
-                                transformOrigin: 'bottom center',
-                                left: '50%',
-                                top: '50%',
-                                marginLeft: '-2px',
-                                marginTop: '-60px',
-                              }}
-                            />
-                            {/* Center dot */}
-                            <div className="w-4 h-4 rounded-full bg-neutral-900 dark:bg-neutral-100 border-2 border-white dark:border-neutral-800 shadow-lg"></div>
-                          </div>
-                        </div>
                       </div>
                       
                       {/* Current selection display */}
-                      <div className="text-center">
+                      <div className="text-center mt-4">
                         <div className="text-3xl font-bold mb-1" style={{
                           color: roundedMinPercentage <= 30 ? '#ef4444' : 
                                  roundedMinPercentage <= 50 ? '#f97316' : 
