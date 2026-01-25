@@ -88,9 +88,19 @@ export default function SpeedometerOptionA({
     return behavior === "hard" ? "Hiding matches below threshold" : "Boosting stronger matches first";
   }, [mode, behavior]);
 
-  // Colored arc - always shows full arc with gradient (gradient provides color coding)
-  // The threshold only affects needle position and filtering, not the arc display
-  const coloredArcD = useMemo(() => arcPath(cx, cy, r, startAngle, endAngle), [arcPath]);
+  // Colored arc - fills from threshold position to end (right side)
+  // Shows the range that matches the threshold
+  const coloredArcD = useMemo(() => {
+    // If threshold is null or 0, show full arc
+    if (threshold == null || threshold === 0) {
+      return arcPath(cx, cy, r, startAngle, endAngle);
+    }
+    // Calculate angle for threshold position
+    const norm = clamp01(Number(threshold) / 100);
+    const thresholdAngle = startAngle + (endAngle - startAngle) * norm;
+    // Arc from threshold position to end (right side)
+    return arcPath(cx, cy, r, thresholdAngle, endAngle);
+  }, [threshold, arcPath]);
 
   const emit = useCallback(
     (next: { threshold: number | null; mode: "filter" | "sort"; behavior: "hard" | "soft" }) => {
