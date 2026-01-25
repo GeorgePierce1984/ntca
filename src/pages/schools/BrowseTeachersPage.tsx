@@ -763,9 +763,9 @@ export const BrowseTeachersPage: React.FC = () => {
                             </linearGradient>
                           </defs>
                           
-                          {/* Background semi-circle */}
+                          {/* Background semi-circle - goes from left (180°) to right (0°) counter-clockwise */}
                           <path
-                            d="M 50 180 A 150 150 0 0 1 350 180"
+                            d="M 50 180 A 150 150 0 0 0 350 180"
                             fill="none"
                             stroke="#e5e7eb"
                             strokeWidth="20"
@@ -776,6 +776,7 @@ export const BrowseTeachersPage: React.FC = () => {
                           {/* Color-coded segments - filled from left to right */}
                           {[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map((value) => {
                             // Convert percentage to angle: 0% = 180° (left), 100% = 0° (right)
+                            // Angles go counter-clockwise from left to right
                             const startAngle = 180 - (value / 100) * 180;
                             const endAngle = 180 - ((value + 10) / 100) * 180;
                             
@@ -788,10 +789,6 @@ export const BrowseTeachersPage: React.FC = () => {
                             const startY = centerY - radius * Math.sin((startAngle * Math.PI) / 180);
                             const endX = centerX + radius * Math.cos((endAngle * Math.PI) / 180);
                             const endY = centerY - radius * Math.sin((endAngle * Math.PI) / 180);
-                            
-                            // Determine if this is a large arc (more than 180 degrees)
-                            const angleDiff = Math.abs(endAngle - startAngle);
-                            const largeArcFlag = angleDiff > 180 ? 1 : 0;
                             
                             // Color for this segment
                             let segmentColor = '';
@@ -810,11 +807,12 @@ export const BrowseTeachersPage: React.FC = () => {
                             
                             if (!isSelected) return null;
                             
-                            // Draw arc segment following the curve from left to right (counter-clockwise)
+                            // Draw arc segment following the curve from left to right (counter-clockwise, matching background)
+                            // Each segment is 18 degrees (180/10), so large arc flag is always 0
                             return (
                               <path
                                 key={value}
-                                d={`M ${startX} ${startY} A ${radius} ${radius} 0 ${largeArcFlag} 0 ${endX} ${endY}`}
+                                d={`M ${startX} ${startY} A ${radius} ${radius} 0 0 0 ${endX} ${endY}`}
                                 fill="none"
                                 stroke={segmentColor}
                                 strokeWidth={isActive ? "24" : "20"}
