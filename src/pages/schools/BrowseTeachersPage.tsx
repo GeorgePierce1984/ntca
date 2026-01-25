@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/Button";
 import { Paywall } from "@/components/paywall/Paywall";
 import { TeacherDetailModal } from "@/components/schools/TeacherDetailModal";
 import { MatchScoreRing } from "@/components/schools/MatchScoreRing";
+import { SpeedometerFilter } from "@/components/schools/SpeedometerFilter";
 import { canAccessPremiumFeatures } from "@/utils/subscription";
 import { motion } from "framer-motion";
 import { getCountryByName } from "@/data/countries";
@@ -93,16 +94,19 @@ export const BrowseTeachersPage: React.FC = () => {
     experience: "",
     location: "",
   });
-  const [minMatchPercentage, setMinMatchPercentage] = useState(0);
-  const [filterMode, setFilterMode] = useState<"hard" | "soft">("hard"); // "hard" = hide below threshold, "soft" = boost but show all
+  const [speedometerState, setSpeedometerState] = useState<{
+    threshold: number | null;
+    mode: "filter" | "sort";
+    behavior: "hard" | "soft";
+  }>({
+    threshold: 80,
+    mode: "filter",
+    behavior: "hard",
+  });
   
-  // Snap zones: Any, 60+, 70+, 80+, 90+, 95+
-  const snapZones = [0, 60, 70, 80, 90, 95];
-  
-  // Round to nearest snap zone
-  const roundedMinPercentage = snapZones.reduce((prev, curr) => 
-    Math.abs(curr - minMatchPercentage) < Math.abs(prev - minMatchPercentage) ? curr : prev
-  );
+  // Use threshold from speedometer, defaulting to 0 if null
+  const roundedMinPercentage = speedometerState.threshold ?? 0;
+  const filterMode = speedometerState.behavior;
   
   // Job match data state
   const [jobDetails, setJobDetails] = useState<{
@@ -744,175 +748,12 @@ export const BrowseTeachersPage: React.FC = () => {
 
               {/* Option A: Tap-to-Snap Speedometer - Show when jobId is present */}
               {jobId ? (
-                <div className="max-w-4xl mx-auto mb-8">
-                  <div className="card p-6">
-                    {/* Semi-Circular Dial Gauge */}
-                    <div className="flex flex-col items-center mb-6">
-                      <div className="relative w-full max-w-lg mb-4">
-                        <svg className="w-full h-64" viewBox="0 0 400 200" preserveAspectRatio="xMidYMid meet">
-                          <defs>
-                            <linearGradient id="dialGradient" x1="0%" y1="100%" x2="100%" y1="100%">
-                              <stop offset="0%" stopColor="#ef4444" /> {/* Red */}
-                              <stop offset="30%" stopColor="#f97316" /> {/* Orange */}
-                              <stop offset="50%" stopColor="#eab308" /> {/* Yellow */}
-                              <stop offset="70%" stopColor="#fbbf24" /> {/* Light Yellow */}
-                              <stop offset="100%" stopColor="#22c55e" /> {/* Green */}
-                            </linearGradient>
-                          </defs>
-                          
-                          {/* Background semi-circle */}
-                          <path
-                            d="M 50 180 A 150 150 0 0 1 350 180"
-                            fill="none"
-                            stroke="#e5e7eb"
-                            strokeWidth="20"
-                            strokeLinecap="round"
-                            className="dark:stroke-neutral-700"
-                          />
-                          
-                          {/* Color-coded segments - filled from left to right */}
-                          {[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map((value) => {
-                            const startAngle = 180 - (value / 100) * 180;
-                            const endAngle = 180 - ((value + 10) / 100) * 180;
-                            
-                            const radius = 150;
-                            const centerX = 200;
-                            const centerY = 180;
-                            
-                            const startX = centerX + radius * Math.cos((startAngle * Math.PI) / 180);
-                            const startY = centerY - radius * Math.sin((startAngle * Math.PI) / 180);
-                            const endX = centerX + radius * Math.cos((endAngle * Math.PI) / 180);
-                            const endY = centerY - radius * Math.sin((endAngle * Math.PI) / 180);
-                            
-                            // Color for this segment
-                            let segmentColor = '';
-                            if (value <= 30) {
-                              segmentColor = '#ef4444';
-                            } else if (value <= 50) {
-                              segmentColor = '#f97316';
-                            } else if (value <= 70) {
-                              segmentColor = '#eab308';
-                            } else {
-                              segmentColor = '#22c55e';
-                            }
-                            
-                            const isSelected = roundedMinPercentage <= value;
-                            
-                            if (!isSelected) return null;
-                            
-                            return (
-                              <path
-                                key={value}
-                                d={`M ${startX} ${startY} A ${radius} ${radius} 0 0 1 ${endX} ${endY}`}
-                                fill="none"
-                                stroke={segmentColor}
-                                strokeWidth="20"
-                                strokeLinecap="round"
-                                className="transition-all duration-200"
-                              />
-                            );
-                          })}
-                          
-                          {/* Needle pointing to selected threshold */}
-                          {roundedMinPercentage > 0 && (
-                            <g>
-                              <line
-                                x1="200"
-                                y1="180"
-                                x2={200 + 130 * Math.cos((180 - (roundedMinPercentage / 100) * 180) * Math.PI / 180)}
-                                y2={180 - 130 * Math.sin((180 - (roundedMinPercentage / 100) * 180) * Math.PI / 180)}
-                                stroke="#1f2937"
-                                strokeWidth="3"
-                                strokeLinecap="round"
-                                className="dark:stroke-neutral-100"
-                              />
-                              <circle
-                                cx="200"
-                                cy="180"
-                                r="6"
-                                fill="#1f2937"
-                                className="dark:fill-neutral-100"
-                              />
-                            </g>
-                          )}
-                        </svg>
-                        
-                        {/* Center readout */}
-                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                          <div className="text-center -mt-8">
-                            <div className="text-4xl font-bold text-neutral-900 dark:text-neutral-100">
-                              {roundedMinPercentage === 0 ? 'Any' : `${roundedMinPercentage}%+`}
-                            </div>
-                          </div>
-                        </div>
-                        
-                        {/* Snap zone buttons along the arc */}
-                        <div className="absolute inset-0 flex items-end justify-center pb-4">
-                          <div className="flex items-center gap-2">
-                            {snapZones.map((zone) => {
-                              const isActive = roundedMinPercentage === zone;
-                              return (
-                                <button
-                                  key={zone}
-                                  onClick={() => setMinMatchPercentage(zone)}
-                                  className={`
-                                    px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-200
-                                    ${isActive
-                                      ? 'bg-primary-600 text-white shadow-md'
-                                      : 'bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 border border-neutral-300 dark:border-neutral-600 hover:border-primary-500 dark:hover:border-primary-500'
-                                    }
-                                  `}
-                                >
-                                  {zone === 0 ? 'Any' : `${zone}+`}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Toggle chips: Hard Filter vs Soft Boost */}
-                    <div className="flex items-center justify-center gap-3 mb-4">
-                      <button
-                        onClick={() => setFilterMode("hard")}
-                        className={`
-                          px-6 py-2 rounded-full font-medium text-sm transition-all duration-200
-                          ${filterMode === "hard"
-                            ? 'bg-primary-600 text-white shadow-md'
-                            : 'bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 border border-neutral-300 dark:border-neutral-600 hover:border-primary-500 dark:hover:border-primary-500'
-                          }
-                        `}
-                      >
-                        Hard Filter
-                      </button>
-                      <button
-                        onClick={() => setFilterMode("soft")}
-                        className={`
-                          px-6 py-2 rounded-full font-medium text-sm transition-all duration-200
-                          ${filterMode === "soft"
-                            ? 'bg-primary-600 text-white shadow-md'
-                            : 'bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 border border-neutral-300 dark:border-neutral-600 hover:border-primary-500 dark:hover:border-primary-500'
-                          }
-                        `}
-                      >
-                        Soft Boost
-                      </button>
-                    </div>
-                    
-                    {/* Match count */}
-                    <div className="text-sm text-neutral-600 dark:text-neutral-400 text-center">
-                      {filterMode === "hard" ? (
-                        <>
-                          Showing <span className="font-semibold text-neutral-900 dark:text-neutral-100">{filteredTeachersByRange.length}</span> matches {roundedMinPercentage > 0 ? `above ${roundedMinPercentage}%` : ''}
-                        </>
-                      ) : (
-                        <>
-                          Showing <span className="font-semibold text-neutral-900 dark:text-neutral-100">{filteredTeachersByRange.length}</span> matches (sorted by match strength)
-                        </>
-                      )}
-                    </div>
-                  </div>
+                <div className="max-w-4xl mx-auto mb-8 flex justify-center">
+                  <SpeedometerFilter
+                    initialThreshold={80}
+                    snapThresholds={[null, 60, 70, 80, 95]}
+                    onChange={setSpeedometerState}
+                  />
                 </div>
               ) : (
                 /* Search and Filters - Show when no jobId */
