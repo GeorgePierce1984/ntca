@@ -749,8 +749,8 @@ export const BrowseTeachersPage: React.FC = () => {
                   {groupedTeachers.strong.length > 0 && (
                     <div>
                       <div className="flex items-center gap-3 mb-6">
-                        <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400" />
-                        <h2 className="text-2xl font-bold text-green-600 dark:text-green-400">
+                        <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
+                        <h2 className="text-lg font-semibold text-green-600 dark:text-green-400">
                           Strong Matches ({groupedTeachers.strong.length})
                         </h2>
                       </div>
@@ -766,8 +766,8 @@ export const BrowseTeachersPage: React.FC = () => {
                   {groupedTeachers.medium.length > 0 && (
                     <div>
                       <div className="flex items-center gap-3 mb-6">
-                        <CheckCircle className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
-                        <h2 className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
+                        <CheckCircle className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
+                        <h2 className="text-lg font-semibold text-yellow-600 dark:text-yellow-400">
                           Good Matches ({groupedTeachers.medium.length})
                         </h2>
                       </div>
@@ -783,8 +783,8 @@ export const BrowseTeachersPage: React.FC = () => {
                   {groupedTeachers.partial.length > 0 && (
                     <div>
                       <div className="flex items-center gap-3 mb-6">
-                        <CheckCircle className="w-6 h-6 text-neutral-500 dark:text-neutral-400" />
-                        <h2 className="text-2xl font-bold text-neutral-600 dark:text-neutral-400">
+                        <CheckCircle className="w-5 h-5 text-neutral-500 dark:text-neutral-400" />
+                        <h2 className="text-lg font-semibold text-neutral-600 dark:text-neutral-400">
                           Partial Matches ({groupedTeachers.partial.length})
                         </h2>
                       </div>
