@@ -661,16 +661,26 @@ export const BrowseTeachersPage: React.FC = () => {
                       </div>
                     )}
                     
-                    {/* Job Title */}
-                    {jobDetails ? (
-                      <h2 className="heading-2 mb-6">{jobDetails.title}</h2>
-                    ) : loadingJobMatchData ? (
-                      <div className="mb-6">
-                        <div className="h-8 w-48 bg-neutral-200 dark:bg-neutral-700 rounded animate-pulse"></div>
+                    {/* Job Title with Speedometer */}
+                    <div className="flex items-start justify-between gap-4 mb-6">
+                      <div className="flex-1">
+                        {jobDetails ? (
+                          <h2 className="heading-2">{jobDetails.title}</h2>
+                        ) : loadingJobMatchData ? (
+                          <div className="h-8 w-48 bg-neutral-200 dark:bg-neutral-700 rounded animate-pulse"></div>
+                        ) : (
+                          <h2 className="heading-2">Loading job details...</h2>
+                        )}
                       </div>
-                    ) : (
-                      <h2 className="heading-2 mb-6">Loading job details...</h2>
-                    )}
+                      {/* Speedometer on the right */}
+                      <div className="flex-shrink-0">
+                        <SpeedometerOptionA
+                          initialThreshold={null}
+                          snapThresholds={[null, 60, 70, 80, 95]}
+                          onChange={setSpeedometerState}
+                        />
+                      </div>
+                    </div>
                     
                     {/* Match Insights */}
                     {loadingJobMatchData ? (
@@ -749,17 +759,8 @@ export const BrowseTeachersPage: React.FC = () => {
                 </motion.div>
               )}
 
-              {/* Option A: Tap-to-Snap Speedometer - Show when jobId is present */}
-              {jobId ? (
-                <div className="max-w-4xl mx-auto mb-8 flex justify-center">
-                  <SpeedometerOptionA
-                    initialThreshold={null}
-                    snapThresholds={[null, 60, 70, 80, 95]}
-                    onChange={setSpeedometerState}
-                  />
-                </div>
-              ) : (
-                /* Search and Filters - Show when no jobId */
+              {/* Search and Filters - Show when no jobId */}
+              {!jobId && (
                 <div className="max-w-4xl mx-auto mb-8">
                   <div className="flex gap-4">
                     <div className="flex-1 relative">

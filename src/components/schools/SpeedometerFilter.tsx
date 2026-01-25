@@ -144,15 +144,12 @@ export default function SpeedometerOptionA({
       // Ensure cumulative increases to force clockwise
       nextRotation = targetAngle + 360;
     }
-    // Case 2: Going FROM a larger angle (like 81° for 95%) TO Any (270°)
-    // We want COUNTER-CLOCKWISE: 81° → 0° → 270°
+    // Case 2: Going FROM any angle TO Any (270°)
+    // We want COUNTER-CLOCKWISE: smaller angles → 0° → 270°, larger angles → 270°
     // To force counter-clockwise, cumulative must decrease
-    // If current cumulative is, say, 81°, we need to go backwards
-    // So we set cumulative to be less: 270° - 360° = -90°
-    // But we need to ensure it's actually less than current cumulative
-    else if (currentNormalized > 90 && targetNormalized === 270) {
-      // Current might be 81° (normalized) but cumulative could be 81°, 441°, etc.
-      // We want to go backwards, so subtract 360° from target
+    else if (targetNormalized === 270) {
+      // Current might be 18° (from 60+), 36° (from 70+), 81° (from 95+), etc.
+      // We want to go backwards to 270°, so subtract 360° from target
       // This makes cumulative decrease, forcing counter-clockwise
       const targetCumulative = targetAngle - 360;
       // Ensure it's less than current cumulative
