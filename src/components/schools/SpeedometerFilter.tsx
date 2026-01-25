@@ -76,26 +76,23 @@ export default function SpeedometerOptionA({
   const thresholdToNeedleRotation = useCallback(
     (t: number | null) => {
       // User requirements (angles measured from left/270°):
-      // 0% (Any) = 270° (left) ✓
-      // 60% = 18° from left = 270° + 18° = 288°
-      // 70% = 36° from left = 270° + 36° = 306°
-      // 80% = 54° from left = 270° + 54° = 324°
-      // 95% = 81° from left = 270° + 81° = 351°
-      // 100% = 90° from left = 270° + 90° = 360° = 0°
-      // Pattern analysis:
-      // - 60% → 18°: 18/60 = 0.3
-      // - 70% → 36°: 36/70 ≈ 0.514
-      // - 80% → 54°: 54/80 = 0.675
-      // - 95% → 81°: 81/95 ≈ 0.852
-      // - 100% → 90°: 90/100 = 0.9
-      // The relationship is non-linear. Using interpolation:
+      // 0% (Any) = 270° (left) - needle already points left, so rotation = 0°
+      // 60% = 288° (18° from left) - rotate 18° clockwise from left
+      // 70% = 306° (36° from left) - rotate 36° clockwise from left
+      // 80% = 324° (54° from left) - rotate 54° clockwise from left
+      // 95% = 351° (81° from left) - rotate 81° clockwise from left
+      // 100% = 0° (90° from left) - rotate 90° clockwise from left
+      // Needle line points left initially (270°), so:
+      // - 0% = 0° rotation (points left/270°)
+      // - 100% = 90° rotation (points right/0°)
       if (t == null || t === 0) {
-        return 270; // Any/0% points left (270°)
+        return 0; // Any/0% - no rotation, points left (270°)
       }
       const p = Number(t);
       let angleOffset: number;
       
       // Piecewise linear interpolation based on known points
+      // These are the angles from the left (270°) position
       if (p <= 60) {
         // 0% → 0°, 60% → 18°
         angleOffset = (p / 60) * 18;
@@ -113,10 +110,9 @@ export default function SpeedometerOptionA({
         angleOffset = 81 + ((p - 95) / 5) * (90 - 81);
       }
       
-      const ang = 270 + angleOffset;
-      // Normalize to 0-360 range
-      const rot = ang >= 360 ? ang - 360 : ang;
-      return rot;
+      // angleOffset is the rotation needed from the initial left position
+      // Since needle points left (270°) at 0° rotation, we rotate clockwise by angleOffset
+      return angleOffset;
     },
     []
   );
