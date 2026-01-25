@@ -88,16 +88,15 @@ export default function SpeedometerOptionA({
     return behavior === "hard" ? "Hiding matches below threshold" : "Boosting stronger matches first";
   }, [mode, behavior]);
 
-  // Calculate colored arc based on threshold
+  // Calculate colored arc based on threshold - fills from threshold to end
   const coloredArcD = useMemo(() => {
     if (threshold == null || threshold === 0) {
       return arcPath(cx, cy, r, startAngle, endAngle);
     }
-    const thresholdAngle = thresholdToNeedleRotation(threshold) + 90; // Convert back to polar angle
-    const norm = threshold == null ? 0 : clamp01(Number(threshold) / 100);
-    const ang = startAngle + (endAngle - startAngle) * norm;
-    return arcPath(cx, cy, r, ang, endAngle);
-  }, [threshold, arcPath, thresholdToNeedleRotation]);
+    const norm = clamp01(Number(threshold) / 100);
+    const thresholdAngle = startAngle + (endAngle - startAngle) * norm;
+    return arcPath(cx, cy, r, thresholdAngle, endAngle);
+  }, [threshold, arcPath]);
 
   const emit = useCallback(
     (next: { threshold: number | null; mode: "filter" | "sort"; behavior: "hard" | "soft" }) => {
