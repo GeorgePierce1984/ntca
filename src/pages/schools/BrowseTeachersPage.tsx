@@ -651,10 +651,10 @@ export const BrowseTeachersPage: React.FC = () => {
                   animate={{ opacity: 1, y: 0 }}
                   className="mb-8"
                 >
-                  <div className="card p-2">
+                  <div className="card p-10">
                     {/* Debug info - remove in production */}
                     {process.env.NODE_ENV === 'development' && (
-                      <div className="mb-2 p-2 bg-yellow-100 dark:bg-yellow-900/20 rounded text-xs">
+                      <div className="mb-4 p-2 bg-yellow-100 dark:bg-yellow-900/20 rounded text-xs">
                         Debug: jobId={jobId}, jobDetails={jobDetails ? 'loaded' : 'null'}, 
                         loading={loadingJobMatchData ? 'yes' : 'no'}, 
                         matchData={jobMatchData ? 'loaded' : 'null'}
@@ -665,8 +665,8 @@ export const BrowseTeachersPage: React.FC = () => {
                     <div className="flex items-end justify-between gap-2">
                       {/* Left side: Title and Match Insights */}
                       <div className="flex-1 flex flex-col">
-                        {/* Job Title */}
-                        <div className="mb-2">
+                        {/* Job Title - Top Left */}
+                        <div className="mb-4">
                           {jobDetails ? (
                             <h2 className="heading-2">{jobDetails.title}</h2>
                           ) : loadingJobMatchData ? (
