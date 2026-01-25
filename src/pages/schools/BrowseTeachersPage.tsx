@@ -649,7 +649,7 @@ export const BrowseTeachersPage: React.FC = () => {
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="mb-8"
+                  className="mb-[42px]"
                 >
                   <div className="card p-10">
                     {/* Debug info - remove in production */}
