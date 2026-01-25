@@ -742,34 +742,25 @@ export const BrowseTeachersPage: React.FC = () => {
                 </motion.div>
               )}
 
-              {/* Match Percentage Semi-Circular Dial Filter - Show when jobId is present */}
+              {/* Option A: Tap-to-Snap Speedometer - Show when jobId is present */}
               {jobId ? (
                 <div className="max-w-4xl mx-auto mb-8">
                   <div className="card p-6">
-                    <div className="flex items-center justify-between mb-6">
-                      <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                        Filter by Minimum Match Percentage
-                      </label>
-                      <span className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
-                        {roundedMinPercentage}% - 100%
-                      </span>
-                    </div>
-                    
                     {/* Semi-Circular Dial Gauge */}
-                    <div className="flex flex-col items-center">
-                      <div className="relative w-full max-w-lg mb-6">
+                    <div className="flex flex-col items-center mb-6">
+                      <div className="relative w-full max-w-lg mb-4">
                         <svg className="w-full h-64" viewBox="0 0 400 200" preserveAspectRatio="xMidYMid meet">
                           <defs>
                             <linearGradient id="dialGradient" x1="0%" y1="100%" x2="100%" y1="100%">
-                              <stop offset="0%" stopColor="#ef4444" /> {/* Red - bottom left */}
+                              <stop offset="0%" stopColor="#ef4444" /> {/* Red */}
                               <stop offset="30%" stopColor="#f97316" /> {/* Orange */}
                               <stop offset="50%" stopColor="#eab308" /> {/* Yellow */}
                               <stop offset="70%" stopColor="#fbbf24" /> {/* Light Yellow */}
-                              <stop offset="100%" stopColor="#22c55e" /> {/* Green - top right */}
+                              <stop offset="100%" stopColor="#22c55e" /> {/* Green */}
                             </linearGradient>
                           </defs>
                           
-                          {/* Background semi-circle - goes from left (180°) to right (0°) clockwise */}
+                          {/* Background semi-circle */}
                           <path
                             d="M 50 180 A 150 150 0 0 1 350 180"
                             fill="none"
@@ -781,8 +772,6 @@ export const BrowseTeachersPage: React.FC = () => {
                           
                           {/* Color-coded segments - filled from left to right */}
                           {[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map((value) => {
-                            // Convert percentage to angle: 0% = 180° (left), 100% = 0° (right)
-                            // Angles go clockwise from left to right (sweep flag 1)
                             const startAngle = 180 - (value / 100) * 180;
                             const endAngle = 180 - ((value + 10) / 100) * 180;
                             
@@ -790,7 +779,6 @@ export const BrowseTeachersPage: React.FC = () => {
                             const centerX = 200;
                             const centerY = 180;
                             
-                            // Calculate start and end points on the arc
                             const startX = centerX + radius * Math.cos((startAngle * Math.PI) / 180);
                             const startY = centerY - radius * Math.sin((startAngle * Math.PI) / 180);
                             const endX = centerX + radius * Math.cos((endAngle * Math.PI) / 180);
@@ -799,159 +787,130 @@ export const BrowseTeachersPage: React.FC = () => {
                             // Color for this segment
                             let segmentColor = '';
                             if (value <= 30) {
-                              segmentColor = '#ef4444'; // red
+                              segmentColor = '#ef4444';
                             } else if (value <= 50) {
-                              segmentColor = '#f97316'; // orange
+                              segmentColor = '#f97316';
                             } else if (value <= 70) {
-                              segmentColor = '#eab308'; // yellow
+                              segmentColor = '#eab308';
                             } else {
-                              segmentColor = '#22c55e'; // green
+                              segmentColor = '#22c55e';
                             }
                             
                             const isSelected = roundedMinPercentage <= value;
-                            const isActive = roundedMinPercentage === value;
                             
                             if (!isSelected) return null;
                             
-                            // Draw arc segment following the curve from left to right (clockwise, matching background)
                             return (
                               <path
                                 key={value}
                                 d={`M ${startX} ${startY} A ${radius} ${radius} 0 0 1 ${endX} ${endY}`}
                                 fill="none"
                                 stroke={segmentColor}
-                                strokeWidth={isActive ? "24" : "20"}
+                                strokeWidth="20"
                                 strokeLinecap="round"
                                 className="transition-all duration-200"
-                                style={{
-                                  filter: isActive ? 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' : 'none',
-                                }}
                               />
                             );
                           })}
                           
-                          {/* Segment dividers - full lines through the arc */}
-                          {[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map((value) => {
-                            const angle = 180 - (value / 100) * 180;
-                            const radius = 150;
-                            const centerX = 200;
-                            const centerY = 180;
-                            
-                            // Calculate points on the arc
-                            const x1 = centerX + radius * Math.cos((angle * Math.PI) / 180);
-                            const y1 = centerY - radius * Math.sin((angle * Math.PI) / 180);
-                            
-                            // Extend line through center and beyond
-                            const lineLength = radius + 30; // Extend beyond the arc
-                            const x2 = centerX + lineLength * Math.cos((angle * Math.PI) / 180);
-                            const y2 = centerY - lineLength * Math.sin((angle * Math.PI) / 180);
-                            
-                            return (
+                          {/* Needle pointing to selected threshold */}
+                          {roundedMinPercentage > 0 && (
+                            <g>
                               <line
-                                key={`divider-${value}`}
-                                x1={x1}
-                                y1={y1}
-                                x2={x2}
-                                y2={y2}
-                                stroke="#ffffff"
-                                strokeWidth="2"
-                                opacity="0.6"
+                                x1="200"
+                                y1="180"
+                                x2={200 + 130 * Math.cos((180 - (roundedMinPercentage / 100) * 180) * Math.PI / 180)}
+                                y2={180 - 130 * Math.sin((180 - (roundedMinPercentage / 100) * 180) * Math.PI / 180)}
+                                stroke="#1f2937"
+                                strokeWidth="3"
+                                strokeLinecap="round"
+                                className="dark:stroke-neutral-100"
                               />
-                            );
-                          })}
-                          
-                          {/* Percentage labels at key points - positioned outside and above the arc like speedometer */}
-                          {[0, 25, 50, 75, 100].map((value) => {
-                            const angle = 180 - (value / 100) * 180;
-                            const radius = 175; // Position labels well outside the arc
-                            const centerX = 200;
-                            const centerY = 180;
-                            
-                            const x = centerX + radius * Math.cos((angle * Math.PI) / 180);
-                            const y = centerY - radius * Math.sin((angle * Math.PI) / 180);
-                            
-                            const isEmphasized = value === 0 || value === 50 || value === 100;
-                            
-                            return (
-                              <text
-                                key={`label-${value}`}
-                                x={x}
-                                y={y}
-                                textAnchor="middle"
-                                dominantBaseline="middle"
-                                fill={isEmphasized ? "#1f2937" : "#9ca3af"}
-                                className="dark:fill-neutral-300 dark:fill-neutral-500"
-                                fontSize={isEmphasized ? "18" : "13"}
-                                fontWeight={isEmphasized ? "bold" : "normal"}
-                                opacity={isEmphasized ? "1" : "0.7"}
-                                style={{
-                                  pointerEvents: 'none',
-                                  userSelect: 'none',
-                                }}
-                              >
-                                {value}%
-                              </text>
-                            );
-                          })}
+                              <circle
+                                cx="200"
+                                cy="180"
+                                r="6"
+                                fill="#1f2937"
+                                className="dark:fill-neutral-100"
+                              />
+                            </g>
+                          )}
                         </svg>
                         
-                        {/* Clickable segments for selecting percentage */}
-                        <div className="absolute inset-0">
-                          {[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map((value, index) => {
-                            const angle = 180 - (value / 100) * 180;
-                            const radius = 150;
-                            const centerX = 200;
-                            const centerY = 180;
-                            
-                            // Create a clickable wedge shape for each segment
-                            const startAngle = 180 - (value / 100) * 180;
-                            const endAngle = 180 - ((value + 10) / 100) * 180;
-                            
-                            // Calculate bounding box for the segment
-                            const startX = centerX + radius * Math.cos((startAngle * Math.PI) / 180);
-                            const startY = centerY - radius * Math.sin((startAngle * Math.PI) / 180);
-                            const endX = centerX + radius * Math.cos((endAngle * Math.PI) / 180);
-                            const endY = centerY - radius * Math.sin((endAngle * Math.PI) / 180);
-                            
-                            // Position button at the center of the segment
-                            const midAngle = (startAngle + endAngle) / 2;
-                            const midRadius = 120;
-                            const x = centerX + midRadius * Math.cos((midAngle * Math.PI) / 180);
-                            const y = centerY - midRadius * Math.sin((midAngle * Math.PI) / 180);
-                            
-                            return (
-                              <button
-                                key={value}
-                                onClick={() => setMinMatchPercentage(value)}
-                                className="absolute transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full hover:bg-white/30 dark:hover:bg-white/20 transition-all duration-200 cursor-pointer z-10"
-                                style={{
-                                  left: `${(x / 400) * 100}%`,
-                                  top: `${(y / 200) * 100}%`,
-                                }}
-                                title={`Filter: ${value}% - 100%`}
-                              />
-                            );
-                          })}
+                        {/* Center readout */}
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                          <div className="text-center -mt-8">
+                            <div className="text-4xl font-bold text-neutral-900 dark:text-neutral-100">
+                              {roundedMinPercentage === 0 ? 'Any' : `${roundedMinPercentage}%+`}
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                      
-                      {/* Current selection display */}
-                      <div className="text-center mt-4">
-                        <div className="text-3xl font-bold mb-1" style={{
-                          color: roundedMinPercentage <= 30 ? '#ef4444' : 
-                                 roundedMinPercentage <= 50 ? '#f97316' : 
-                                 roundedMinPercentage <= 70 ? '#eab308' : '#22c55e'
-                        }}>
-                          {roundedMinPercentage}%
-                        </div>
-                        <div className="text-xs text-neutral-500 dark:text-neutral-400">
-                          Minimum Match Threshold
+                        
+                        {/* Snap zone buttons along the arc */}
+                        <div className="absolute inset-0 flex items-end justify-center pb-4">
+                          <div className="flex items-center gap-2">
+                            {snapZones.map((zone) => {
+                              const isActive = roundedMinPercentage === zone;
+                              return (
+                                <button
+                                  key={zone}
+                                  onClick={() => setMinMatchPercentage(zone)}
+                                  className={`
+                                    px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-200
+                                    ${isActive
+                                      ? 'bg-primary-600 text-white shadow-md'
+                                      : 'bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 border border-neutral-300 dark:border-neutral-600 hover:border-primary-500 dark:hover:border-primary-500'
+                                    }
+                                  `}
+                                >
+                                  {zone === 0 ? 'Any' : `${zone}+`}
+                                </button>
+                              );
+                            })}
+                          </div>
                         </div>
                       </div>
                     </div>
                     
-                    <div className="mt-6 text-sm text-neutral-600 dark:text-neutral-400 text-center">
-                      Showing <span className="font-semibold text-neutral-900 dark:text-neutral-100">{filteredTeachersByRange.length}</span> of <span className="font-semibold text-neutral-900 dark:text-neutral-100">{teachers.length}</span> matches
+                    {/* Toggle chips: Hard Filter vs Soft Boost */}
+                    <div className="flex items-center justify-center gap-3 mb-4">
+                      <button
+                        onClick={() => setFilterMode("hard")}
+                        className={`
+                          px-6 py-2 rounded-full font-medium text-sm transition-all duration-200
+                          ${filterMode === "hard"
+                            ? 'bg-primary-600 text-white shadow-md'
+                            : 'bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 border border-neutral-300 dark:border-neutral-600 hover:border-primary-500 dark:hover:border-primary-500'
+                          }
+                        `}
+                      >
+                        Hard Filter
+                      </button>
+                      <button
+                        onClick={() => setFilterMode("soft")}
+                        className={`
+                          px-6 py-2 rounded-full font-medium text-sm transition-all duration-200
+                          ${filterMode === "soft"
+                            ? 'bg-primary-600 text-white shadow-md'
+                            : 'bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 border border-neutral-300 dark:border-neutral-600 hover:border-primary-500 dark:hover:border-primary-500'
+                          }
+                        `}
+                      >
+                        Soft Boost
+                      </button>
+                    </div>
+                    
+                    {/* Match count */}
+                    <div className="text-sm text-neutral-600 dark:text-neutral-400 text-center">
+                      {filterMode === "hard" ? (
+                        <>
+                          Showing <span className="font-semibold text-neutral-900 dark:text-neutral-100">{filteredTeachersByRange.length}</span> matches {roundedMinPercentage > 0 ? `above ${roundedMinPercentage}%` : ''}
+                        </>
+                      ) : (
+                        <>
+                          Showing <span className="font-semibold text-neutral-900 dark:text-neutral-100">{filteredTeachersByRange.length}</span> matches (sorted by match strength)
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
