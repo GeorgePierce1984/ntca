@@ -94,9 +94,15 @@ export const BrowseTeachersPage: React.FC = () => {
     location: "",
   });
   const [minMatchPercentage, setMinMatchPercentage] = useState(0);
+  const [filterMode, setFilterMode] = useState<"hard" | "soft">("hard"); // "hard" = hide below threshold, "soft" = boost but show all
   
-  // Round to nearest 10 for odometer increments
-  const roundedMinPercentage = Math.floor(minMatchPercentage / 10) * 10;
+  // Snap zones: Any, 60+, 70+, 80+, 90+, 95+
+  const snapZones = [0, 60, 70, 80, 90, 95];
+  
+  // Round to nearest snap zone
+  const roundedMinPercentage = snapZones.reduce((prev, curr) => 
+    Math.abs(curr - minMatchPercentage) < Math.abs(prev - minMatchPercentage) ? curr : prev
+  );
   
   // Job match data state
   const [jobDetails, setJobDetails] = useState<{
