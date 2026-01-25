@@ -649,7 +649,7 @@ export const BrowseTeachersPage: React.FC = () => {
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="mb-4 flex items-start gap-4"
+                  className="mt-4 mb-4 flex items-start gap-4"
                 >
                   {/* Title Box - Left */}
                   <div className="flex-1 card p-10">
@@ -662,8 +662,8 @@ export const BrowseTeachersPage: React.FC = () => {
                       </div>
                     )}
                     
-                    {/* Job Title - Top */}
-                    <div className="mb-4">
+                    {/* Job Title - Top (moved up 5pts) */}
+                    <div className="mb-4 -mt-[5px]">
                       {jobDetails ? (
                         <h2 className="heading-2">{jobDetails.title}</h2>
                       ) : loadingJobMatchData ? (
