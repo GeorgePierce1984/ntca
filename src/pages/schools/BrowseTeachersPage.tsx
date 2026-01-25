@@ -763,9 +763,9 @@ export const BrowseTeachersPage: React.FC = () => {
                             </linearGradient>
                           </defs>
                           
-                          {/* Background semi-circle - goes from left (180°) to right (0°) counter-clockwise */}
+                          {/* Background semi-circle - goes from left (180°) to right (0°) clockwise */}
                           <path
-                            d="M 50 180 A 150 150 0 0 0 350 180"
+                            d="M 50 180 A 150 150 0 0 1 350 180"
                             fill="none"
                             stroke="#e5e7eb"
                             strokeWidth="20"
@@ -776,7 +776,7 @@ export const BrowseTeachersPage: React.FC = () => {
                           {/* Color-coded segments - filled from left to right */}
                           {[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map((value) => {
                             // Convert percentage to angle: 0% = 180° (left), 100% = 0° (right)
-                            // Angles go counter-clockwise from left to right
+                            // Angles go clockwise from left to right (sweep flag 1)
                             const startAngle = 180 - (value / 100) * 180;
                             const endAngle = 180 - ((value + 10) / 100) * 180;
                             
@@ -807,12 +807,11 @@ export const BrowseTeachersPage: React.FC = () => {
                             
                             if (!isSelected) return null;
                             
-                            // Draw arc segment following the curve from left to right (counter-clockwise, matching background)
-                            // Each segment is 18 degrees (180/10), so large arc flag is always 0
+                            // Draw arc segment following the curve from left to right (clockwise, matching background)
                             return (
                               <path
                                 key={value}
-                                d={`M ${startX} ${startY} A ${radius} ${radius} 0 0 0 ${endX} ${endY}`}
+                                d={`M ${startX} ${startY} A ${radius} ${radius} 0 0 1 ${endX} ${endY}`}
                                 fill="none"
                                 stroke={segmentColor}
                                 strokeWidth={isActive ? "24" : "20"}
@@ -855,10 +854,10 @@ export const BrowseTeachersPage: React.FC = () => {
                             );
                           })}
                           
-                          {/* Percentage labels at key points */}
+                          {/* Percentage labels at key points - positioned outside and above the arc like speedometer */}
                           {[0, 25, 50, 75, 100].map((value) => {
                             const angle = 180 - (value / 100) * 180;
-                            const radius = 140; // Position labels slightly outside the arc
+                            const radius = 175; // Position labels well outside the arc
                             const centerX = 200;
                             const centerY = 180;
                             
@@ -876,7 +875,7 @@ export const BrowseTeachersPage: React.FC = () => {
                                 dominantBaseline="middle"
                                 fill={isEmphasized ? "#1f2937" : "#9ca3af"}
                                 className="dark:fill-neutral-300 dark:fill-neutral-500"
-                                fontSize={isEmphasized ? "16" : "12"}
+                                fontSize={isEmphasized ? "18" : "13"}
                                 fontWeight={isEmphasized ? "bold" : "normal"}
                                 opacity={isEmphasized ? "1" : "0.7"}
                                 style={{
@@ -890,22 +889,35 @@ export const BrowseTeachersPage: React.FC = () => {
                           })}
                         </svg>
                         
-                        {/* Clickable area for selecting percentage */}
+                        {/* Clickable segments for selecting percentage */}
                         <div className="absolute inset-0">
-                          {[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map((value) => {
+                          {[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map((value, index) => {
                             const angle = 180 - (value / 100) * 180;
-                            const radius = 120;
+                            const radius = 150;
                             const centerX = 200;
                             const centerY = 180;
                             
-                            const x = centerX + radius * Math.cos((angle * Math.PI) / 180);
-                            const y = centerY - radius * Math.sin((angle * Math.PI) / 180);
+                            // Create a clickable wedge shape for each segment
+                            const startAngle = 180 - (value / 100) * 180;
+                            const endAngle = 180 - ((value + 10) / 100) * 180;
+                            
+                            // Calculate bounding box for the segment
+                            const startX = centerX + radius * Math.cos((startAngle * Math.PI) / 180);
+                            const startY = centerY - radius * Math.sin((startAngle * Math.PI) / 180);
+                            const endX = centerX + radius * Math.cos((endAngle * Math.PI) / 180);
+                            const endY = centerY - radius * Math.sin((endAngle * Math.PI) / 180);
+                            
+                            // Position button at the center of the segment
+                            const midAngle = (startAngle + endAngle) / 2;
+                            const midRadius = 120;
+                            const x = centerX + midRadius * Math.cos((midAngle * Math.PI) / 180);
+                            const y = centerY - midRadius * Math.sin((midAngle * Math.PI) / 180);
                             
                             return (
                               <button
                                 key={value}
                                 onClick={() => setMinMatchPercentage(value)}
-                                className="absolute transform -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-full hover:bg-white/20 dark:hover:bg-white/10 transition-all duration-200"
+                                className="absolute transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full hover:bg-white/30 dark:hover:bg-white/20 transition-all duration-200 cursor-pointer z-10"
                                 style={{
                                   left: `${(x / 400) * 100}%`,
                                   top: `${(y / 200) * 100}%`,
