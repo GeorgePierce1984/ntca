@@ -141,21 +141,24 @@ const JobDetail: React.FC = () => {
   // Update form when teacher profile loads and form is open
   useEffect(() => {
     if (showApplicationForm && teacherProfile && user?.userType === "TEACHER") {
-      setGuestForm(prev => ({
-        firstName: teacherProfile.firstName || prev.firstName,
-        lastName: teacherProfile.lastName || prev.lastName,
-        email: user.email || prev.email,
-        phone: teacherProfile.phone || prev.phone,
-        city: teacherProfile.city || prev.city,
-        country: teacherProfile.country || prev.country,
-        coverLetter: prev.coverLetter, // Preserve any entered cover letter
-        cv: prev.cv, // Preserve any uploaded CV
-        createAccount: false,
-      }));
-      // Set using existing CV if available and no new CV uploaded
-      if (teacherProfile.resumeUrl && !prev.cv) {
-        setUsingExistingCV(true);
-      }
+      setGuestForm(prev => {
+        const updated = {
+          firstName: teacherProfile.firstName || prev.firstName,
+          lastName: teacherProfile.lastName || prev.lastName,
+          email: user.email || prev.email,
+          phone: teacherProfile.phone || prev.phone,
+          city: teacherProfile.city || prev.city,
+          country: teacherProfile.country || prev.country,
+          coverLetter: prev.coverLetter, // Preserve any entered cover letter
+          cv: prev.cv, // Preserve any uploaded CV
+          createAccount: false,
+        };
+        // Set using existing CV if available and no new CV uploaded
+        if (teacherProfile.resumeUrl && !prev.cv) {
+          setUsingExistingCV(true);
+        }
+        return updated;
+      });
     }
   }, [teacherProfile, showApplicationForm, user]);
 
