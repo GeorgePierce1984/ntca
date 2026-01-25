@@ -13,6 +13,7 @@ import {
   Award,
   Languages,
   User,
+  ArrowLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Paywall } from "@/components/paywall/Paywall";
@@ -731,6 +732,17 @@ export const BrowseTeachersPage: React.FC = () => {
                         No match data available
                       </div>
                     ) : null}
+                    
+                    {/* Return to Dashboard Button - Bottom Left */}
+                    <div className="mt-auto pt-4">
+                      <Button
+                        variant="secondary"
+                        leftIcon={<ArrowLeft className="w-4 h-4" />}
+                        onClick={() => navigate("/schools/dashboard")}
+                      >
+                        Return to Dashboard
+                      </Button>
+                    </div>
                   </div>
                   
                   {/* Match Threshold Box - Right (stays in current position) */}
