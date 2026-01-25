@@ -75,44 +75,44 @@ export default function SpeedometerOptionA({
 
   const thresholdToNeedleRotation = useCallback(
     (t: number | null) => {
-      // User requirements (angles measured from left/270°):
-      // 0% (Any) = 270° (left) - needle already points left, so rotation = 0°
-      // 60% = 288° (18° from left) - rotate 18° clockwise from left
-      // 70% = 306° (36° from left) - rotate 36° clockwise from left
-      // 80% = 324° (54° from left) - rotate 54° clockwise from left
-      // 95% = 351° (81° from left) - rotate 81° clockwise from left
-      // 100% = 0° (90° from left) - rotate 90° clockwise from left
-      // Needle line points left initially (270°), so:
-      // - 0% = 0° rotation (points left/270°)
-      // - 100% = 90° rotation (points right/0°)
+      // User requirements (absolute angles where 0° = straight up):
+      // 0% (Any) = 270° absolute (left)
+      // 60% = 18° absolute (18° clockwise from up)
+      // 70% = 36° absolute (36° clockwise from up)
+      // 80% = 54° absolute (54° clockwise from up)
+      // 95% = 81° absolute (81° clockwise from up)
+      // 100% = 90° absolute (right)
+      // Needle line points up initially (0°), so rotation = absolute angle
       if (t == null || t === 0) {
-        return 0; // Any/0% - no rotation, points left (270°)
+        return 270; // Any/0% - rotate 270° clockwise from up to point left
       }
       const p = Number(t);
-      let angleOffset: number;
+      let absoluteAngle: number;
       
       // Piecewise linear interpolation based on known points
-      // These are the angles from the left (270°) position
+      // These are absolute angles where 0° = up
       if (p <= 60) {
-        // 0% → 0°, 60% → 18°
-        angleOffset = (p / 60) * 18;
+        // 0% → 270°, 60% → 18°
+        // Going clockwise from 270° to 18°: 270° → 360° (90°) + 0° → 18° (18°) = 108° total
+        const rotationFrom270 = (p / 60) * 108; // 108° clockwise rotation
+        absoluteAngle = (270 + rotationFrom270) % 360;
       } else if (p <= 70) {
         // 60% → 18°, 70% → 36°
-        angleOffset = 18 + ((p - 60) / 10) * (36 - 18);
+        absoluteAngle = 18 + ((p - 60) / 10) * (36 - 18);
       } else if (p <= 80) {
         // 70% → 36°, 80% → 54°
-        angleOffset = 36 + ((p - 70) / 10) * (54 - 36);
+        absoluteAngle = 36 + ((p - 70) / 10) * (54 - 36);
       } else if (p <= 95) {
         // 80% → 54°, 95% → 81°
-        angleOffset = 54 + ((p - 80) / 15) * (81 - 54);
+        absoluteAngle = 54 + ((p - 80) / 15) * (81 - 54);
       } else {
         // 95% → 81°, 100% → 90°
-        angleOffset = 81 + ((p - 95) / 5) * (90 - 81);
+        absoluteAngle = 81 + ((p - 95) / 5) * (90 - 81);
       }
       
-      // angleOffset is the rotation needed from the initial left position
-      // Since needle points left (270°) at 0° rotation, we rotate clockwise by angleOffset
-      return angleOffset;
+      // Normalize to 0-360 range
+      const rot = ((absoluteAngle % 360) + 360) % 360;
+      return rot;
     },
     []
   );
@@ -242,8 +242,8 @@ export default function SpeedometerOptionA({
               }}
               aria-hidden="true"
             >
-              {/* Needle line pointing left initially (towards 270°), will rotate clockwise along arc */}
-              <line x1={cx} y1={cy} x2={cx - r} y2={cy} stroke="#0f172a" strokeWidth="6" strokeLinecap="round" className="dark:stroke-slate-100" />
+              {/* Needle line pointing up initially (towards 0°), will rotate to absolute angles */}
+              <line x1={cx} y1={cy} x2={cx} y2={cy - r} stroke="#0f172a" strokeWidth="6" strokeLinecap="round" className="dark:stroke-slate-100" />
               <circle cx={cx} cy={cy} r={16} fill="#0f172a" className="dark:fill-slate-100" />
               <circle cx={cx} cy={cy} r={9} fill="white" opacity="0.12" />
             </g>
