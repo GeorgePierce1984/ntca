@@ -1647,8 +1647,8 @@ export const SchoolDashboardPage: React.FC = () => {
                                   </div>
                                 </div>
 
-                                {/* View Matches Button - Bottom Right */}
-                                <div className="flex justify-end">
+                                {/* View Matches and Applicants Buttons - Bottom Right */}
+                                <div className="flex justify-end gap-2">
                                   <Button
                                     variant="secondary"
                                     size="sm"
@@ -1657,6 +1657,14 @@ export const SchoolDashboardPage: React.FC = () => {
                                     className={jobMatches[job.id].totalMatches === 0 ? "opacity-50 cursor-not-allowed" : ""}
                                   >
                                     View Matches
+                                  </Button>
+                                  <Button
+                                    variant="secondary"
+                                    size="sm"
+                                    leftIcon={<Eye className="w-4 h-4" />}
+                                    onClick={() => setActiveTab("applicants")}
+                                  >
+                                    {job._count.applications} Applicants
                                   </Button>
                                 </div>
                               </div>
@@ -1692,14 +1700,6 @@ export const SchoolDashboardPage: React.FC = () => {
                           )}
                         </div>
                         <div className="flex items-center gap-2 ml-4">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            leftIcon={<Eye className="w-4 h-4" />}
-                            onClick={() => setActiveTab("applicants")}
-                          >
-                            {job._count.applications} Applicants
-                          </Button>
                           <Button
                             variant="ghost"
                             size="sm"
