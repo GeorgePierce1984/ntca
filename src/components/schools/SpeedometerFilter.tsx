@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useCallback } from "react";
+import React, { useMemo, useState, useCallback, useEffect } from "react";
 
 /**
  * Option A: Tap-to-Snap Speedometer (React)
@@ -19,6 +19,9 @@ export default function SpeedometerOptionA({
   width = 420,
 }) {
   const [threshold, setThreshold] = useState<number | null>(initialThreshold);
+  // Track cumulative rotation to ensure clockwise movement
+  const [cumulativeRotation, setCumulativeRotation] = useState(270);
+  const prevRotationRef = React.useRef(270);
 
   // Unique ids so gradients/filters don't collide if you render multiple gauges
   const uid = React.useId();
@@ -74,7 +77,7 @@ export default function SpeedometerOptionA({
   const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
 
   const thresholdToNeedleRotation = useCallback(
-    (t: number | null) => {
+    (t: number | null, currentRotation: number = 270) => {
       // User requirements (absolute angles where 0° = straight up):
       // 0% (Any) = 270° absolute (left)
       // 60% = 18° absolute (18° clockwise from up)
@@ -93,9 +96,11 @@ export default function SpeedometerOptionA({
       // These are absolute angles where 0° = up
       if (p <= 60) {
         // 0% → 270°, 60% → 18°
-        // Going clockwise from 270° to 18°: 270° → 360° (90°) + 0° → 18° (18°) = 108° total
-        const rotationFrom270 = (p / 60) * 108; // 108° clockwise rotation
-        absoluteAngle = (270 + rotationFrom270) % 360;
+        // To go clockwise from 270° to 18°, we need to wrap: 270° → 360° → 18°
+        // Calculate the clockwise rotation: (p/60) * 108 degrees
+        const clockwiseRotation = (p / 60) * 108; // 108° clockwise from 270° to 18°
+        const result = 270 + clockwiseRotation;
+        absoluteAngle = result >= 360 ? result - 360 : result;
       } else if (p <= 70) {
         // 60% → 18°, 70% → 36°
         absoluteAngle = 18 + ((p - 60) / 10) * (36 - 18);
@@ -117,7 +122,34 @@ export default function SpeedometerOptionA({
     []
   );
 
-  const rotation = useMemo(() => thresholdToNeedleRotation(threshold), [thresholdToNeedleRotation, threshold]);
+  // Calculate target angle
+  const targetAngle = useMemo(() => thresholdToNeedleRotation(threshold), [thresholdToNeedleRotation, threshold]);
+  
+  // Update cumulative rotation to ensure clockwise movement
+  useEffect(() => {
+    const currentNormalized = prevRotationRef.current % 360;
+    const targetNormalized = targetAngle % 360;
+    
+    // If target is less than current (wrapping case), add 360 to ensure clockwise
+    let nextRotation = targetAngle;
+    if (targetNormalized < currentNormalized && targetNormalized !== currentNormalized) {
+      // Find the next occurrence of targetAngle that's greater than current
+      // This forces clockwise rotation through 360°
+      nextRotation = targetAngle + 360;
+    } else if (targetNormalized > currentNormalized) {
+      // Normal case: target is greater, use as-is
+      nextRotation = targetAngle;
+    } else {
+      // Same angle, no change needed
+      return;
+    }
+    
+    prevRotationRef.current = nextRotation;
+    setCumulativeRotation(nextRotation);
+  }, [targetAngle]);
+  
+  // Use cumulative rotation for display (normalized)
+  const rotation = cumulativeRotation % 360;
 
   const readout = useMemo(() => {
     if (threshold == null) return { main: "Any", suffix: "" };
@@ -140,13 +172,21 @@ export default function SpeedometerOptionA({
     (next: Partial<{ threshold: number | null; mode: "filter" | "sort"; behavior: "hard" | "soft" }>) => {
       // next: partial
       const nextState = {
-        threshold: next.threshold ?? threshold,
-        mode: next.mode ?? mode,
-        behavior: next.behavior ?? behavior,
+        threshold: next.threshold !== undefined ? next.threshold : threshold,
+        mode: next.mode !== undefined ? next.mode : mode,
+        behavior: next.behavior !== undefined ? next.behavior : behavior,
       };
-      if (next.threshold !== undefined) setThreshold(next.threshold);
-      if (next.mode !== undefined) setMode(next.mode);
-      if (next.behavior !== undefined) setBehavior(next.behavior);
+      // Always update state and emit, even if value appears the same (handles null case)
+      if (next.threshold !== undefined) {
+        setThreshold(next.threshold);
+      }
+      if (next.mode !== undefined) {
+        setMode(next.mode);
+      }
+      if (next.behavior !== undefined) {
+        setBehavior(next.behavior);
+      }
+      // Always emit the new state
       emit(nextState);
     },
     [threshold, mode, behavior, emit]
