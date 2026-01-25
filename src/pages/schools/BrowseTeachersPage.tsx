@@ -94,6 +94,21 @@ export const BrowseTeachersPage: React.FC = () => {
     location: "",
   });
   
+  // Job match data state
+  const [jobDetails, setJobDetails] = useState<{
+    id: string;
+    title: string;
+  } | null>(null);
+  const [jobMatchData, setJobMatchData] = useState<{
+    totalMatches: number;
+    byStrength: {
+      strong: number;
+      medium: number;
+      partial: number;
+    };
+  } | null>(null);
+  const [loadingJobMatchData, setLoadingJobMatchData] = useState(false);
+  
   // Get URL parameters for match filtering
   const jobId = searchParams.get("jobId");
   const matchStrength = searchParams.get("matchStrength"); // "strong", "medium", "partial"
@@ -123,6 +138,53 @@ export const BrowseTeachersPage: React.FC = () => {
       setSubscriptionLoading(false);
     }
   }, [user]);
+
+  // Fetch job details and match data
+  const fetchJobDetailsAndMatches = useCallback(async (jobId: string) => {
+    const token = localStorage.getItem("authToken");
+    if (!token) return;
+
+    setLoadingJobMatchData(true);
+    try {
+      // Fetch job details
+      const jobResponse = await fetch(`/api/jobs/${jobId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (jobResponse.ok) {
+        const jobData = await jobResponse.json();
+        setJobDetails({
+          id: jobData.job.id,
+          title: jobData.job.title,
+        });
+      }
+
+      // Fetch match data
+      const matchResponse = await fetch(`/api/jobs/${jobId}/matches`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (matchResponse.ok) {
+        const matchData = await matchResponse.json();
+        setJobMatchData({
+          totalMatches: matchData.totalMatches || 0,
+          byStrength: matchData.byStrength || {
+            strong: 0,
+            medium: 0,
+            partial: 0,
+          },
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching job details and matches:", error);
+    } finally {
+      setLoadingJobMatchData(false);
+    }
+  }, []);
 
   // Fetch match data for teachers if jobId is provided
   const fetchTeacherMatches = useCallback(async (teacherIds: string[], jobId: string) => {
@@ -269,7 +331,12 @@ export const BrowseTeachersPage: React.FC = () => {
     // Fetch data on mount
     fetchTeachers();
     fetchSubscriptionStatus();
-  }, [isAuthenticated, user, navigate, fetchTeachers, fetchSubscriptionStatus]);
+    
+    // If jobId is present, fetch job details and match data
+    if (jobId) {
+      fetchJobDetailsAndMatches(jobId);
+    }
+  }, [isAuthenticated, user, navigate, fetchTeachers, fetchSubscriptionStatus, jobId, fetchJobDetailsAndMatches]);
 
   // Group teachers by match strength when jobId is present
   const groupTeachersByMatchStrength = (teachersList: Teacher[]) => {
@@ -529,17 +596,91 @@ export const BrowseTeachersPage: React.FC = () => {
         <div className="min-h-screen pt-20 bg-neutral-50 dark:bg-neutral-900">
           <div className="section">
             <div className="container-custom">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-center mb-12"
-              >
-                <h1 className="heading-1 mb-4">Browse Qualified Teachers</h1>
-                <p className="text-xl text-neutral-600 dark:text-neutral-400 max-w-3xl mx-auto">
-                  Find the perfect teacher for your school from our verified pool of
-                  professionals
-                </p>
-              </motion.div>
+              {/* Job Match Header - Show when jobId is present */}
+              {jobId && jobDetails && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mb-8"
+                >
+                  <div className="card p-6">
+                    {/* Job Title */}
+                    <h2 className="heading-2 mb-6">{jobDetails.title}</h2>
+                    
+                    {/* Match Insights */}
+                    {loadingJobMatchData ? (
+                      <div className="card p-4">
+                        <div className="flex items-center gap-2">
+                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-neutral-300 dark:border-neutral-600 border-t-neutral-600 dark:border-t-neutral-400"></div>
+                          <span className="text-sm text-neutral-600 dark:text-neutral-400">
+                            Calculating matches...
+                          </span>
+                        </div>
+                      </div>
+                    ) : jobMatchData ? (
+                      <>
+                        {/* Headline - Top Left */}
+                        <div className="flex justify-start mb-4">
+                          <h4 className="font-semibold text-neutral-900 dark:text-neutral-100">
+                            Matches Found: {jobMatchData.totalMatches}
+                          </h4>
+                        </div>
+
+                        {/* Match Category Boxes - Bottom Left */}
+                        <div className="flex items-center justify-start gap-3">
+                          {/* Strong Matches Box */}
+                          <div className="flex items-center gap-2 px-4 py-2 rounded-lg border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20">
+                            <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0" />
+                            <span className="text-lg font-bold text-green-600 dark:text-green-400">
+                              {jobMatchData.byStrength.strong}
+                            </span>
+                            <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                              Strong
+                            </span>
+                          </div>
+
+                          {/* Good Matches Box */}
+                          <div className="flex items-center gap-2 px-4 py-2 rounded-lg border border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-900/20">
+                            <CheckCircle className="w-4 h-4 text-yellow-600 dark:text-yellow-400 flex-shrink-0" />
+                            <span className="text-lg font-bold text-yellow-600 dark:text-yellow-400">
+                              {jobMatchData.byStrength.medium}
+                            </span>
+                            <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                              Good
+                            </span>
+                          </div>
+
+                          {/* Partial Matches Box */}
+                          <div className="flex items-center gap-2 px-4 py-2 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50">
+                            <CheckCircle className="w-4 h-4 text-neutral-500 dark:text-neutral-400 flex-shrink-0" />
+                            <span className="text-lg font-bold text-neutral-600 dark:text-neutral-400">
+                              {jobMatchData.byStrength.partial}
+                            </span>
+                            <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                              Partial
+                            </span>
+                          </div>
+                        </div>
+                      </>
+                    ) : null}
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Default Header - Show when no jobId */}
+              {!jobId && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-center mb-12"
+                >
+                  <h1 className="heading-1 mb-4">Browse Qualified Teachers</h1>
+                  <p className="text-xl text-neutral-600 dark:text-neutral-400 max-w-3xl mx-auto">
+                    Find the perfect teacher for your school from our verified pool of
+                    professionals
+                  </p>
+                </motion.div>
+              )}
 
               {/* Search and Filters */}
               <div className="max-w-4xl mx-auto mb-8">
