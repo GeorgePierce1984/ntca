@@ -9,15 +9,18 @@ const applicationSchema = z.object({
   coverLetter: z.string().optional(),
   cv: z
     .instanceof(FileList)
-    .optional()
     .refine(
-      (files) => !files || files.length === 0 || files[0]?.size <= 10000000,
+      (files) => files && files.length > 0,
+      "CV/Resume is required",
+    )
+    .refine(
+      (files) => files && files.length > 0 && files[0]?.size <= 10000000,
       "File size must be less than 10MB",
     )
     .refine(
       (files) =>
-        !files ||
-        files.length === 0 ||
+        files &&
+        files.length > 0 &&
         [
           "application/pdf",
           "application/msword",
@@ -68,9 +71,10 @@ export function JobApplicationForm({
         formData.append("coverLetter", data.coverLetter);
       }
 
-      if (data.cv && data.cv.length > 0) {
-        formData.append("cv", data.cv[0]);
+      if (!data.cv || data.cv.length === 0) {
+        throw new Error("CV/Resume is required");
       }
+      formData.append("cv", data.cv[0]);
 
       const token = localStorage.getItem("authToken");
       const response = await fetch("/api/applications/create", {
@@ -143,7 +147,9 @@ export function JobApplicationForm({
 
         {/* CV Upload */}
         <div>
-          <label className="block text-sm font-medium mb-2">Resume/CV</label>
+          <label className="block text-sm font-medium mb-2">
+            Resume/CV <span className="text-red-500">*</span>
+          </label>
 
           {uploadedFile ? (
             <div className="border-2 border-dashed border-neutral-300 dark:border-neutral-700 rounded-lg p-4">
@@ -190,10 +196,6 @@ export function JobApplicationForm({
           {errors.cv && (
             <p className="text-red-500 text-sm mt-1">{errors.cv.message}</p>
           )}
-
-          <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-2">
-            Your existing resume will be used if you don't upload a new one
-          </p>
         </div>
 
         {/* Action Buttons */}

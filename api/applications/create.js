@@ -140,45 +140,48 @@ export default async function handler(req, res) {
         .json({ error: "You have already applied for this job" });
     }
 
-    // Handle CV upload
-    let resumeUrl = teacher.resumeUrl; // Use existing resume if no new upload
+    // Handle CV upload - CV is now required
+    if (!files.cv || !files.cv[0]) {
+      return res.status(400).json({
+        error: "CV/Resume upload is required",
+      });
+    }
 
-    if (files.cv && files.cv[0]) {
-      const cvFile = files.cv[0];
+    const cvFile = files.cv[0];
+    let resumeUrl;
 
-      // Validate file type
-      const allowedTypes = [
-        "application/pdf",
-        "application/msword",
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      ];
-      if (!allowedTypes.includes(cvFile.mimetype)) {
-        await fs.unlink(cvFile.filepath);
-        return res.status(400).json({
-          error: "Invalid file type. Please upload PDF or DOC/DOCX files only",
-        });
-      }
+    // Validate file type
+    const allowedTypes = [
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ];
+    if (!allowedTypes.includes(cvFile.mimetype)) {
+      await fs.unlink(cvFile.filepath);
+      return res.status(400).json({
+        error: "Invalid file type. Please upload PDF or DOC/DOCX files only",
+      });
+    }
 
-      // Upload to Vercel Blob
-      try {
-        const teacherName = `${teacher.firstName}-${teacher.lastName}`;
-        resumeUrl = await uploadToVercelBlob(
-          cvFile.filepath,
-          teacher.id,
-          teacherName,
-          "resume",
-          cvFile.originalFilename || "resume.pdf",
-        );
+    // Upload to Vercel Blob
+    try {
+      const teacherName = `${teacher.firstName}-${teacher.lastName}`;
+      resumeUrl = await uploadToVercelBlob(
+        cvFile.filepath,
+        teacher.id,
+        teacherName,
+        "resume",
+        cvFile.originalFilename || "resume.pdf",
+      );
 
-        // Update teacher's resume URL
-        await prisma.teacher.update({
-          where: { id: teacher.id },
-          data: { resumeUrl },
-        });
-      } finally {
-        // Clean up temp file
-        await fs.unlink(cvFile.filepath);
-      }
+      // Update teacher's resume URL
+      await prisma.teacher.update({
+        where: { id: teacher.id },
+        data: { resumeUrl },
+      });
+    } finally {
+      // Clean up temp file
+      await fs.unlink(cvFile.filepath);
     }
 
     // Create application

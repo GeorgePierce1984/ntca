@@ -225,8 +225,14 @@ const JobDetail: React.FC = () => {
   };
 
   const handleApply = () => {
+    // Redirect to login/registration if not logged in
+    if (!user || user.userType !== "TEACHER") {
+      navigate("/signin?redirect=" + encodeURIComponent(window.location.pathname));
+      return;
+    }
+
     // Pre-fill form if teacher is logged in (except cover letter)
-    if (user?.userType === "TEACHER" && teacherProfile) {
+    if (teacherProfile) {
       setGuestForm({
         firstName: teacherProfile.firstName || "",
         lastName: teacherProfile.lastName || "",
@@ -239,7 +245,7 @@ const JobDetail: React.FC = () => {
         createAccount: false,
       });
     } else {
-      // Reset form for guests
+      // Reset form
       setGuestForm({
         firstName: "",
         lastName: "",
@@ -252,7 +258,7 @@ const JobDetail: React.FC = () => {
         createAccount: false,
       });
     }
-    // Open application form for everyone (both authenticated teachers and guests)
+    // Open application form
     setShowApplicationForm(true);
   };
 
@@ -341,6 +347,13 @@ const JobDetail: React.FC = () => {
 
   const handleGuestApplication = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate CV is uploaded
+    if (!guestForm.cv) {
+      toast.error("Please upload your CV/Resume to continue");
+      return;
+    }
+
     setApplying(true);
 
     try {
@@ -349,7 +362,7 @@ const JobDetail: React.FC = () => {
         const formData = new FormData();
         formData.append("jobId", id!);
         if (guestForm.coverLetter) formData.append("coverLetter", guestForm.coverLetter);
-        if (guestForm.cv) formData.append("cv", guestForm.cv);
+        formData.append("cv", guestForm.cv);
 
         const response = await fetch("/api/applications/create", {
           method: "POST",
@@ -384,7 +397,7 @@ const JobDetail: React.FC = () => {
         return;
       }
 
-      // Guest application flow
+      // Guest application flow (should not reach here if redirect works)
       const formData = new FormData();
       formData.append("jobId", id!);
       formData.append("firstName", guestForm.firstName);
@@ -395,7 +408,7 @@ const JobDetail: React.FC = () => {
       if (guestForm.city) formData.append("city", guestForm.city);
       if (guestForm.country) formData.append("country", guestForm.country);
       if (guestForm.coverLetter) formData.append("coverLetter", guestForm.coverLetter);
-      if (guestForm.cv) formData.append("cv", guestForm.cv);
+      formData.append("cv", guestForm.cv);
 
       const response = await fetch("/api/applications/guest", {
         method: "POST",
@@ -1593,7 +1606,7 @@ const JobDetail: React.FC = () => {
               {/* CV Upload */}
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  Upload CV/Resume
+                  Upload CV/Resume <span className="text-red-500">*</span>
                 </label>
                 <div className="border-2 border-dashed border-neutral-300 dark:border-neutral-600 rounded-lg p-6 text-center">
                   <input
@@ -1602,6 +1615,7 @@ const JobDetail: React.FC = () => {
                     accept=".pdf,.doc,.docx"
                     onChange={handleCVUpload}
                     className="hidden"
+                    required
                   />
                   <label
                     htmlFor="cv-upload"
@@ -1628,27 +1642,11 @@ const JobDetail: React.FC = () => {
                     </button>
                   </div>
                 )}
-              </div>
-
-              {/* Sign up option */}
-              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                <div className="flex items-start gap-3">
-                  <input
-                    type="checkbox"
-                    id="create-account"
-                    checked={guestForm.createAccount}
-                    onChange={(e) => setGuestForm({...guestForm, createAccount: e.target.checked})}
-                    className="mt-1"
-                  />
-                  <div>
-                    <label htmlFor="create-account" className="text-sm font-medium cursor-pointer">
-                      Create an account to save my details
-                    </label>
-                    <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-1">
-                      This will create a teacher profile so you can apply faster to future jobs and track your applications.
-                    </p>
-                  </div>
-                </div>
+                {!guestForm.cv && (
+                  <p className="text-red-500 text-sm mt-1">
+                    CV/Resume is required
+                  </p>
+                )}
               </div>
 
               {/* Submit buttons */}
@@ -1665,7 +1663,7 @@ const JobDetail: React.FC = () => {
                 <Button
                   type="submit"
                   variant="gradient"
-                  disabled={applying}
+                  disabled={applying || !guestForm.cv}
                   className="flex-1"
                 >
                   {applying ? "Submitting..." : "Submit Application"}

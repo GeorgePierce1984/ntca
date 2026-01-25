@@ -43,3 +43,4 @@ vercel env ls | grep RESEND_API_KEY
 
 After redeploying, try the email verification step again. The code should now be sent via email instead of showing an error.
 
+
