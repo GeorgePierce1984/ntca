@@ -31,9 +31,9 @@ export default function SpeedometerOptionA({
   const cx = 210;
   const cy = 190;
   const r = 150;
-  // Top semicircle: left (90°) to right (270°) - flipped to correct orientation
-  const startAngle = 90;
-  const endAngle = 270;
+  // Top semicircle: left (270°) to right (90°)
+  const startAngle = 270;
+  const endAngle = 90;
 
   const polarToCartesian = useCallback((centerX: number, centerY: number, radius: number, angleDeg: number) => {
     const a = ((angleDeg - 90) * Math.PI) / 180;
@@ -48,9 +48,9 @@ export default function SpeedometerOptionA({
       const start = polarToCartesian(centerX, centerY, radius, startAng);
       const end = polarToCartesian(centerX, centerY, radius, endAng);
       // For our top semicircle (270 -> 90), we want the shorter arc (largeArcFlag=0)
-      // and we want the arc to sweep counterclockwise (sweepFlag=0).
+      // and we want the arc to sweep clockwise (sweepFlag=1).
       const largeArcFlag = 0;
-      const sweepFlag = 0;
+      const sweepFlag = 1;
       return `M ${start.x} ${start.y} A ${radius} ${radius} 0 ${largeArcFlag} ${sweepFlag} ${end.x} ${end.y}`;
     },
     [polarToCartesian]
@@ -75,11 +75,17 @@ export default function SpeedometerOptionA({
 
   const thresholdToNeedleRotation = useCallback(
     (t: number | null) => {
-      // Needle points to the right when rotation = 0deg.
-      // Convert threshold -> angle on arc, then to SVG rotation.
+      // Needle line points upward (towards 0°) when rotation = 0deg.
+      // The arc goes from 270° (left) clockwise to 90° (right)
+      // In SVG rotation: 0° = up, 90° = right, 180° = down, 270° = left
+      // We want: 270° (left) → 270° rotation, 90° (right) → 90° rotation
       const norm = t == null ? 0 : clamp01(Number(t) / 100);
       const ang = startAngle + (endAngle - startAngle) * norm;
-      const rot = ang - 90;
+      // Needle starts pointing up (0°), needs to rotate to point at angle on arc
+      // Since needle points up at 0°, and we want it to point at 'ang':
+      // - 270° (left) → rotate 270° clockwise
+      // - 90° (right) → rotate 90° clockwise
+      const rot = ang;
       return rot;
     },
     [startAngle, endAngle]
@@ -210,7 +216,8 @@ export default function SpeedometerOptionA({
               }}
               aria-hidden="true"
             >
-              <line x1={cx} y1={cy} x2={345} y2={cy} stroke="#0f172a" strokeWidth="6" strokeLinecap="round" className="dark:stroke-slate-100" />
+              {/* Needle line pointing upward initially (towards 0°), will rotate to point along arc */}
+              <line x1={cx} y1={cy} x2={cx} y2={cy - r} stroke="#0f172a" strokeWidth="6" strokeLinecap="round" className="dark:stroke-slate-100" />
               <circle cx={cx} cy={cy} r={16} fill="#0f172a" className="dark:fill-slate-100" />
               <circle cx={cx} cy={cy} r={9} fill="white" opacity="0.12" />
             </g>
