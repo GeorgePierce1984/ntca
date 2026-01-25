@@ -641,15 +641,15 @@ export const BrowseTeachersPage: React.FC = () => {
         featureName="Browse Teachers"
         description="Subscribe to unlock access to our verified teacher database and find the perfect candidates for your school."
       >
-        <div className="min-h-screen pt-20 bg-neutral-50 dark:bg-neutral-900">
-          <div className="section">
+        <div className="min-h-screen pt-[85px] bg-neutral-50 dark:bg-neutral-900">
+          <div className="pb-4">
             <div className="container-custom">
               {/* Job Match Header - Show when jobId is present */}
               {jobId && (
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="mb-8 pt-3.5"
+                  className="mb-8"
                 >
                   <div className="card p-2">
                     {/* Debug info - remove in production */}
