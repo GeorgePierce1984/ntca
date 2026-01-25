@@ -125,31 +125,61 @@ export default function SpeedometerOptionA({
   // Calculate target angle
   const targetAngle = useMemo(() => thresholdToNeedleRotation(threshold), [thresholdToNeedleRotation, threshold]);
   
-  // Update cumulative rotation to ensure clockwise movement
+  // Update cumulative rotation to ensure correct direction
   useEffect(() => {
     const currentNormalized = prevRotationRef.current % 360;
     const targetNormalized = targetAngle % 360;
+    const currentCumulative = prevRotationRef.current;
     
-    // If target is less than current (wrapping case), add 360 to ensure clockwise
-    let nextRotation = targetAngle;
-    if (targetNormalized < currentNormalized && targetNormalized !== currentNormalized) {
-      // Find the next occurrence of targetAngle that's greater than current
-      // This forces clockwise rotation through 360°
-      nextRotation = targetAngle + 360;
-    } else if (targetNormalized > currentNormalized) {
-      // Normal case: target is greater, use as-is
-      nextRotation = targetAngle;
-    } else {
+    if (targetNormalized === currentNormalized) {
       // Same angle, no change needed
       return;
+    }
+    
+    let nextRotation: number;
+    
+    // Case 1: Going FROM Any (270°) TO a smaller angle (like 18° for 60%)
+    // We want CLOCKWISE: 270° → 360° → 18°
+    // To force clockwise, cumulative must increase: 270° → 378° (18° + 360°)
+    if (currentNormalized === 270 && targetNormalized < 270) {
+      // Ensure cumulative increases to force clockwise
+      nextRotation = targetAngle + 360;
+    }
+    // Case 2: Going FROM a larger angle (like 81° for 95%) TO Any (270°)
+    // We want COUNTER-CLOCKWISE: 81° → 0° → 270°
+    // To force counter-clockwise, cumulative must decrease
+    // If current cumulative is, say, 81°, we need to go backwards
+    // So we set cumulative to be less: 270° - 360° = -90°
+    // But we need to ensure it's actually less than current cumulative
+    else if (currentNormalized > 90 && targetNormalized === 270) {
+      // Current might be 81° (normalized) but cumulative could be 81°, 441°, etc.
+      // We want to go backwards, so subtract 360° from target
+      // This makes cumulative decrease, forcing counter-clockwise
+      const targetCumulative = targetAngle - 360;
+      // Ensure it's less than current cumulative
+      if (targetCumulative >= currentCumulative) {
+        nextRotation = targetCumulative - 360;
+      } else {
+        nextRotation = targetCumulative;
+      }
+    }
+    // Case 3: Normal progression - smaller to larger (clockwise)
+    // e.g., 18° → 36° → 54° → 81° → 90°
+    else if (targetNormalized > currentNormalized) {
+      nextRotation = targetAngle;
+    }
+    // Case 4: Larger to smaller (but not the Any case) - should go clockwise through 360°
+    else {
+      nextRotation = targetAngle + 360;
     }
     
     prevRotationRef.current = nextRotation;
     setCumulativeRotation(nextRotation);
   }, [targetAngle]);
   
-  // Use cumulative rotation for display (normalized)
-  const rotation = cumulativeRotation % 360;
+  // Use cumulative rotation directly (not normalized) to force correct direction
+  // CSS will see the actual cumulative value, ensuring correct transition direction
+  const rotation = cumulativeRotation;
 
   const readout = useMemo(() => {
     if (threshold == null) return { main: "Any", suffix: "" };
