@@ -649,7 +649,7 @@ export const BrowseTeachersPage: React.FC = () => {
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="mt-4 mb-4 flex items-start gap-4"
+                  className="mt-4 mb-4 flex items-end gap-4"
                 >
                   {/* Title Box - Left */}
                   <div className="flex-1 card p-10">
