@@ -367,13 +367,13 @@ export const BrowseTeachersPage: React.FC = () => {
         <div className="space-y-4">
           <div className="flex items-center gap-4">
                           <div className="relative flex-shrink-0">
-                            {/* Match Score Ring - positioned around the photo container */}
+                            {/* Match Score Ring - positioned around the photo container with gap */}
                             {teacher.matchPercentage !== undefined && (
                               <>
-                                <div className="absolute -inset-0.5 z-10" style={{ top: '-2px', left: '-2px' }}>
+                                <div className="absolute z-10" style={{ top: '-10px', left: '-10px' }}>
                                   <MatchScoreRing
                                     percentage={teacher.matchPercentage}
-                                    size={68}
+                                    size={84}
                                     strokeWidth={3}
                                     showText={false}
                                   />
