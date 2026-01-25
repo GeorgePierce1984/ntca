@@ -649,9 +649,10 @@ export const BrowseTeachersPage: React.FC = () => {
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="mb-[42px]"
+                  className="mb-[52px] flex items-start gap-4"
                 >
-                  <div className="card p-10">
+                  {/* Title Box - Left */}
+                  <div className="flex-1 card p-10">
                     {/* Debug info - remove in production */}
                     {process.env.NODE_ENV === 'development' && (
                       <div className="mb-4 p-2 bg-yellow-100 dark:bg-yellow-900/20 rounded text-xs">
@@ -661,90 +662,84 @@ export const BrowseTeachersPage: React.FC = () => {
                       </div>
                     )}
                     
-                    {/* Job Title with Speedometer and Match Insights */}
-                    <div className="flex items-end justify-between gap-2">
-                      {/* Left side: Title and Match Insights */}
-                      <div className="flex-1 flex flex-col">
-                        {/* Job Title - Top Left */}
-                        <div className="mb-4">
-                          {jobDetails ? (
-                            <h2 className="heading-2">{jobDetails.title}</h2>
-                          ) : loadingJobMatchData ? (
-                            <div className="h-8 w-48 bg-neutral-200 dark:bg-neutral-700 rounded animate-pulse"></div>
-                          ) : (
-                            <h2 className="heading-2">Loading job details...</h2>
-                          )}
+                    {/* Job Title - Top */}
+                    <div className="mb-4">
+                      {jobDetails ? (
+                        <h2 className="heading-2">{jobDetails.title}</h2>
+                      ) : loadingJobMatchData ? (
+                        <div className="h-8 w-48 bg-neutral-200 dark:bg-neutral-700 rounded animate-pulse"></div>
+                      ) : (
+                        <h2 className="heading-2">Loading job details...</h2>
+                      )}
+                    </div>
+                    
+                    {/* Match Insights */}
+                    {loadingJobMatchData ? (
+                      <div className="flex items-center gap-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-neutral-300 dark:border-neutral-600 border-t-neutral-600 dark:border-t-neutral-400"></div>
+                        <span className="text-sm text-neutral-600 dark:text-neutral-400">
+                          Calculating matches...
+                        </span>
+                      </div>
+                    ) : jobMatchData ? (
+                      <div className="flex flex-col gap-2">
+                        {/* Headline */}
+                        <div className="flex justify-start">
+                          <h4 className="font-semibold text-neutral-900 dark:text-neutral-100">
+                            Matches Found: {jobMatchData.totalMatches}
+                          </h4>
                         </div>
-                        
-                        {/* Match Insights - aligned to bottom */}
-                        {loadingJobMatchData ? (
-                          <div className="flex items-center gap-2">
-                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-neutral-300 dark:border-neutral-600 border-t-neutral-600 dark:border-t-neutral-400"></div>
-                            <span className="text-sm text-neutral-600 dark:text-neutral-400">
-                              Calculating matches...
+
+                        {/* Match Category Boxes */}
+                        <div className="flex items-center justify-start gap-3">
+                          {/* Strong Matches Box */}
+                          <div className="flex items-center gap-2 px-4 py-2 rounded-lg border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20">
+                            <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0" />
+                            <span className="text-lg font-bold text-green-600 dark:text-green-400">
+                              {jobMatchData.byStrength.strong}
+                            </span>
+                            <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                              Strong
                             </span>
                           </div>
-                        ) : jobMatchData ? (
-                          <div className="flex flex-col gap-2">
-                            {/* Headline */}
-                            <div className="flex justify-start">
-                              <h4 className="font-semibold text-neutral-900 dark:text-neutral-100">
-                                Matches Found: {jobMatchData.totalMatches}
-                              </h4>
-                            </div>
 
-                            {/* Match Category Boxes */}
-                            <div className="flex items-center justify-start gap-3">
-                              {/* Strong Matches Box */}
-                              <div className="flex items-center gap-2 px-4 py-2 rounded-lg border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20">
-                                <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0" />
-                                <span className="text-lg font-bold text-green-600 dark:text-green-400">
-                                  {jobMatchData.byStrength.strong}
-                                </span>
-                                <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                                  Strong
-                                </span>
-                              </div>
-
-                              {/* Good Matches Box */}
-                              <div className="flex items-center gap-2 px-4 py-2 rounded-lg border border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-900/20">
-                                <CheckCircle className="w-4 h-4 text-yellow-600 dark:text-yellow-400 flex-shrink-0" />
-                                <span className="text-lg font-bold text-yellow-600 dark:text-yellow-400">
-                                  {jobMatchData.byStrength.medium}
-                                </span>
-                                <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                                  Good
-                                </span>
-                              </div>
-
-                              {/* Partial Matches Box */}
-                              <div className="flex items-center gap-2 px-4 py-2 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50">
-                                <CheckCircle className="w-4 h-4 text-neutral-500 dark:text-neutral-400 flex-shrink-0" />
-                                <span className="text-lg font-bold text-neutral-600 dark:text-neutral-400">
-                                  {jobMatchData.byStrength.partial}
-                                </span>
-                                <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                                  Partial
-                                </span>
-                              </div>
-                            </div>
+                          {/* Good Matches Box */}
+                          <div className="flex items-center gap-2 px-4 py-2 rounded-lg border border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-900/20">
+                            <CheckCircle className="w-4 h-4 text-yellow-600 dark:text-yellow-400 flex-shrink-0" />
+                            <span className="text-lg font-bold text-yellow-600 dark:text-yellow-400">
+                              {jobMatchData.byStrength.medium}
+                            </span>
+                            <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                              Good
+                            </span>
                           </div>
-                        ) : !loadingJobMatchData ? (
-                          <div className="text-sm text-neutral-600 dark:text-neutral-400">
-                            No match data available
+
+                          {/* Partial Matches Box */}
+                          <div className="flex items-center gap-2 px-4 py-2 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50">
+                            <CheckCircle className="w-4 h-4 text-neutral-500 dark:text-neutral-400 flex-shrink-0" />
+                            <span className="text-lg font-bold text-neutral-600 dark:text-neutral-400">
+                              {jobMatchData.byStrength.partial}
+                            </span>
+                            <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                              Partial
+                            </span>
                           </div>
-                        ) : null}
+                        </div>
                       </div>
-                      
-                      {/* Speedometer on the right - aligned to bottom */}
-                      <div className="flex-shrink-0">
-                        <SpeedometerOptionA
-                          initialThreshold={null}
-                          snapThresholds={[null, 60, 70, 80, 95]}
-                          onChange={setSpeedometerState}
-                        />
+                    ) : !loadingJobMatchData ? (
+                      <div className="text-sm text-neutral-600 dark:text-neutral-400">
+                        No match data available
                       </div>
-                    </div>
+                    ) : null}
+                  </div>
+                  
+                  {/* Match Threshold Box - Right (stays in current position) */}
+                  <div className="flex-shrink-0">
+                    <SpeedometerOptionA
+                      initialThreshold={null}
+                      snapThresholds={[null, 60, 70, 80, 95]}
+                      onChange={setSpeedometerState}
+                    />
                   </div>
                 </motion.div>
               )}
