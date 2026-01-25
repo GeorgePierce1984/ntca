@@ -95,6 +95,9 @@ export const BrowseTeachersPage: React.FC = () => {
   });
   const [minMatchPercentage, setMinMatchPercentage] = useState(0);
   
+  // Round to nearest 10 for odometer increments
+  const roundedMinPercentage = Math.floor(minMatchPercentage / 10) * 10;
+  
   // Job match data state
   const [jobDetails, setJobDetails] = useState<{
     id: string;
@@ -366,9 +369,9 @@ export const BrowseTeachersPage: React.FC = () => {
     return (teachers || []).filter(teacher => {
       const matchPct = teacher.matchPercentage;
       if (matchPct === undefined) return false;
-      return matchPct >= minMatchPercentage && matchPct <= 100;
+      return matchPct >= roundedMinPercentage && matchPct <= 100;
     });
-  }, [teachers, jobId, minMatchPercentage]);
+  }, [teachers, jobId, roundedMinPercentage]);
 
   // Group teachers by match strength when jobId is present
   const groupTeachersByMatchStrength = (teachersList: Teacher[]) => {
@@ -733,61 +736,65 @@ export const BrowseTeachersPage: React.FC = () => {
                 </motion.div>
               )}
 
-              {/* Match Percentage Range Filter - Show when jobId is present */}
+              {/* Match Percentage Odometer Filter - Show when jobId is present */}
               {jobId ? (
                 <div className="max-w-4xl mx-auto mb-8">
-                  <div className="card p-3">
-                    <div className="flex items-center justify-between mb-2">
+                  <div className="card p-4">
+                    <div className="flex items-center justify-between mb-4">
                       <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
                         Filter by Minimum Match Percentage
                       </label>
-                      <span className="text-sm font-semibold text-primary-600 dark:text-primary-400">
-                        {minMatchPercentage}% - 100%
+                      <span className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+                        {roundedMinPercentage}% - 100%
                       </span>
                     </div>
-                    <div className="relative py-2">
-                      {/* Background track */}
-                      <div className="absolute w-full h-1.5 bg-neutral-200 dark:bg-neutral-700 rounded-full top-1/2 -translate-y-1/2"></div>
-                      {/* Active range - from min to 100% */}
-                      <div 
-                        className="absolute h-1.5 bg-primary-600 dark:bg-primary-500 rounded-full top-1/2 -translate-y-1/2 transition-all duration-150"
-                        style={{
-                          left: `${minMatchPercentage}%`,
-                          width: `${100 - minMatchPercentage}%`
-                        }}
-                      ></div>
-                      {/* Single slider for minimum percentage */}
-                      <input
-                        type="range"
-                        min="0"
-                        max="100"
-                        step="1"
-                        value={minMatchPercentage}
-                        onChange={(e) => {
-                          setMinMatchPercentage(parseInt(e.target.value));
-                        }}
-                        className="w-full h-1.5 bg-transparent appearance-none cursor-pointer z-20 relative"
-                        style={{
-                          WebkitAppearance: 'none',
-                          appearance: 'none',
-                          padding: '0',
-                          margin: '0',
-                        }}
-                      />
-                      {/* Slider thumb - positioned correctly */}
-                      <div 
-                        className="absolute w-3 h-3 bg-primary-600 dark:bg-primary-500 rounded-full border-2 border-white dark:border-neutral-800 shadow-md top-1/2 pointer-events-none transition-all duration-150"
-                        style={{ 
-                          left: `calc(${minMatchPercentage}% - 5.5px)`,
-                          transform: 'translateY(-50%)'
-                        }}
-                      ></div>
+                    
+                    {/* Color-coded Odometer Style Dial */}
+                    <div className="flex items-center justify-center gap-1 mb-4">
+                      {[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map((value) => {
+                        // Color gradient: red -> orange -> yellow -> green
+                        let bgColor = '';
+                        let textColor = '';
+                        if (value <= 30) {
+                          bgColor = 'bg-red-500';
+                          textColor = 'text-red-700 dark:text-red-300';
+                        } else if (value <= 50) {
+                          bgColor = 'bg-orange-500';
+                          textColor = 'text-orange-700 dark:text-orange-300';
+                        } else if (value <= 70) {
+                          bgColor = 'bg-yellow-500';
+                          textColor = 'text-yellow-700 dark:text-yellow-300';
+                        } else {
+                          bgColor = 'bg-green-500';
+                          textColor = 'text-green-700 dark:text-green-300';
+                        }
+                        
+                        const isSelected = roundedMinPercentage <= value;
+                        const isActive = roundedMinPercentage === value;
+                        
+                        return (
+                          <button
+                            key={value}
+                            onClick={() => setMinMatchPercentage(value)}
+                            className={`
+                              flex-1 h-12 rounded-lg border-2 transition-all duration-200 font-semibold text-sm
+                              ${isSelected 
+                                ? `${bgColor} border-neutral-900 dark:border-neutral-100 ${textColor} shadow-md scale-105` 
+                                : 'bg-neutral-200 dark:bg-neutral-700 border-neutral-300 dark:border-neutral-600 text-neutral-500 dark:text-neutral-400 hover:bg-neutral-300 dark:hover:bg-neutral-600'
+                              }
+                              ${isActive ? 'ring-2 ring-offset-2 ring-neutral-900 dark:ring-neutral-100' : ''}
+                            `}
+                            style={{
+                              minWidth: '60px',
+                            }}
+                          >
+                            {value}%
+                          </button>
+                        );
+                      })}
                     </div>
-                    <div className="flex justify-between text-xs text-neutral-500 dark:text-neutral-400 mt-1">
-                      <span>0%</span>
-                      <span>100%</span>
-                    </div>
-                    <div className="mt-2 text-xs text-neutral-500 dark:text-neutral-400 text-center">
+                    
+                    <div className="text-xs text-neutral-500 dark:text-neutral-400 text-center">
                       Showing {filteredTeachersByRange.length} of {teachers.length} matches
                     </div>
                   </div>
