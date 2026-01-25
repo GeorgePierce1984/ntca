@@ -116,6 +116,7 @@ const JobDetail: React.FC = () => {
   const [sendingMessage, setSendingMessage] = useState(false);
   const [showSchoolProfile, setShowSchoolProfile] = useState(false);
   const [teacherProfile, setTeacherProfile] = useState<any>(null);
+  const [loadingTeacherProfile, setLoadingTeacherProfile] = useState(false);
   const [guestForm, setGuestForm] = useState({
     firstName: "",
     lastName: "",
@@ -139,6 +140,7 @@ const JobDetail: React.FC = () => {
   const fetchTeacherProfile = async () => {
     if (!user || user.userType !== "TEACHER") return;
     
+    setLoadingTeacherProfile(true);
     try {
       const token = localStorage.getItem("authToken");
       const response = await fetch("/api/teachers/profile", {
@@ -155,6 +157,8 @@ const JobDetail: React.FC = () => {
       }
     } catch (error) {
       console.error("Error fetching teacher profile:", error);
+    } finally {
+      setLoadingTeacherProfile(false);
     }
   };
 
@@ -224,14 +228,25 @@ const JobDetail: React.FC = () => {
     }
   };
 
-  const handleApply = () => {
+  const handleApply = async () => {
     // Redirect to login/registration if not logged in
     if (!user || user.userType !== "TEACHER") {
       navigate("/signin?redirect=" + encodeURIComponent(window.location.pathname));
       return;
     }
 
-    // Pre-fill form if teacher is logged in (except cover letter)
+    // Ensure teacher profile is loaded before opening form
+    if (!teacherProfile && !loadingTeacherProfile) {
+      await fetchTeacherProfile();
+    }
+
+    // Wait for profile to load
+    if (loadingTeacherProfile) {
+      // Show loading state - form will open once profile is loaded
+      return;
+    }
+
+    // Pre-fill form with teacher profile data (except cover letter)
     if (teacherProfile) {
       setGuestForm({
         firstName: teacherProfile.firstName || "",
@@ -241,11 +256,11 @@ const JobDetail: React.FC = () => {
         city: teacherProfile.city || "",
         country: teacherProfile.country || "",
         coverLetter: "",
-        cv: null,
+        cv: null, // CV file upload - will use existing resumeUrl if available
         createAccount: false,
       });
     } else {
-      // Reset form
+      // Reset form if profile not available
       setGuestForm({
         firstName: "",
         lastName: "",
@@ -348,8 +363,8 @@ const JobDetail: React.FC = () => {
   const handleGuestApplication = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate CV is uploaded
-    if (!guestForm.cv) {
+    // Validate CV is uploaded or teacher has existing CV
+    if (!guestForm.cv && !teacherProfile?.resumeUrl) {
       toast.error("Please upload your CV/Resume to continue");
       return;
     }
@@ -362,7 +377,13 @@ const JobDetail: React.FC = () => {
         const formData = new FormData();
         formData.append("jobId", id!);
         if (guestForm.coverLetter) formData.append("coverLetter", guestForm.coverLetter);
-        formData.append("cv", guestForm.cv);
+        if (guestForm.cv) {
+          formData.append("cv", guestForm.cv);
+        }
+        // If no new CV uploaded but teacher has existing resumeUrl, indicate to use existing
+        if (!guestForm.cv && teacherProfile?.resumeUrl) {
+          formData.append("useExistingResume", "true");
+        }
 
         const response = await fetch("/api/applications/create", {
           method: "POST",
@@ -1501,6 +1522,12 @@ const JobDetail: React.FC = () => {
               </button>
             </div>
             
+            {loadingTeacherProfile ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                <span className="ml-3 text-neutral-600 dark:text-neutral-400">Loading your profile...</span>
+              </div>
+            ) : (
             <form onSubmit={handleGuestApplication} className="space-y-6">
               {/* Personal Information */}
               <div className="space-y-4">
@@ -1608,6 +1635,13 @@ const JobDetail: React.FC = () => {
                 <label className="block text-sm font-medium mb-2">
                   Upload CV/Resume <span className="text-red-500">*</span>
                 </label>
+                {teacherProfile?.resumeUrl && !guestForm.cv && (
+                  <div className="mb-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                    <p className="text-sm text-blue-800 dark:text-blue-200">
+                      ✓ You have a CV on file. You can use it or upload a new one below.
+                    </p>
+                  </div>
+                )}
                 <div className="border-2 border-dashed border-neutral-300 dark:border-neutral-600 rounded-lg p-6 text-center">
                   <input
                     type="file"
@@ -1615,7 +1649,7 @@ const JobDetail: React.FC = () => {
                     accept=".pdf,.doc,.docx"
                     onChange={handleCVUpload}
                     className="hidden"
-                    required
+                    required={!teacherProfile?.resumeUrl}
                   />
                   <label
                     htmlFor="cv-upload"
@@ -1642,7 +1676,7 @@ const JobDetail: React.FC = () => {
                     </button>
                   </div>
                 )}
-                {!guestForm.cv && (
+                {!guestForm.cv && !teacherProfile?.resumeUrl && (
                   <p className="text-red-500 text-sm mt-1">
                     CV/Resume is required
                   </p>
@@ -1663,13 +1697,14 @@ const JobDetail: React.FC = () => {
                 <Button
                   type="submit"
                   variant="gradient"
-                  disabled={applying || !guestForm.cv}
+                  disabled={applying || (!guestForm.cv && !teacherProfile?.resumeUrl)}
                   className="flex-1"
                 >
                   {applying ? "Submitting..." : "Submit Application"}
                 </Button>
               </div>
             </form>
+            )}
           </div>
         </div>
       )}

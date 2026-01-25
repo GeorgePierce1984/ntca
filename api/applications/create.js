@@ -140,48 +140,55 @@ export default async function handler(req, res) {
         .json({ error: "You have already applied for this job" });
     }
 
-    // Handle CV upload - CV is now required
-    if (!files.cv || !files.cv[0]) {
-      return res.status(400).json({
-        error: "CV/Resume upload is required",
-      });
-    }
-
-    const cvFile = files.cv[0];
+    // Handle CV upload - CV is required (either new upload or use existing)
+    const useExistingResume = fields.useExistingResume?.[0] === "true";
     let resumeUrl;
 
-    // Validate file type
-    const allowedTypes = [
-      "application/pdf",
-      "application/msword",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    ];
-    if (!allowedTypes.includes(cvFile.mimetype)) {
-      await fs.unlink(cvFile.filepath);
+    if (files.cv && files.cv[0]) {
+      // New CV file uploaded
+      const cvFile = files.cv[0];
+
+      // Validate file type
+      const allowedTypes = [
+        "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      ];
+      if (!allowedTypes.includes(cvFile.mimetype)) {
+        await fs.unlink(cvFile.filepath);
+        return res.status(400).json({
+          error: "Invalid file type. Please upload PDF or DOC/DOCX files only",
+        });
+      }
+
+      // Upload to Vercel Blob
+      try {
+        const teacherName = `${teacher.firstName}-${teacher.lastName}`;
+        resumeUrl = await uploadToVercelBlob(
+          cvFile.filepath,
+          teacher.id,
+          teacherName,
+          "resume",
+          cvFile.originalFilename || "resume.pdf",
+        );
+
+        // Update teacher's resume URL
+        await prisma.teacher.update({
+          where: { id: teacher.id },
+          data: { resumeUrl },
+        });
+      } finally {
+        // Clean up temp file
+        await fs.unlink(cvFile.filepath);
+      }
+    } else if (useExistingResume && teacher.resumeUrl) {
+      // Use existing resume from teacher profile
+      resumeUrl = teacher.resumeUrl;
+    } else {
+      // No CV provided and no existing CV available
       return res.status(400).json({
-        error: "Invalid file type. Please upload PDF or DOC/DOCX files only",
+        error: "CV/Resume is required. Please upload a CV or ensure you have one on file.",
       });
-    }
-
-    // Upload to Vercel Blob
-    try {
-      const teacherName = `${teacher.firstName}-${teacher.lastName}`;
-      resumeUrl = await uploadToVercelBlob(
-        cvFile.filepath,
-        teacher.id,
-        teacherName,
-        "resume",
-        cvFile.originalFilename || "resume.pdf",
-      );
-
-      // Update teacher's resume URL
-      await prisma.teacher.update({
-        where: { id: teacher.id },
-        data: { resumeUrl },
-      });
-    } finally {
-      // Clean up temp file
-      await fs.unlink(cvFile.filepath);
     }
 
     // Create application
