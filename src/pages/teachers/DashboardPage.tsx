@@ -422,7 +422,14 @@ const TeacherDashboard: React.FC = () => {
   useEffect(() => {
     if (activeTab === "applications" && teacher?.applications) {
       teacher.applications.forEach((app) => {
-        if (app.status === "INTERVIEW") {
+        // If application already has interviewRequest from API, use it
+        if (app.interviewRequest) {
+          setInterviewRequests((prev) => ({
+            ...prev,
+            [app.id]: app.interviewRequest,
+          }));
+        } else if (app.status === "INTERVIEW" || app.status === "REVIEWING") {
+          // Otherwise, fetch it if status suggests there might be one
           fetchInterviewRequest(app.id);
         }
       });
