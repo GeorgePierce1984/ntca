@@ -2236,6 +2236,7 @@ export const SchoolDashboardPage: React.FC = () => {
             ? jobs.find((j) => j.id === selectedApplicant.jobId)?.title
             : ""
         }
+        isUpdating={updatingStatus === selectedApplicant?.id}
       />
 
       {/* Profile Completion Modal */}

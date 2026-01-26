@@ -1018,8 +1018,9 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
                         variant="ghost"
                         leftIcon={<XCircle className="w-4 h-4" />}
                         onClick={() => handleStatusUpdate("declined")}
+                        disabled={isUpdating}
                       >
-                        Decline
+                        {isUpdating ? "Updating..." : "Decline"}
                       </Button>
                     )}
                   </div>
