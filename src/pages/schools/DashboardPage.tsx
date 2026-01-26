@@ -190,9 +190,6 @@ export const SchoolDashboardPage: React.FC = () => {
     null,
   );
   const [showApplicantModal, setShowApplicantModal] = useState(false);
-  const [showInterviewModal, setShowInterviewModal] = useState(false);
-  const [selectedApplicantForInterview, setSelectedApplicantForInterview] =
-    useState<Application | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
 
   // Add refs for post job form and heading
