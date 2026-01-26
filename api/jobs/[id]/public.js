@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import jwt from "jsonwebtoken";
 
 const prisma = new PrismaClient({
   log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
@@ -8,6 +9,17 @@ const prisma = new PrismaClient({
     },
   },
 });
+
+// Helper function to verify JWT token
+function verifyToken(req) {
+  const token = req.headers.authorization?.replace("Bearer ", "");
+  if (!token) return null;
+  try {
+    return jwt.verify(token, process.env.JWT_SECRET);
+  } catch (error) {
+    return null;
+  }
+}
 
 // Helper function to retry database operations
 async function retryOperation(operation, maxRetries = 3, initialDelay = 500) {
@@ -127,7 +139,48 @@ export default async function handler(req, res) {
       });
     }
 
-    return res.status(200).json({ job });
+    // Check if user has already applied (if authenticated as teacher)
+    let hasApplied = false;
+    let applicationStatus = null;
+    const decoded = verifyToken(req);
+    
+    if (decoded && decoded.userType === "TEACHER") {
+      const teacher = await retryOperation(async () => {
+        return await prisma.teacher.findUnique({
+          where: { userId: decoded.userId },
+          select: { id: true },
+        });
+      });
+
+      if (teacher) {
+        const existingApplication = await retryOperation(async () => {
+          return await prisma.application.findFirst({
+            where: {
+              jobId: id,
+              teacherId: teacher.id,
+            },
+            select: {
+              id: true,
+              status: true,
+              createdAt: true,
+            },
+          });
+        });
+
+        if (existingApplication) {
+          hasApplied = true;
+          applicationStatus = existingApplication.status;
+        }
+      }
+    }
+
+    return res.status(200).json({ 
+      job: {
+        ...job,
+        hasApplied,
+        applicationStatus,
+      }
+    });
 
   } catch (error) {
     console.error("Public job detail API error:", error);

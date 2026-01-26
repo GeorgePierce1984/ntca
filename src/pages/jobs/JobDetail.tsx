@@ -100,6 +100,8 @@ interface Job {
   contractLength?: string | null;
   teachingHoursPerWeek?: number | null;
   subjectsTaught?: string | null;
+  hasApplied?: boolean;
+  applicationStatus?: string | null;
 }
 
 const JobDetail: React.FC = () => {
@@ -275,6 +277,12 @@ const JobDetail: React.FC = () => {
       return;
     }
 
+    // Check if already applied
+    if (job?.hasApplied) {
+      toast.error("You have already applied for this job");
+      return;
+    }
+
     // Open form immediately
     setShowApplicationForm(true);
 
@@ -441,11 +449,21 @@ const JobDetail: React.FC = () => {
         const result = await response.json();
 
         if (!response.ok) {
+          // Check if error is due to already applied
+          if (result.error?.includes("already applied")) {
+            toast.error(result.error);
+            // Refresh job details to update hasApplied status
+            await fetchJobDetails();
+            setShowApplicationForm(false);
+            return;
+          }
           throw new Error(result.error || "Failed to submit application");
         }
 
         toast.success("Application submitted successfully!");
         setShowApplicationForm(false);
+        // Refresh job details to update hasApplied status
+        await fetchJobDetails();
         
         // Reset form
         setGuestForm({
@@ -540,7 +558,7 @@ const JobDetail: React.FC = () => {
   startOfToday.setHours(0, 0, 0, 0);
   const jobDeadline = new Date(job.deadline);
   jobDeadline.setHours(0, 0, 0, 0);
-  const canApply = job.status === "ACTIVE" && jobDeadline >= startOfToday; // Anyone can apply if job is active and deadline is today or in the future
+  const canApply = job.status === "ACTIVE" && jobDeadline >= startOfToday && !job.hasApplied; // Anyone can apply if job is active, deadline is today or in the future, and they haven't already applied
 
   return (
     <div className="min-h-screen bg-neutral-50 dark:bg-neutral-900 pt-20">
@@ -638,11 +656,23 @@ const JobDetail: React.FC = () => {
 
           {/* Action Buttons */}
           <div className="flex flex-wrap gap-3 mt-6">
-            {canApply && (
+            {job.hasApplied ? (
+              <div className="flex items-center gap-2 px-4 py-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
+                <span className="text-sm font-medium text-green-800 dark:text-green-200">
+                  You have already applied for this job
+                </span>
+                {job.applicationStatus && (
+                  <span className="text-xs text-green-600 dark:text-green-400">
+                    ({job.applicationStatus})
+                  </span>
+                )}
+              </div>
+            ) : canApply ? (
               <Button onClick={handleApply} variant="gradient" size="lg">
                 Apply Now
               </Button>
-            )}
+            ) : null}
             {user?.userType === "TEACHER" && (
               <>
                 <Button
