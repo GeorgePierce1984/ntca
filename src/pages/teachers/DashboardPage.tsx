@@ -44,7 +44,9 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessagesModal } from "@/components/messages/MessagesModal";
+import { InterviewInviteResponse } from "@/components/teachers/InterviewInviteResponse";
 import { getCountryByName } from "@/data/countries";
+import toast from "react-hot-toast";
 
 interface Teacher {
   id: string;
@@ -212,6 +214,16 @@ const TeacherDashboard: React.FC = () => {
   const [showMessagesModal, setShowMessagesModal] = useState(false);
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
 
+  // Interview requests
+  const [interviewRequests, setInterviewRequests] = useState<Record<string, any>>({});
+  const [selectedInterviewRequest, setSelectedInterviewRequest] = useState<{
+    applicationId: string;
+    interviewRequest: any;
+    jobTitle: string;
+    schoolName: string;
+  } | null>(null);
+  const [showInterviewModal, setShowInterviewModal] = useState(false);
+
   // Fetch unread message count
   const fetchUnreadMessageCount = async () => {
     try {
@@ -236,6 +248,43 @@ const TeacherDashboard: React.FC = () => {
       console.error("Error fetching unread message count:", error);
     }
   };
+
+  // Fetch interview request for an application
+  const fetchInterviewRequest = async (applicationId: string) => {
+    try {
+      const token = localStorage.getItem("authToken");
+      if (!token) return;
+
+      const response = await fetch(`/api/applications/${applicationId}/interview-request`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.interviewRequest) {
+          setInterviewRequests((prev) => ({
+            ...prev,
+            [applicationId]: data.interviewRequest,
+          }));
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching interview request:", error);
+    }
+  };
+
+  // Fetch all interview requests when applications tab is active
+  useEffect(() => {
+    if (activeTab === "applications" && teacher?.applications) {
+      teacher.applications.forEach((app) => {
+        if (app.status === "INTERVIEW") {
+          fetchInterviewRequest(app.id);
+        }
+      });
+    }
+  }, [activeTab, teacher?.applications]);
 
   useEffect(() => {
     // Initial data fetch on page load
@@ -1921,6 +1970,60 @@ const TeacherDashboard: React.FC = () => {
                           </p>
                         </div>
                       )}
+
+                      {/* Interview Request Section */}
+                      {app.status === "INTERVIEW" && interviewRequests[app.id] && (
+                        <div className="mt-4 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                              <Calendar className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                              <h4 className="font-medium text-purple-900 dark:text-purple-300">
+                                Interview Invitation
+                              </h4>
+                            </div>
+                            {interviewRequests[app.id].status === "pending" && (
+                              <span className="px-2 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 rounded-full text-xs font-medium">
+                                Action Required
+                              </span>
+                            )}
+                            {interviewRequests[app.id].status === "accepted" && (
+                              <span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 rounded-full text-xs font-medium">
+                                Accepted
+                              </span>
+                            )}
+                            {interviewRequests[app.id].status === "alternative_suggested" && (
+                              <span className="px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-400 rounded-full text-xs font-medium">
+                                Alternative Suggested
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-sm text-purple-700 dark:text-purple-400 mb-3">
+                            {interviewRequests[app.id].locationType === "video"
+                              ? "Video Interview"
+                              : interviewRequests[app.id].locationType === "phone"
+                              ? "Phone Interview"
+                              : "Onsite Interview"}{" "}
+                            - {interviewRequests[app.id].duration} minutes
+                          </p>
+                          <Button
+                            size="sm"
+                            variant="gradient"
+                            onClick={() => {
+                              setSelectedInterviewRequest({
+                                applicationId: app.id,
+                                interviewRequest: interviewRequests[app.id],
+                                jobTitle: app.job.title,
+                                schoolName: app.job.school.name,
+                              });
+                              setShowInterviewModal(true);
+                            }}
+                          >
+                            {interviewRequests[app.id].status === "pending"
+                              ? "View & Respond"
+                              : "View Details"}
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   ))
                 ) : (
@@ -2049,6 +2152,92 @@ const TeacherDashboard: React.FC = () => {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Interview Invite Response Modal */}
+        {showInterviewModal && selectedInterviewRequest && (
+          <InterviewInviteResponse
+            isOpen={showInterviewModal}
+            onClose={() => {
+              setShowInterviewModal(false);
+              setSelectedInterviewRequest(null);
+            }}
+            interviewRequest={selectedInterviewRequest.interviewRequest}
+            applicationId={selectedInterviewRequest.applicationId}
+            jobTitle={selectedInterviewRequest.jobTitle}
+            schoolName={selectedInterviewRequest.schoolName}
+            teacherTimezone={teacher?.timezone || "UTC"}
+            onAccept={async (slotIndex: number) => {
+              try {
+                const token = localStorage.getItem("authToken");
+                if (!token) {
+                  throw new Error("No authentication token found");
+                }
+
+                const response = await fetch(
+                  `/api/applications/${selectedInterviewRequest.applicationId}/interview-response`,
+                  {
+                    method: "PATCH",
+                    headers: {
+                      "Content-Type": "application/json",
+                      Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({ selectedSlot: slotIndex }),
+                  }
+                );
+
+                if (!response.ok) {
+                  const error = await response.json().catch(() => ({
+                    error: "Failed to accept interview slot",
+                  }));
+                  throw new Error(error.error || "Failed to accept interview slot");
+                }
+
+                // Refresh interview request
+                await fetchInterviewRequest(selectedInterviewRequest.applicationId);
+                // Refresh teacher profile to update application status
+                await fetchTeacherProfile();
+              } catch (error) {
+                console.error("Error accepting interview slot:", error);
+                throw error;
+              }
+            }}
+            onSuggestAlternative={async (alternativeSlot: any) => {
+              try {
+                const token = localStorage.getItem("authToken");
+                if (!token) {
+                  throw new Error("No authentication token found");
+                }
+
+                const response = await fetch(
+                  `/api/applications/${selectedInterviewRequest.applicationId}/interview-response`,
+                  {
+                    method: "PATCH",
+                    headers: {
+                      "Content-Type": "application/json",
+                      Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({ alternativeSlot }),
+                  }
+                );
+
+                if (!response.ok) {
+                  const error = await response.json().catch(() => ({
+                    error: "Failed to suggest alternative slot",
+                  }));
+                  throw new Error(
+                    error.error || "Failed to suggest alternative slot"
+                  );
+                }
+
+                // Refresh interview request
+                await fetchInterviewRequest(selectedInterviewRequest.applicationId);
+              } catch (error) {
+                console.error("Error suggesting alternative slot:", error);
+                throw error;
+              }
+            }}
+          />
+        )}
 
         {/* Application Modal */}
         {showApplicationModal && selectedJob && (
