@@ -3095,7 +3095,11 @@ const TeacherDashboard: React.FC = () => {
                             {new Date(savedJob.createdAt).toLocaleDateString()}
                           </div>
                           <div className="flex items-center gap-2">
-                            <Button size="sm" variant="ghost">
+                            <Button 
+                              size="sm" 
+                              variant="ghost"
+                              onClick={() => navigate(`/jobs/${savedJob.job.id}`)}
+                            >
                               <Eye className="w-4 h-4 mr-2" />
                               View
                             </Button>
@@ -3108,7 +3112,7 @@ const TeacherDashboard: React.FC = () => {
                             ) : (
                               <Button
                                 size="sm"
-                                onClick={() => openApplicationModal(savedJob.job)}
+                                onClick={() => navigate(`/jobs/${savedJob.job.id}`)}
                               >
                                 Apply
                               </Button>
