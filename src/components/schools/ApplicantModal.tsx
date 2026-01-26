@@ -21,6 +21,7 @@ import {
   Briefcase,
   Languages,
   Users,
+  AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { InterviewInviteModal } from "./InterviewInviteModal";
