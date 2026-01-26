@@ -1105,31 +1105,55 @@ export const SchoolDashboardPage: React.FC = () => {
     };
   };
 
-  const updateApplicantStatus = (
+  const updateApplicantStatus = async (
     applicantId: string,
     newStatus: "applied" | "reviewing" | "interview" | "declined" | "hired",
     note?: string,
   ) => {
-    // Convert lowercase status to uppercase for API
-    const apiStatus = newStatus.toUpperCase() as Application["status"];
-    
-    // In a real app, this would make an API call
-    console.log(
-      `Updating applicant ${applicantId} to status ${apiStatus}`,
-      note ? `with note: ${note}` : "",
-    );
-
-    // If the new status is interview, open the interview scheduling modal
-    if (newStatus === "interview") {
-      const applicant = applications.find((a) => a.id === applicantId);
-      if (applicant) {
-        setSelectedApplicantForInterview(applicant);
-        setShowInterviewModal(true);
+    try {
+      // Convert lowercase status to uppercase for API
+      const apiStatus = newStatus.toUpperCase() as Application["status"];
+      
+      const token = localStorage.getItem("authToken");
+      if (!token) {
+        toast.error("Authentication required");
+        return;
       }
-    }
 
-    setShowApplicantModal(false);
-    setSelectedApplicant(null);
+      const response = await fetch(`/api/applications/${applicantId}/status`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ status: apiStatus, note }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ error: "Failed to update status" }));
+        throw new Error(error.error || "Failed to update application status");
+      }
+
+      toast.success("Application status updated successfully");
+      
+      // Refresh applications list
+      await fetchApplications();
+
+      // If the new status is interview, open the interview scheduling modal
+      if (newStatus === "interview") {
+        const applicant = applications.find((a) => a.id === applicantId);
+        if (applicant) {
+          setSelectedApplicantForInterview(applicant);
+          setShowInterviewModal(true);
+        }
+      }
+
+      setShowApplicantModal(false);
+      setSelectedApplicant(null);
+    } catch (error) {
+      console.error("Error updating application status:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to update application status");
+    }
   };
 
   const openApplicantModal = (applicant: Application) => {
