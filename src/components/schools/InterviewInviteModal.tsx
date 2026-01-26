@@ -63,8 +63,6 @@ export const InterviewInviteModal: React.FC<InterviewInviteModalProps> = ({
   const [message, setMessage] = useState("");
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([
     { date: "", time: "", timezone: school.timezone || "UTC" },
-    { date: "", time: "", timezone: school.timezone || "UTC" },
-    { date: "", time: "", timezone: school.timezone || "UTC" },
   ]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -89,6 +87,24 @@ export const InterviewInviteModal: React.FC<InterviewInviteModalProps> = ({
   const updateTimeSlot = (index: number, field: keyof TimeSlot, value: string) => {
     const updated = [...timeSlots];
     updated[index] = { ...updated[index], [field]: value };
+    setTimeSlots(updated);
+  };
+
+  const addTimeSlot = () => {
+    if (timeSlots.length < 5) {
+      setTimeSlots([
+        ...timeSlots,
+        { date: "", time: "", timezone: school.timezone || "UTC" },
+      ]);
+    }
+  };
+
+  const removeTimeSlot = (index: number) => {
+    // Don't allow removing the first slot (index 0)
+    if (index === 0 || timeSlots.length <= 1) {
+      return;
+    }
+    const updated = timeSlots.filter((_, i) => i !== index);
     setTimeSlots(updated);
   };
 
@@ -122,15 +138,22 @@ export const InterviewInviteModal: React.FC<InterviewInviteModalProps> = ({
       }
     }
 
-    const validSlots = timeSlots.filter((slot) => slot.date && slot.time);
-    if (validSlots.length === 0) {
-      toast.error("Please provide at least one time slot");
+    // First slot (index 0) is always mandatory
+    if (!timeSlots[0].date || !timeSlots[0].time) {
+      toast.error("Please provide at least one time slot (Option 1 is required)");
       return false;
     }
 
-    if (validSlots.length < 3) {
-      toast.error("Please provide all 3 time slots");
-      return false;
+    // If additional slots are added, they must be completed
+    for (let i = 1; i < timeSlots.length; i++) {
+      const slot = timeSlots[i];
+      // If any field is filled, all fields must be filled
+      if (slot.date || slot.time) {
+        if (!slot.date || !slot.time) {
+          toast.error(`Please complete Option ${i + 1} or remove it`);
+          return false;
+        }
+      }
     }
 
     return true;
@@ -162,8 +185,6 @@ export const InterviewInviteModal: React.FC<InterviewInviteModalProps> = ({
       setLocation("");
       setMessage("");
       setTimeSlots([
-        { date: "", time: "", timezone: school.timezone || "UTC" },
-        { date: "", time: "", timezone: school.timezone || "UTC" },
         { date: "", time: "", timezone: school.timezone || "UTC" },
       ]);
     } catch (error) {
@@ -303,9 +324,24 @@ export const InterviewInviteModal: React.FC<InterviewInviteModalProps> = ({
 
                 {/* Time Slots */}
                 <div>
-                  <label className="block text-sm font-medium mb-3">
-                    Suggested Time Slots * (3 required)
-                  </label>
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="block text-sm font-medium">
+                      Suggested Time Slots
+                    </label>
+                    <button
+                      type="button"
+                      onClick={addTimeSlot}
+                      disabled={timeSlots.length >= 5}
+                      className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                        timeSlots.length >= 5
+                          ? "bg-neutral-100 dark:bg-neutral-700 text-neutral-400 cursor-not-allowed"
+                          : "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30"
+                      }`}
+                    >
+                      <Plus className="w-4 h-4" />
+                      Add Option
+                    </button>
+                  </div>
                   <div className="space-y-4">
                     {timeSlots.map((slot, index) => (
                       <div
@@ -315,7 +351,25 @@ export const InterviewInviteModal: React.FC<InterviewInviteModalProps> = ({
                         <div className="flex items-center justify-between mb-3">
                           <span className="text-sm font-medium">
                             Option {index + 1}
+                            {index === 0 && (
+                              <span className="ml-2 text-xs text-red-500">* Required</span>
+                            )}
+                            {index > 0 && (
+                              <span className="ml-2 text-xs text-neutral-500">
+                                {slot.date || slot.time ? "* Required" : "Optional"}
+                              </span>
+                            )}
                           </span>
+                          {index > 0 && (
+                            <button
+                              type="button"
+                              onClick={() => removeTimeSlot(index)}
+                              className="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors group"
+                              title="Remove this time slot"
+                            >
+                              <Trash2 className="w-4 h-4 text-neutral-400 group-hover:text-red-500" />
+                            </button>
+                          )}
                         </div>
                         <div className="grid md:grid-cols-3 gap-3">
                           <div>
@@ -330,7 +384,7 @@ export const InterviewInviteModal: React.FC<InterviewInviteModalProps> = ({
                               }
                               min={new Date().toISOString().split("T")[0]}
                               className="input text-sm"
-                              required
+                              required={index === 0 || slot.date !== "" || slot.time !== ""}
                             />
                           </div>
                           <div>
@@ -344,7 +398,7 @@ export const InterviewInviteModal: React.FC<InterviewInviteModalProps> = ({
                                 updateTimeSlot(index, "time", e.target.value)
                               }
                               className="input text-sm"
-                              required
+                              required={index === 0 || slot.date !== "" || slot.time !== ""}
                             />
                           </div>
                           <div>

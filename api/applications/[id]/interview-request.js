@@ -55,8 +55,22 @@ export default async function handler(req, res) {
       }
 
       // Validate time slots
-      if (!timeSlots || !Array.isArray(timeSlots) || timeSlots.length !== 3) {
-        return res.status(400).json({ error: "Exactly 3 time slots are required" });
+      if (!timeSlots || !Array.isArray(timeSlots) || timeSlots.length === 0) {
+        return res.status(400).json({ error: "At least one time slot is required" });
+      }
+
+      if (timeSlots.length > 5) {
+        return res.status(400).json({ error: "Maximum 5 time slots allowed" });
+      }
+
+      // Validate that all time slots have date and time
+      for (let i = 0; i < timeSlots.length; i++) {
+        const slot = timeSlots[i];
+        if (!slot.date || !slot.time) {
+          return res.status(400).json({ 
+            error: `Time slot ${i + 1} is incomplete. Both date and time are required.` 
+          });
+        }
       }
 
       // Create interview request
