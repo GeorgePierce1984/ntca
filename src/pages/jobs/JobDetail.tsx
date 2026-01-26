@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   MapPin,
@@ -579,7 +579,40 @@ const JobDetail: React.FC = () => {
       <div className="container-custom max-w-5xl mx-auto px-4 py-8">
         {/* Back Button */}
         <button
-          onClick={() => navigate(-1)}
+          onClick={() => {
+            // Check if we came from the dashboard jobs tab
+            const referrer = document.referrer;
+            const fromDashboard = referrer.includes('/teachers/dashboard') || location.state?.from === 'dashboard';
+            
+            if (fromDashboard) {
+              // Get filters from referrer URL or use current search params
+              try {
+                const referrerUrl = new URL(referrer);
+                const filters = referrerUrl.searchParams.toString();
+                // Navigate to dashboard jobs tab with filters preserved
+                navigate(`/teachers/dashboard?tab=jobs${filters ? `&${filters}` : ''}`);
+              } catch {
+                // If URL parsing fails, just navigate to dashboard jobs tab
+                navigate('/teachers/dashboard?tab=jobs');
+              }
+            } else {
+              // Check if we came from public jobs page
+              const fromJobsPage = referrer.includes('/jobs') && !referrer.includes('/jobs/');
+              if (fromJobsPage) {
+                // Get filters from referrer URL
+                try {
+                  const referrerUrl = new URL(referrer);
+                  const filters = referrerUrl.searchParams.toString();
+                  navigate(`/jobs${filters ? `?${filters}` : ''}`);
+                } catch {
+                  navigate('/jobs');
+                }
+              } else {
+                // Default: go back in history
+                navigate(-1);
+              }
+            }
+          }}
           className="flex items-center gap-2 text-neutral-600 dark:text-neutral-400 hover:text-primary-600 dark:hover:text-primary-400 mb-6 transition-colors"
         >
           <ChevronLeft className="w-5 h-5" />

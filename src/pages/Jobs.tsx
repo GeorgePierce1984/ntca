@@ -368,7 +368,10 @@ export default function Jobs() {
   };
 
   const handleJobClick = (jobId: string) => {
-    navigate(`/jobs/${jobId}`);
+    // Preserve current filters in URL when navigating to job detail
+    const params = buildURLParams(appliedFilters, searchTerm);
+    const queryString = params.toString();
+    navigate(`/jobs/${jobId}${queryString ? `?${queryString}` : ''}`);
   };
 
   const getDaysUntilDeadline = (deadline: string) => {

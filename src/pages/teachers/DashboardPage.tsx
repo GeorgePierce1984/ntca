@@ -223,9 +223,20 @@ const TeacherDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [profileFetchAttempted, setProfileFetchAttempted] = useState(false);
   const [jobsLoading, setJobsLoading] = useState(false);
+  
+  // Get initial tab from URL params, default to "overview"
+  const initialTab = searchParams.get("tab") as "overview" | "profile" | "jobs" | "applications" | "saved" | null;
   const [activeTab, setActiveTab] = useState<
     "overview" | "profile" | "jobs" | "applications" | "saved"
-  >("overview");
+  >(initialTab || "overview");
+  
+  // Update active tab when URL param changes
+  useEffect(() => {
+    const tabParam = searchParams.get("tab") as "overview" | "profile" | "jobs" | "applications" | "saved" | null;
+    if (tabParam && ["overview", "profile", "jobs", "applications", "saved"].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
 
   // Job search and filtering - matching Jobs page exactly
   const parseFiltersFromURL = (): FilterState => {
@@ -601,7 +612,13 @@ const TeacherDashboard: React.FC = () => {
   };
 
   const handleJobClick = (jobId: string) => {
-    navigate(`/jobs/${jobId}`);
+    // Preserve current filters in URL when navigating to job detail
+    const params = buildURLParams(appliedFilters, searchTerm);
+    const queryString = params.toString();
+    navigate(`/jobs/${jobId}`, { 
+      state: { from: 'dashboard' },
+      ...(queryString ? { search: queryString } : {})
+    });
   };
 
   const getDaysUntilDeadline = (deadline: string) => {
@@ -1199,6 +1216,10 @@ const TeacherDashboard: React.FC = () => {
                       setShowMessagesModal(true);
                     } else {
                       setActiveTab(key as any);
+                      // Update URL to reflect active tab
+                      const newParams = new URLSearchParams(searchParams);
+                      newParams.set("tab", key);
+                      setSearchParams(newParams, { replace: true });
                     }
                   }}
                   className={`py-4 px-1 border-b-2 font-medium text-sm ${
