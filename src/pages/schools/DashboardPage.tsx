@@ -2243,6 +2243,25 @@ export const SchoolDashboardPage: React.FC = () => {
           setSelectedApplicant(null);
         }}
         onStatusUpdate={updateApplicantStatus}
+        onRefresh={async () => {
+          // Refresh applications and update selected applicant
+          const response = await fetch("/api/applications", {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+            },
+          });
+          if (response.ok) {
+            const data = await response.json();
+            setApplications(data.applications || []);
+            // Update selected applicant if modal is still open
+            if (selectedApplicant) {
+              const updatedApp = data.applications?.find((a: Application) => a.id === selectedApplicant.id);
+              if (updatedApp) {
+                setSelectedApplicant(transformToApplicant(updatedApp));
+              }
+            }
+          }
+        }}
         subscriptionStatus={subscriptionStatus}
         jobTitle={
           selectedApplicant

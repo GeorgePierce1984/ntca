@@ -128,6 +128,7 @@ interface ApplicantModalProps {
     status: Applicant["status"],
     note?: string,
   ) => void;
+  onRefresh?: () => void; // Optional callback to refresh applicant data
   jobTitle?: string;
   subscriptionStatus?: string | null;
   isUpdating?: boolean;
@@ -144,6 +145,7 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
   isOpen,
   onClose,
   onStatusUpdate,
+  onRefresh,
   jobTitle,
   subscriptionStatus,
   isUpdating = false,
@@ -1224,11 +1226,13 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
 
                                   if (response.ok) {
                                     toast.success("Alternative time accepted!");
-                                    // Refresh applicant data by calling onStatusUpdate which will refresh applications
-                                    // This will update the interview request status
-                                    onStatusUpdate(applicant.id, applicant.status);
-                                    // Also trigger a window reload of the modal by closing and reopening
-                                    // The parent component will refresh applications list
+                                    // Refresh applicant data
+                                    if (onRefresh) {
+                                      onRefresh();
+                                    } else {
+                                      // Fallback: trigger status update to refresh
+                                      onStatusUpdate(applicant.id, applicant.status);
+                                    }
                                   } else {
                                     const error = await response.json();
                                     throw new Error(error.error || "Failed to accept alternative time");
@@ -1258,9 +1262,13 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
 
                                   if (response.ok) {
                                     toast.success("Alternative time declined. Teacher will be notified.");
-                                    // Refresh applicant data by calling onStatusUpdate which will refresh applications
-                                    // This will update the interview request status
-                                    onStatusUpdate(applicant.id, applicant.status);
+                                    // Refresh applicant data
+                                    if (onRefresh) {
+                                      onRefresh();
+                                    } else {
+                                      // Fallback: trigger status update to refresh
+                                      onStatusUpdate(applicant.id, applicant.status);
+                                    }
                                   } else {
                                     const error = await response.json();
                                     throw new Error(error.error || "Failed to decline alternative time");
