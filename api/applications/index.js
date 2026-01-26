@@ -87,7 +87,15 @@ export default async function handler(req, res) {
             },
             include: {
               job: true,
-              teacher: true,
+              teacher: {
+                include: {
+                  user: {
+                    select: {
+                      email: true,
+                    },
+                  },
+                },
+              },
               notes: {
                 orderBy: { createdAt: 'desc' }
               }

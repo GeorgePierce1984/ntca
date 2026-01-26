@@ -60,7 +60,6 @@ export default async function handler(req, res) {
             id: true,
             firstName: true,
             lastName: true,
-            email: true,
             phone: true,
             phoneCountryCode: true,
             city: true,
@@ -94,6 +93,11 @@ export default async function handler(req, res) {
             otherLanguages: true,
             visaStatus: true,
             workAuthorization: true,
+            user: {
+              select: {
+                email: true,
+              },
+            },
           },
         },
         notes: {

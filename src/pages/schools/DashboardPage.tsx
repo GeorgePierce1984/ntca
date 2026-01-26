@@ -124,7 +124,6 @@ interface Application {
     id: string;
     firstName: string;
     lastName: string;
-    email: string;
     phone: string;
     qualification: string;
     experience: string;
@@ -165,6 +164,9 @@ interface Application {
     currentLocation?: string;
     willingToRelocate?: boolean;
     preferredLocations?: string[];
+    user?: {
+      email: string;
+    };
   } | null;
 }
 
@@ -1054,7 +1056,9 @@ export const SchoolDashboardPage: React.FC = () => {
     const isGuestApplication = !application.teacher;
     const firstName = isGuestApplication ? application.guestFirstName || 'Guest' : application.teacher?.firstName || 'Unknown';
     const lastName = isGuestApplication ? application.guestLastName || 'User' : application.teacher?.lastName || 'User';
-    const email = isGuestApplication ? application.guestEmail || 'N/A' : application.teacher?.email || 'N/A';
+    const email = isGuestApplication 
+      ? application.guestEmail || 'N/A' 
+      : application.teacher?.user?.email || application.teacher?.email || 'N/A';
     
     return {
       id: application.id,
