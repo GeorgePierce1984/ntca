@@ -81,15 +81,31 @@ export default async function handler(req, res) {
     const firstName = isGuestApplication ? application.guestFirstName : application.teacher.firstName;
     const lastName = isGuestApplication ? application.guestLastName : application.teacher.lastName;
 
+    // Helper function to extract file extension from URL
+    const getFileExtension = (url) => {
+      if (!url) return 'pdf';
+      try {
+        const urlPath = new URL(url).pathname;
+        const match = urlPath.match(/\.([a-z0-9]+)(\?|$)/i);
+        return match ? match[1].toLowerCase() : 'pdf';
+      } catch {
+        // If URL parsing fails, try simple string matching
+        const match = url.match(/\.([a-z0-9]+)(\?|$)/i);
+        return match ? match[1].toLowerCase() : 'pdf';
+      }
+    };
+
     switch (type) {
       case "resume":
       case "cv":
         documentUrl = application.resumeUrl || (!isGuestApplication ? application.teacher.resumeUrl : null);
-        fileName = `${firstName}_${lastName}_Resume.pdf`;
+        const resumeExt = documentUrl ? getFileExtension(documentUrl) : 'pdf';
+        fileName = `${firstName}_${lastName}_Resume.${resumeExt}`;
         break;
       case "portfolio":
         documentUrl = application.portfolioUrl || (!isGuestApplication ? application.teacher.portfolioUrl : null);
-        fileName = `${firstName}_${lastName}_Portfolio.pdf`;
+        const portfolioExt = documentUrl ? getFileExtension(documentUrl) : 'pdf';
+        fileName = `${firstName}_${lastName}_Portfolio.${portfolioExt}`;
         break;
       case "coverletter":
         // Cover letters are stored as text, not files
@@ -109,7 +125,8 @@ export default async function handler(req, res) {
       case "certificate":
         // For future implementation when certificates are added
         documentUrl = !isGuestApplication ? application.teacher.certificateUrl : null;
-        fileName = `${firstName}_${lastName}_Certificate.pdf`;
+        const certExt = documentUrl ? getFileExtension(documentUrl) : 'pdf';
+        fileName = `${firstName}_${lastName}_Certificate.${certExt}`;
         break;
       default:
         return res.status(400).json({ error: "Invalid document type" });
