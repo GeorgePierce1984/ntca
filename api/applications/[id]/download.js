@@ -163,14 +163,23 @@ export default async function handler(req, res) {
       // Get the file content
       const fileBuffer = await fileResponse.arrayBuffer();
       
-      // Determine content type from the file URL or response
-      let contentType = fileResponse.headers.get("content-type") || "application/octet-stream";
-      if (documentUrl.toLowerCase().includes('.pdf')) {
-        contentType = "application/pdf";
-      } else if (documentUrl.toLowerCase().includes('.docx')) {
-        contentType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-      } else if (documentUrl.toLowerCase().includes('.doc')) {
-        contentType = "application/msword";
+      // Determine content type from the file extension
+      const fileExt = getFileExtension(documentUrl);
+      let contentType = "application/octet-stream";
+      
+      switch (fileExt) {
+        case 'pdf':
+          contentType = "application/pdf";
+          break;
+        case 'docx':
+          contentType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+          break;
+        case 'doc':
+          contentType = "application/msword";
+          break;
+        default:
+          // Try to get content type from response header, fallback to octet-stream
+          contentType = fileResponse.headers.get("content-type") || "application/octet-stream";
       }
 
       // Set headers for download
