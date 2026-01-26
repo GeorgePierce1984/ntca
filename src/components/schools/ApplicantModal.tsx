@@ -1224,8 +1224,11 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
 
                                   if (response.ok) {
                                     toast.success("Alternative time accepted!");
-                                    // Refresh applicant data
+                                    // Refresh applicant data by calling onStatusUpdate which will refresh applications
+                                    // This will update the interview request status
                                     onStatusUpdate(applicant.id, applicant.status);
+                                    // Also trigger a window reload of the modal by closing and reopening
+                                    // The parent component will refresh applications list
                                   } else {
                                     const error = await response.json();
                                     throw new Error(error.error || "Failed to accept alternative time");
@@ -1255,7 +1258,8 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
 
                                   if (response.ok) {
                                     toast.success("Alternative time declined. Teacher will be notified.");
-                                    // Refresh applicant data
+                                    // Refresh applicant data by calling onStatusUpdate which will refresh applications
+                                    // This will update the interview request status
                                     onStatusUpdate(applicant.id, applicant.status);
                                   } else {
                                     const error = await response.json();
