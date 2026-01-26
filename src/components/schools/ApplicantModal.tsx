@@ -1194,14 +1194,14 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
                         })()}
 
                         {/* Accepted Interview Details */}
-                        {safeApplicant.interviewRequest.status === "accepted" && safeApplicant.interviewRequest.selectedSlot !== undefined && (
+                        {safeInterviewRequest && safeInterviewRequest.status === "accepted" && safeInterviewRequest.selectedSlot !== undefined && (
                           <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
                             <p className="text-sm font-medium text-green-900 dark:text-green-300 mb-1">
                               Interview Confirmed:
                             </p>
                             <p className="text-sm text-green-800 dark:text-green-400">
                               {(() => {
-                                const slot = applicant.interviewRequest.timeSlots[applicant.interviewRequest.selectedSlot];
+                                const slot = safeInterviewRequest.timeSlots[safeInterviewRequest.selectedSlot];
                                 try {
                                   const dateTime = new Date(`${slot.date}T${slot.time}`);
                                   return new Intl.DateTimeFormat("en-US", {
