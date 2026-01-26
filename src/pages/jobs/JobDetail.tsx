@@ -140,6 +140,13 @@ const JobDetail: React.FC = () => {
     }
   }, [id, user]);
 
+  // Refetch job details when user changes (to update hasApplied status)
+  useEffect(() => {
+    if (user && id) {
+      fetchJobDetails();
+    }
+  }, [user, id]);
+
   // Update form when teacher profile loads and form is open
   useEffect(() => {
     if (showApplicationForm && teacherProfile && user?.userType === "TEACHER") {
@@ -206,12 +213,21 @@ const JobDetail: React.FC = () => {
 
   const fetchJobDetails = async () => {
     try {
-      const response = await fetch(`/api/jobs/${id}/public`);
+      const token = localStorage.getItem("authToken");
+      const headers: HeadersInit = {};
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+      
+      const response = await fetch(`/api/jobs/${id}/public`, {
+        headers,
+      });
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || "Failed to fetch job details");
       }
       const data = await response.json();
+      console.log("Job details fetched:", data.job?.hasApplied, data.job?.applicationStatus);
       setJob(data.job);
     } catch (error) {
       console.error("Error fetching job details:", error);
