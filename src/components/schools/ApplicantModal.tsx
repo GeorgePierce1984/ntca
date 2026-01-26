@@ -559,6 +559,20 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
                       return null;
                     })()}
 
+                    {/* Cover Letter Preview */}
+                    {applicant.coverLetter && (
+                      <div>
+                        <h3 className="text-lg font-semibold mb-4">
+                          Cover Letter
+                        </h3>
+                        <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-4">
+                          <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed">
+                            {applicant.coverLetter}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Teaching Experience */}
                     {applicant.teachingExperience && applicant.teachingExperience.length > 0 && (
                       <div>
@@ -635,13 +649,15 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
                         Contact Information
                       </h3>
                       <div className="space-y-3">
-                        <div className="flex items-center gap-3">
-                          <Mail className="w-5 h-5 text-neutral-400" />
-                          <div>
-                            <span className="text-sm text-neutral-500">Email</span>
-                            <p className="font-medium">{applicant.email}</p>
+                        {applicant.email && (
+                          <div className="flex items-center gap-3">
+                            <Mail className="w-5 h-5 text-neutral-400" />
+                            <div>
+                              <span className="text-sm text-neutral-500">Email</span>
+                              <p className="font-medium">{applicant.email}</p>
+                            </div>
                           </div>
-                        </div>
+                        )}
                         {applicant.phone && applicant.phone !== 'N/A' && (
                           <div className="flex items-center gap-3">
                             <Phone className="w-5 h-5 text-neutral-400" />
@@ -653,20 +669,6 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
                         )}
                       </div>
                     </div>
-
-                    {/* Cover Letter Preview */}
-                    {applicant.coverLetter && (
-                      <div>
-                        <h3 className="text-lg font-semibold mb-4">
-                          Cover Letter
-                        </h3>
-                        <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-4">
-                          <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed">
-                            {applicant.coverLetter}
-                          </p>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 )}
 
