@@ -1149,14 +1149,8 @@ export const SchoolDashboardPage: React.FC = () => {
       // Refresh applications list
       await fetchApplications();
 
-      // If the new status is interview, open the interview scheduling modal
-      if (newStatus === "interview") {
-        const applicant = applications.find((a) => a.id === applicantId);
-        if (applicant) {
-          setSelectedApplicantForInterview(applicant);
-          setShowInterviewModal(true);
-        }
-      }
+      // Don't open the old interview modal - the new InterviewInviteModal handles this
+      // If status was updated to interview via the new modal, it's already handled
 
       setShowApplicantModal(false);
       setSelectedApplicant(null);
@@ -2268,27 +2262,7 @@ export const SchoolDashboardPage: React.FC = () => {
         </div>
       )}
 
-      {/* Interview Schedule Modal */}
-      {selectedApplicantForInterview && (
-        <InterviewScheduleModal
-          isOpen={showInterviewModal}
-          onClose={() => {
-            setShowInterviewModal(false);
-            setSelectedApplicantForInterview(null);
-          }}
-          applicant={{
-            id: selectedApplicantForInterview.id,
-            name: selectedApplicantForInterview.teacher.firstName + " " + selectedApplicantForInterview.teacher.lastName,
-            email: selectedApplicantForInterview.teacher.email,
-            phone: selectedApplicantForInterview.teacher.phone,
-          }}
-          jobTitle={
-            jobs.find((j) => j.id === selectedApplicantForInterview.jobId)
-              ?.title || ""
-          }
-          onSchedule={handleScheduleInterview}
-        />
-      )}
+      {/* Old Interview Schedule Modal - Removed, using InterviewInviteModal in ApplicantModal instead */}
 
       {/* Job Edit Modal - Now using PostJobModal (removed old modal) */}
 

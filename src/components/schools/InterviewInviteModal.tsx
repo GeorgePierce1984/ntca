@@ -177,7 +177,7 @@ export const InterviewInviteModal: React.FC<InterviewInviteModalProps> = ({
         message: message.trim() || undefined,
         timeSlots: timeSlots.filter((slot) => slot.date && slot.time),
       });
-      toast.success("Interview invite sent successfully!");
+      // Don't show toast here - let the parent component handle it
       onClose();
       // Reset form
       setDuration(30);
