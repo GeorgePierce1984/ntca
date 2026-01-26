@@ -132,9 +132,13 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
   const [addingNote, setAddingNote] = useState(false);
 
   const fetchNotes = useCallback(async () => {
-    if (!applicant?.id || loadingNotes) return;
+    if (!applicant?.id) return;
     
-    setLoadingNotes(true);
+    setLoadingNotes((prev) => {
+      if (prev) return prev; // Already loading, don't start another fetch
+      return true;
+    });
+    
     try {
       const token = localStorage.getItem("authToken");
       if (!token) {
@@ -160,7 +164,7 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
     } finally {
       setLoadingNotes(false);
     }
-  }, [applicant?.id, loadingNotes]);
+  }, [applicant?.id]);
 
   const addNote = async () => {
     if (!newNote.trim() || !applicant?.id || addingNote) return;
