@@ -135,9 +135,39 @@ export default async function handler(req, res) {
       },
     });
 
-    // If document is stored in Vercel Blob or Cloudinary, redirect to the URL
-    // The browser will handle the download based on content-disposition headers from the storage provider
-    return res.redirect(documentUrl);
+    // Fetch the file from Vercel Blob and proxy it to the client
+    try {
+      const fileResponse = await fetch(documentUrl);
+      
+      if (!fileResponse.ok) {
+        return res.status(404).json({ error: "File not found" });
+      }
+
+      // Get the file content
+      const fileBuffer = await fileResponse.arrayBuffer();
+      
+      // Determine content type from the file URL or response
+      let contentType = fileResponse.headers.get("content-type") || "application/octet-stream";
+      if (documentUrl.toLowerCase().includes('.pdf')) {
+        contentType = "application/pdf";
+      } else if (documentUrl.toLowerCase().includes('.docx')) {
+        contentType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+      } else if (documentUrl.toLowerCase().includes('.doc')) {
+        contentType = "application/msword";
+      }
+
+      // Set headers for download
+      res.setHeader("Content-Type", contentType);
+      res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
+      res.setHeader("Content-Length", fileBuffer.byteLength);
+
+      // Send the file
+      return res.send(Buffer.from(fileBuffer));
+    } catch (fetchError) {
+      console.error("Error fetching file from storage:", fetchError);
+      // Fallback: redirect to the URL if fetch fails
+      return res.redirect(documentUrl);
+    }
 
   } catch (error) {
     console.error("Document download error:", error);

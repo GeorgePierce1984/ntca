@@ -184,38 +184,42 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
       );
 
       if (!response.ok) {
-        const error = await response.json();
+        const error = await response.json().catch(() => ({ error: "Failed to download document" }));
         throw new Error(error.error || "Failed to download document");
       }
 
-      // If it's a redirect response, open in new tab
-      if (response.redirected) {
-        window.open(response.url, "_blank");
+      // Handle file response
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.style.display = "none";
+      a.href = url;
+
+      // Get filename from content-disposition header or use default
+      const contentDisposition = response.headers.get("content-disposition");
+      let filename = `${documentType}_${applicant.name.replace(/\s+/g, "_")}.pdf`;
+
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="?(.+)"?/i);
+        if (filenameMatch) {
+          filename = filenameMatch[1];
+        }
       } else {
-        // Handle direct file response
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.style.display = "none";
-        a.href = url;
-
-        // Get filename from content-disposition header or use default
-        const contentDisposition = response.headers.get("content-disposition");
-        let filename = `${documentType}_${applicant.name.replace(/\s+/g, "_")}.pdf`;
-
-        if (contentDisposition) {
-          const filenameMatch = contentDisposition.match(/filename="?(.+)"?/i);
-          if (filenameMatch) {
-            filename = filenameMatch[1];
+        // Try to determine filename from resume URL if available
+        if (applicant.resumeUrl) {
+          const urlParts = applicant.resumeUrl.split('/');
+          const lastPart = urlParts[urlParts.length - 1];
+          if (lastPart && lastPart.includes('.')) {
+            filename = lastPart.split('?')[0]; // Remove query params if any
           }
         }
-
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
       }
+
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
     } catch (error) {
       console.error("Download error:", error);
       alert(
