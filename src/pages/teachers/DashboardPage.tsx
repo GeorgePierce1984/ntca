@@ -1961,6 +1961,7 @@ const TeacherDashboard: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
             >
+              {console.log('Dashboard: Rendering jobs tab, jobs count:', jobs.length, 'loading:', jobsLoading)}
               {/* Search Bar - Matching Jobs page exactly */}
               <form onSubmit={handleSearch} className="max-w-6xl mx-auto mb-8">
                 <div className="flex gap-4 mb-4">
