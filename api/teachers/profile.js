@@ -192,7 +192,8 @@ export default async function handler(req, res) {
                         }
                       }
                     }
-                  }
+                  },
+                  interviewRequest: true
                 },
                 orderBy: { createdAt: 'desc' }
               },

@@ -155,6 +155,27 @@ interface Application {
   resumeUrl?: string;
   portfolioUrl?: string;
   createdAt: string;
+  interviewRequest?: {
+    id: string;
+    duration: number;
+    locationType: string;
+    location?: string;
+    message?: string;
+    timeSlots: Array<{
+      date: string;
+      time: string;
+      timezone: string;
+    }>;
+    selectedSlot?: number;
+    alternativeSlot?: {
+      date: string;
+      time: string;
+      timezone: string;
+    };
+    status: "pending" | "accepted" | "alternative_suggested";
+    createdAt: string;
+    updatedAt: string;
+  };
   job: {
     id: string;
     title: string;
