@@ -1,6 +1,50 @@
 import { PrismaClient } from "@prisma/client";
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
+  datasources: {
+    db: {
+      url: process.env.DATABASE_URL,
+    },
+  },
+});
+
+// Helper function to retry database operations
+async function retryOperation(operation, maxRetries = 3, initialDelay = 500) {
+  let delay = initialDelay;
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      if (attempt === 1) {
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+      return await operation();
+    } catch (error) {
+      const isConnectionError = 
+        error.message?.includes("Engine was empty") ||
+        error.message?.includes("Engine is not yet connected") ||
+        error.message?.includes("connection") ||
+        error.message?.includes("Response from the Engine was empty") ||
+        error.code === "P1001" ||
+        error.code === "P1017" ||
+        error.code === "P1008" ||
+        error.code === "GenericFailure" ||
+        error.name === "PrismaClientUnknownRequestError";
+
+      if (isConnectionError && attempt < maxRetries) {
+        console.log(`Connection error on attempt ${attempt}, retrying in ${delay}ms...`);
+        await prisma.$disconnect().catch(() => {});
+        if (error.message?.includes("Engine is not yet connected") || error.message?.includes("Response from the Engine was empty")) {
+          await new Promise(resolve => setTimeout(resolve, 1500 + (attempt * 500)));
+        } else {
+          await new Promise(resolve => setTimeout(resolve, delay));
+          delay = Math.min(delay * 1.5, 2000);
+        }
+        continue;
+      }
+      throw error;
+    }
+  }
+}
 
 export default async function handler(req, res) {
   if (req.method !== "GET") {
@@ -16,7 +60,8 @@ export default async function handler(req, res) {
     }
 
     // Get job with school information
-    const job = await prisma.job.findUnique({
+    const job = await retryOperation(async () => {
+      return await prisma.job.findUnique({
       where: { id },
       include: {
         school: {
@@ -52,6 +97,7 @@ export default async function handler(req, res) {
           select: { applications: true },
         },
       },
+      });
     });
 
     if (!job) {
@@ -91,7 +137,5 @@ export default async function handler(req, res) {
       details:
         process.env.NODE_ENV === "development" ? error.message : undefined,
     });
-  } finally {
-    await prisma.$disconnect();
   }
 } 
