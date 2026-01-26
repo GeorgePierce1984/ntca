@@ -103,6 +103,7 @@ export default async function handler(req, res) {
         notes: {
           orderBy: { createdAt: "desc" },
         },
+        interviewRequest: true,
       },
       orderBy: { createdAt: "desc" },
     });
