@@ -251,17 +251,30 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
 
   // Safely parse interviewRequest.alternativeSlot if it exists and is a string
   const safeApplicant = useMemo(() => {
-    if (!applicant.interviewRequest?.alternativeSlot) {
-      return applicant;
-    }
-    
     try {
-      const interviewRequest = { ...applicant.interviewRequest };
+      // If no interviewRequest, return applicant as-is
+      if (!applicant.interviewRequest) {
+        return applicant;
+      }
+      
+      // If interviewRequest exists but no alternativeSlot, return as-is
+      if (!applicant.interviewRequest.alternativeSlot) {
+        return applicant;
+      }
       
       // Parse alternativeSlot if it's a JSON string
+      const interviewRequest = { ...applicant.interviewRequest };
+      
       if (typeof interviewRequest.alternativeSlot === 'string') {
         try {
-          interviewRequest.alternativeSlot = JSON.parse(interviewRequest.alternativeSlot);
+          const parsed = JSON.parse(interviewRequest.alternativeSlot);
+          // Validate parsed object has required properties
+          if (parsed && typeof parsed === 'object' && parsed.date && parsed.time) {
+            interviewRequest.alternativeSlot = parsed;
+          } else {
+            // Invalid structure, remove it
+            delete interviewRequest.alternativeSlot;
+          }
         } catch (e) {
           console.error("Error parsing alternativeSlot:", e);
           // If parsing fails, remove it to prevent errors
@@ -275,9 +288,8 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
       };
     } catch (error) {
       console.error("Error processing applicant interviewRequest:", error);
-      // Return applicant without interviewRequest if there's an error
-      const { interviewRequest, ...safeApplicant } = applicant;
-      return safeApplicant;
+      // Return applicant as-is if there's any error
+      return applicant;
     }
   }, [applicant]);
 
