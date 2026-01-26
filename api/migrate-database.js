@@ -770,6 +770,38 @@ export default async function handler(req, res) {
     if (!interviewRequestsTableCheck[0].exists) {
       console.log("Creating interview_requests table...");
       
+      // First, ensure applications table has a primary key constraint
+      const applicationsPKCheck = await prisma.$queryRaw`
+        SELECT EXISTS (
+          SELECT 1
+          FROM pg_constraint
+          WHERE conrelid = 'applications'::regclass
+          AND contype = 'p'
+        );
+      `;
+
+      if (!applicationsPKCheck[0].exists) {
+        console.log("Ensuring applications table has primary key...");
+        // Check if id column exists
+        const idColumnCheck = await prisma.$queryRaw`
+          SELECT EXISTS (
+            SELECT 1
+            FROM information_schema.columns
+            WHERE table_name = 'applications'
+            AND column_name = 'id'
+          );
+        `;
+        
+        if (idColumnCheck[0].exists) {
+          await prisma.$executeRaw`
+            ALTER TABLE "applications" 
+            ADD CONSTRAINT "applications_pkey" PRIMARY KEY ("id");
+          `;
+          console.log("✓ Added primary key to applications table");
+        }
+      }
+
+      // Create the interview_requests table
       await prisma.$executeRaw`
         CREATE TABLE "interview_requests" (
           "id" TEXT NOT NULL,
@@ -789,11 +821,13 @@ export default async function handler(req, res) {
         );
       `;
 
+      // Create unique index on applicationId
       await prisma.$executeRaw`
-        CREATE UNIQUE INDEX "interview_requests_applicationId_key" 
+        CREATE UNIQUE INDEX IF NOT EXISTS "interview_requests_applicationId_key" 
         ON "interview_requests"("applicationId");
       `;
 
+      // Add foreign key constraint
       await prisma.$executeRaw`
         ALTER TABLE "interview_requests" 
         ADD CONSTRAINT "interview_requests_applicationId_fkey" 
