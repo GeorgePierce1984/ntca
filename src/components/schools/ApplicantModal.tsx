@@ -1083,8 +1083,266 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
                     )}
                   </div>
 
+                  {/* Interview Request Information */}
+                  {applicant.interviewRequest && (
+                    <div className="mt-4 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <Calendar className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                          <h4 className="font-medium text-purple-900 dark:text-purple-300">
+                            Interview Request
+                          </h4>
+                        </div>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          applicant.interviewRequest.status === "pending"
+                            ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400"
+                            : applicant.interviewRequest.status === "accepted"
+                            ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400"
+                            : "bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-400"
+                        }`}>
+                          {applicant.interviewRequest.status === "pending"
+                            ? "Pending Response"
+                            : applicant.interviewRequest.status === "accepted"
+                            ? "Accepted"
+                            : "Alternative Suggested"}
+                        </span>
+                      </div>
+
+                      {/* Original Time Slots */}
+                      {applicant.interviewRequest.timeSlots && applicant.interviewRequest.timeSlots.length > 0 && (
+                        <div className="mb-3">
+                          <p className="text-sm font-medium text-purple-900 dark:text-purple-300 mb-2">
+                            Suggested Time Slots:
+                          </p>
+                          <div className="space-y-2">
+                            {applicant.interviewRequest.timeSlots.map((slot, index) => {
+                              const formatTime = (date: string, time: string, timezone: string) => {
+                                try {
+                                  const dateTime = new Date(`${date}T${time}`);
+                                  return new Intl.DateTimeFormat("en-US", {
+                                    timeZone: timezone,
+                                    weekday: "short",
+                                    month: "short",
+                                    day: "numeric",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                    hour12: true,
+                                  }).format(dateTime);
+                                } catch {
+                                  return `${date} ${time}`;
+                                }
+                              };
+                              
+                              return (
+                                <div
+                                  key={index}
+                                  className={`p-2 rounded text-sm ${
+                                    applicant.interviewRequest?.selectedSlot === index
+                                      ? "bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700"
+                                      : "bg-white dark:bg-neutral-800"
+                                  }`}
+                                >
+                                  <div className="flex items-center justify-between">
+                                    <span>
+                                      Option {index + 1}: {formatTime(slot.date, slot.time, slot.timezone)}
+                                    </span>
+                                    {applicant.interviewRequest?.selectedSlot === index && (
+                                      <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Alternative Time Slot Suggested */}
+                      {applicant.interviewRequest.status === "alternative_suggested" && applicant.interviewRequest.alternativeSlot && (
+                        <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
+                          <div className="flex items-center justify-between mb-2">
+                            <p className="text-sm font-medium text-amber-900 dark:text-amber-300">
+                              Teacher Suggested Alternative Time:
+                            </p>
+                            <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                          </div>
+                          <p className="text-sm text-amber-800 dark:text-amber-400 mb-3">
+                            {(() => {
+                              const alt = applicant.interviewRequest.alternativeSlot;
+                              try {
+                                const dateTime = new Date(`${alt.date}T${alt.time}`);
+                                return new Intl.DateTimeFormat("en-US", {
+                                  timeZone: alt.timezone,
+                                  weekday: "short",
+                                  month: "short",
+                                  day: "numeric",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                  hour12: true,
+                                }).format(dateTime);
+                              } catch {
+                                return `${alt.date} ${alt.time}`;
+                              }
+                            })()}
+                            {school?.timezone && applicant.interviewRequest.alternativeSlot.timezone !== school.timezone && (
+                              <span className="ml-2 text-xs">
+                                ({school.timezone}: {(() => {
+                                  const alt = applicant.interviewRequest.alternativeSlot;
+                                  try {
+                                    const dateTime = new Date(`${alt.date}T${alt.time}`);
+                                    return new Intl.DateTimeFormat("en-US", {
+                                      timeZone: school.timezone,
+                                      weekday: "short",
+                                      month: "short",
+                                      day: "numeric",
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                      hour12: true,
+                                    }).format(dateTime);
+                                  } catch {
+                                    return `${alt.date} ${alt.time}`;
+                                  }
+                                })()})
+                              </span>
+                            )}
+                          </p>
+                          <div className="flex gap-2 mt-3">
+                            <Button
+                              size="sm"
+                              variant="gradient"
+                              onClick={async () => {
+                                try {
+                                  const token = localStorage.getItem("authToken");
+                                  const response = await fetch(`/api/applications/${applicant.id}/interview-alternative-response`, {
+                                    method: "PATCH",
+                                    headers: {
+                                      "Content-Type": "application/json",
+                                      Authorization: `Bearer ${token}`,
+                                    },
+                                    body: JSON.stringify({ action: "accept" }),
+                                  });
+
+                                  if (response.ok) {
+                                    toast.success("Alternative time accepted!");
+                                    // Refresh applicant data
+                                    onStatusUpdate(applicant.id, applicant.status);
+                                  } else {
+                                    const error = await response.json();
+                                    throw new Error(error.error || "Failed to accept alternative time");
+                                  }
+                                } catch (error) {
+                                  toast.error(error instanceof Error ? error.message : "Failed to accept alternative time");
+                                }
+                              }}
+                            >
+                              <CheckCircle className="w-4 h-4 mr-2" />
+                              Accept Alternative
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={async () => {
+                                try {
+                                  const token = localStorage.getItem("authToken");
+                                  const response = await fetch(`/api/applications/${applicant.id}/interview-alternative-response`, {
+                                    method: "PATCH",
+                                    headers: {
+                                      "Content-Type": "application/json",
+                                      Authorization: `Bearer ${token}`,
+                                    },
+                                    body: JSON.stringify({ action: "decline" }),
+                                  });
+
+                                  if (response.ok) {
+                                    toast.success("Alternative time declined. Teacher will be notified.");
+                                    // Refresh applicant data
+                                    onStatusUpdate(applicant.id, applicant.status);
+                                  } else {
+                                    const error = await response.json();
+                                    throw new Error(error.error || "Failed to decline alternative time");
+                                  }
+                                } catch (error) {
+                                  toast.error(error instanceof Error ? error.message : "Failed to decline alternative time");
+                                }
+                              }}
+                            >
+                              <XCircle className="w-4 h-4 mr-2" />
+                              Decline Alternative
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Accepted Interview Details */}
+                      {applicant.interviewRequest.status === "accepted" && applicant.interviewRequest.selectedSlot !== undefined && (
+                        <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                          <p className="text-sm font-medium text-green-900 dark:text-green-300 mb-1">
+                            Interview Confirmed:
+                          </p>
+                          <p className="text-sm text-green-800 dark:text-green-400">
+                            {(() => {
+                              const slot = applicant.interviewRequest.timeSlots[applicant.interviewRequest.selectedSlot];
+                              try {
+                                const dateTime = new Date(`${slot.date}T${slot.time}`);
+                                return new Intl.DateTimeFormat("en-US", {
+                                  timeZone: slot.timezone,
+                                  weekday: "short",
+                                  month: "short",
+                                  day: "numeric",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                  hour12: true,
+                                }).format(dateTime);
+                              } catch {
+                                return `${slot.date} ${slot.time}`;
+                              }
+                            })()}
+                          </p>
+                          <p className="text-xs text-green-700 dark:text-green-500 mt-1">
+                            {applicant.interviewRequest.locationType === "video"
+                              ? "Video Interview"
+                              : applicant.interviewRequest.locationType === "phone"
+                              ? "Phone Interview"
+                              : "Onsite Interview"}{" "}
+                            - {applicant.interviewRequest.duration} minutes
+                          </p>
+                          {applicant.interviewRequest.location && (
+                            <p className="text-xs text-green-700 dark:text-green-500 mt-1">
+                              Location: {applicant.interviewRequest.location}
+                            </p>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Interview Details */}
+                      <div className="mt-3 pt-3 border-t border-purple-200 dark:border-purple-800">
+                        <p className="text-xs text-purple-700 dark:text-purple-400">
+                          <strong>Type:</strong> {applicant.interviewRequest.locationType === "video"
+                            ? "Video Interview"
+                            : applicant.interviewRequest.locationType === "phone"
+                            ? "Phone Interview"
+                            : "Onsite Interview"}
+                        </p>
+                        <p className="text-xs text-purple-700 dark:text-purple-400">
+                          <strong>Duration:</strong> {applicant.interviewRequest.duration} minutes
+                        </p>
+                        {applicant.interviewRequest.location && (
+                          <p className="text-xs text-purple-700 dark:text-purple-400">
+                            <strong>Location:</strong> {applicant.interviewRequest.location}
+                          </p>
+                        )}
+                        {applicant.interviewRequest.message && (
+                          <p className="text-xs text-purple-700 dark:text-purple-400 mt-2">
+                            <strong>Message:</strong> {applicant.interviewRequest.message}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   {applicant.status === "interview" &&
-                    applicant.interviewDate && (
+                    applicant.interviewDate &&
+                    !applicant.interviewRequest && (
                       <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
                         <p className="text-sm text-purple-700 dark:text-purple-300">
                           Interview scheduled:{" "}
