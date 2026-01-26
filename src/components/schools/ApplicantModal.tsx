@@ -51,6 +51,8 @@ interface Applicant {
   location: string;
   status: "applied" | "reviewing" | "interview" | "declined" | "hired";
   appliedDate: string;
+  createdAt?: string;
+  updatedAt?: string;
   resumeUrl?: string;
   coverLetter?: string;
   portfolioUrl?: string;
@@ -320,32 +322,74 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
     }
   };
 
-  const mockTimeline = [
-    {
-      date: applicant.appliedDate,
-      action: "Applied",
-      status: "applied",
-      note: "Application submitted with resume and cover letter",
-    },
-    {
-      date: "2024-01-19",
-      action: "Status Changed",
-      status: "reviewing",
-      note: "Application moved to review stage",
-    },
-    ...(applicant.status === "interview"
-      ? [
-          {
-            date: "2024-01-22",
-            action: "Interview Scheduled",
-            status: "interview",
-            note: applicant.interviewDate
-              ? `Interview scheduled for ${applicant.interviewDate}`
-              : "Interview scheduled",
-          },
-        ]
-      : []),
-  ];
+  // Build timeline from actual application data
+  const buildTimeline = () => {
+    const timeline: Array<{
+      date: string;
+      action: string;
+      status: string;
+      note: string;
+    }> = [];
+
+    // 1. Application submitted
+    const appliedDate = applicant.appliedDate || applicant.createdAt;
+    if (appliedDate) {
+      timeline.push({
+        date: appliedDate,
+        action: "Applied",
+        status: "applied",
+        note: "Application submitted" + (applicant.resumeUrl ? " with resume" : ""),
+      });
+    }
+
+    // 2. Status progression based on current status
+    const statusOrder = ["applied", "reviewing", "interview", "hired", "declined"];
+    const currentStatusIndex = statusOrder.indexOf(applicant.status);
+    
+    // Add status changes based on current status
+    if (currentStatusIndex >= 1) {
+      // Status changed to reviewing
+      const reviewingDate = applicant.updatedAt || appliedDate;
+      timeline.push({
+        date: reviewingDate,
+        action: "Status Changed",
+        status: "reviewing",
+        note: "Application moved to review stage",
+      });
+    }
+
+    if (currentStatusIndex >= 2) {
+      // Status changed to interview
+      const interviewDate = applicant.interviewDate || applicant.updatedAt || appliedDate;
+      timeline.push({
+        date: interviewDate,
+        action: "Interview Scheduled",
+        status: "interview",
+        note: applicant.interviewDate
+          ? `Interview scheduled for ${new Date(applicant.interviewDate).toLocaleDateString()}`
+          : "Interview scheduled",
+      });
+    }
+
+    if (currentStatusIndex >= 3) {
+      // Final status (hired or declined)
+      const finalDate = applicant.updatedAt || appliedDate;
+      const finalStatus = applicant.status === "hired" ? "hired" : "declined";
+      timeline.push({
+        date: finalDate,
+        action: applicant.status === "hired" ? "Hired" : "Declined",
+        status: finalStatus,
+        note: applicant.status === "hired" 
+          ? "Application accepted and candidate hired"
+          : "Application declined",
+      });
+    }
+
+    // Sort timeline by date (oldest first)
+    return timeline.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  };
+
+  const timeline = buildTimeline();
 
   return (
     <>
@@ -871,7 +915,8 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
                       Application Timeline
                     </h3>
                     <div className="space-y-4">
-                      {mockTimeline.map((event, index) => (
+                      {timeline.length > 0 ? (
+                        timeline.map((event, index) => (
                         <div key={index} className="flex items-start gap-4">
                           <div
                             className={`w-8 h-8 rounded-full flex items-center justify-center ${getStatusColor(event.status)}`}
@@ -904,7 +949,13 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
                             </p>
                           </div>
                         </div>
-                      ))}
+                      ))
+                      ) : (
+                        <div className="text-center py-8 text-neutral-500">
+                          <Clock className="w-12 h-12 mx-auto mb-3 text-neutral-300" />
+                          <p>No timeline events available</p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}

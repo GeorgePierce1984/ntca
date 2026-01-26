@@ -1073,6 +1073,8 @@ export const SchoolDashboardPage: React.FC = () => {
       location: isGuestApplication ? 'Not specified' : (application.teacher?.city && application.teacher?.country ? `${application.teacher.city}, ${application.teacher.country}` : 'Not specified'),
       status: application.status.toLowerCase() as "applied" | "reviewing" | "interview" | "declined" | "hired",
       appliedDate: application.createdAt,
+      createdAt: application.createdAt,
+      updatedAt: application.updatedAt,
       resumeUrl: application.resumeUrl,
       coverLetter: application.coverLetter,
       portfolioUrl: application.portfolioUrl,
