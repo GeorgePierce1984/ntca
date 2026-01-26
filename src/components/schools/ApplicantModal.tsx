@@ -316,14 +316,6 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
     }
   };
 
-  const addNote = () => {
-    if (newNote.trim()) {
-      // In a real app, this would make an API call
-      console.log("Adding note:", newNote);
-      setNewNote("");
-    }
-  };
-
   const mockTimeline = [
     {
       date: applicant.appliedDate,
