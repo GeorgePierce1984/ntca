@@ -154,14 +154,19 @@ export default async function handler(req, res) {
 
     // Fetch the file from Vercel Blob and proxy it to the client
     try {
-      const fileResponse = await fetch(documentUrl);
+      const fileResponse = await fetch(documentUrl, {
+        headers: {
+          'Accept': '*/*',
+        },
+      });
       
       if (!fileResponse.ok) {
         return res.status(404).json({ error: "File not found" });
       }
 
-      // Get the file content
-      const fileBuffer = await fileResponse.arrayBuffer();
+      // Get the file content as array buffer to preserve binary data
+      const arrayBuffer = await fileResponse.arrayBuffer();
+      const fileBuffer = Buffer.from(arrayBuffer);
       
       // Determine content type from the file extension
       const fileExt = getFileExtension(documentUrl);
@@ -182,13 +187,14 @@ export default async function handler(req, res) {
           contentType = fileResponse.headers.get("content-type") || "application/octet-stream";
       }
 
-      // Set headers for download
+      // Set headers for download - ensure binary data is handled correctly
       res.setHeader("Content-Type", contentType);
-      res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
-      res.setHeader("Content-Length", fileBuffer.byteLength);
+      res.setHeader("Content-Disposition", `attachment; filename="${encodeURIComponent(fileName)}"`);
+      res.setHeader("Content-Length", fileBuffer.length);
+      res.setHeader("Cache-Control", "no-cache");
 
-      // Send the file
-      return res.send(Buffer.from(fileBuffer));
+      // Send the file buffer directly - use end() for binary data
+      return res.end(fileBuffer);
     } catch (fetchError) {
       console.error("Error fetching file from storage:", fetchError);
       // Fallback: redirect to the URL if fetch fails
