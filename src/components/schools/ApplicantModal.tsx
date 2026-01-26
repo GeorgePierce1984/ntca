@@ -162,6 +162,7 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
   const [notes, setNotes] = useState<ApplicationNote[]>(applicant?.notes || []);
   const [loadingNotes, setLoadingNotes] = useState(false);
   const [addingNote, setAddingNote] = useState(false);
+  const [processingAlternative, setProcessingAlternative] = useState(false);
   const fetchingRef = useRef(false);
 
   const fetchNotes = useCallback(async () => {
@@ -989,9 +990,20 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
                               <Button
                                 size="sm"
                                 variant="gradient"
-                                onClick={async () => {
+                                disabled={processingAlternative}
+                                onClick={async (e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  
+                                  if (processingAlternative) return;
+                                  
+                                  setProcessingAlternative(true);
                                   try {
                                     const token = localStorage.getItem("authToken");
+                                    if (!token) {
+                                      throw new Error("Authentication required");
+                                    }
+
                                     const response = await fetch(`/api/applications/${applicant.id}/interview-alternative-response`, {
                                       method: "PATCH",
                                       headers: {
@@ -1001,33 +1013,62 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
                                       body: JSON.stringify({ action: "accept" }),
                                     });
 
-                                    if (response.ok) {
-                                      toast.success("Alternative time accepted!");
-                                      // Refresh applicant data
+                                    if (!response.ok) {
+                                      const errorData = await response.json().catch(() => ({ error: "Failed to accept alternative time" }));
+                                      throw new Error(errorData.error || "Failed to accept alternative time");
+                                    }
+
+                                    toast.success("Alternative time accepted!");
+                                    
+                                    // Refresh applicant data with error handling
+                                    try {
                                       if (onRefresh) {
-                                        onRefresh();
+                                        await onRefresh();
                                       } else {
                                         // Fallback: trigger status update to refresh
-                                        onStatusUpdate(applicant.id, applicant.status);
+                                        await onStatusUpdate(applicant.id, applicant.status);
                                       }
-                                    } else {
-                                      const error = await response.json();
-                                      throw new Error(error.error || "Failed to accept alternative time");
+                                    } catch (refreshError) {
+                                      console.error("Error refreshing applicant data:", refreshError);
+                                      // Don't show error to user, just log it - the API call succeeded
                                     }
                                   } catch (error) {
+                                    console.error("Error accepting alternative time:", error);
                                     toast.error(error instanceof Error ? error.message : "Failed to accept alternative time");
+                                  } finally {
+                                    setProcessingAlternative(false);
                                   }
                                 }}
                               >
-                                <CheckCircle className="w-4 h-4 mr-2" />
-                                Accept Alternative
+                                {processingAlternative ? (
+                                  <>
+                                    <Clock className="w-4 h-4 mr-2 animate-spin" />
+                                    Processing...
+                                  </>
+                                ) : (
+                                  <>
+                                    <CheckCircle className="w-4 h-4 mr-2" />
+                                    Accept Alternative
+                                  </>
+                                )}
                               </Button>
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                onClick={async () => {
+                                disabled={processingAlternative}
+                                onClick={async (e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  
+                                  if (processingAlternative) return;
+                                  
+                                  setProcessingAlternative(true);
                                   try {
                                     const token = localStorage.getItem("authToken");
+                                    if (!token) {
+                                      throw new Error("Authentication required");
+                                    }
+
                                     const response = await fetch(`/api/applications/${applicant.id}/interview-alternative-response`, {
                                       method: "PATCH",
                                       headers: {
@@ -1037,26 +1078,44 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
                                       body: JSON.stringify({ action: "decline" }),
                                     });
 
-                                    if (response.ok) {
-                                      toast.success("Alternative time declined. Teacher will be notified.");
-                                      // Refresh applicant data
+                                    if (!response.ok) {
+                                      const errorData = await response.json().catch(() => ({ error: "Failed to decline alternative time" }));
+                                      throw new Error(errorData.error || "Failed to decline alternative time");
+                                    }
+
+                                    toast.success("Alternative time declined. Teacher will be notified.");
+                                    
+                                    // Refresh applicant data with error handling
+                                    try {
                                       if (onRefresh) {
-                                        onRefresh();
+                                        await onRefresh();
                                       } else {
                                         // Fallback: trigger status update to refresh
-                                        onStatusUpdate(applicant.id, applicant.status);
+                                        await onStatusUpdate(applicant.id, applicant.status);
                                       }
-                                    } else {
-                                      const error = await response.json();
-                                      throw new Error(error.error || "Failed to decline alternative time");
+                                    } catch (refreshError) {
+                                      console.error("Error refreshing applicant data:", refreshError);
+                                      // Don't show error to user, just log it - the API call succeeded
                                     }
                                   } catch (error) {
+                                    console.error("Error declining alternative time:", error);
                                     toast.error(error instanceof Error ? error.message : "Failed to decline alternative time");
+                                  } finally {
+                                    setProcessingAlternative(false);
                                   }
                                 }}
                               >
-                                <XCircle className="w-4 h-4 mr-2" />
-                                Decline Alternative
+                                {processingAlternative ? (
+                                  <>
+                                    <Clock className="w-4 h-4 mr-2 animate-spin" />
+                                    Processing...
+                                  </>
+                                ) : (
+                                  <>
+                                    <XCircle className="w-4 h-4 mr-2" />
+                                    Decline Alternative
+                                  </>
+                                )}
                               </Button>
                             </div>
                           </div>

@@ -2260,22 +2260,38 @@ export const SchoolDashboardPage: React.FC = () => {
         }}
         onStatusUpdate={updateApplicantStatus}
         onRefresh={async () => {
-          // Refresh applications and update selected applicant
-          const response = await fetch("/api/applications", {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-            },
-          });
-          if (response.ok) {
+          try {
+            // Refresh applications and update selected applicant
+            const response = await fetch("/api/applications", {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+              },
+            });
+            
+            if (!response.ok) {
+              throw new Error("Failed to refresh applications");
+            }
+            
             const data = await response.json();
             setApplications(data.applications || []);
+            
             // Update selected applicant if modal is still open
             if (selectedApplicant) {
               const updatedApp = data.applications?.find((a: Application) => a.id === selectedApplicant.id);
               if (updatedApp) {
-                setSelectedApplicant(transformToApplicant(updatedApp));
+                try {
+                  const transformed = transformToApplicant(updatedApp);
+                  setSelectedApplicant(transformed);
+                } catch (transformError) {
+                  console.error("Error transforming applicant:", transformError);
+                  // If transformation fails, just refresh the list - don't crash
+                }
               }
             }
+          } catch (error) {
+            console.error("Error refreshing applications:", error);
+            // Don't throw - just log the error to prevent white screen
+            toast.error("Failed to refresh applicant data. Please refresh the page.");
           }
         }}
         subscriptionStatus={subscriptionStatus}
