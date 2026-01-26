@@ -131,8 +131,6 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
   const [loadingNotes, setLoadingNotes] = useState(false);
   const [addingNote, setAddingNote] = useState(false);
 
-  if (!applicant) return null;
-
   const fetchNotes = useCallback(async () => {
     if (!applicant?.id) return;
     
@@ -206,6 +204,8 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
       fetchNotes();
     }
   }, [activeTab, applicant?.id, fetchNotes, loadingNotes]);
+
+  if (!applicant) return null;
 
   // Only block if we have a subscription status and it's not active
   // If subscriptionStatus is null/undefined, allow access to prevent flash
