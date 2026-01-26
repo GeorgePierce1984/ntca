@@ -125,12 +125,10 @@ export default async function handler(req, res) {
     }
 
     // Check if already applied
-    const existingApplication = await prisma.application.findUnique({
+    const existingApplication = await prisma.application.findFirst({
       where: {
-        jobId_teacherId: {
-          jobId: jobId,
-          teacherId: teacher.id,
-        },
+        jobId: jobId,
+        teacherId: teacher.id,
       },
     });
 
