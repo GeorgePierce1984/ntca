@@ -16,6 +16,11 @@ import {
   XCircle,
   Globe,
   FileText,
+  Star,
+  GraduationCap,
+  Briefcase,
+  Languages,
+  Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import {
@@ -24,6 +29,7 @@ import {
 } from "./InterviewScheduleModal";
 import { Paywall } from "@/components/paywall/Paywall";
 import { canAccessPremiumFeatures } from "@/utils/subscription";
+import { getCountryByName } from "@/data/countries";
 
 interface Applicant {
   id: string;
@@ -46,6 +52,41 @@ interface Applicant {
   languages?: string[];
   visaStatus?: string;
   availability?: string;
+  // Teacher profile fields
+  photoUrl?: string;
+  nationality?: string;
+  firstName?: string;
+  lastName?: string;
+  experienceYears?: number;
+  verified?: boolean;
+  certifications?: string[];
+  subjects?: string[];
+  ageGroups?: string[];
+  bio?: string;
+  education?: Array<{
+    degree: string;
+    field: string;
+    institution: string;
+    year: string;
+  }>;
+  teachingExperience?: Array<{
+    schoolName: string;
+    country: string;
+    startDate: string;
+    endDate: string;
+    studentAgeGroups: string[];
+    subjectsTaught: string[];
+    keyAchievements: string;
+  }>;
+  specializations?: string[];
+  teachingStyle?: string;
+  nativeLanguage?: string;
+  otherLanguages?: string;
+  workAuthorization?: string[];
+  startDate?: string;
+  currentLocation?: string;
+  willingToRelocate?: boolean;
+  preferredLocations?: string[];
 }
 
 interface ApplicantModalProps {
@@ -246,14 +287,31 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
               {/* Header */}
               <div className="flex items-center justify-between p-6 border-b border-neutral-200 dark:border-neutral-800">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-lg">
-                    {applicant.name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")}
-                  </div>
+                  {applicant.photoUrl ? (
+                    <img
+                      src={applicant.photoUrl}
+                      alt={applicant.name}
+                      className="w-16 h-16 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-lg">
+                      {applicant.name
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")}
+                    </div>
+                  )}
                   <div>
-                    <h2 className="text-2xl font-bold">{applicant.name}</h2>
+                    <h2 className="text-2xl font-bold flex items-center gap-2">
+                      {applicant.nationality && (() => {
+                        const country = getCountryByName(applicant.nationality);
+                        return country?.flag ? <span className="text-2xl">{country.flag}</span> : null;
+                      })()}
+                      {applicant.name}
+                      {applicant.verified && (
+                        <CheckCircle className="w-6 h-6 text-green-500" />
+                      )}
+                    </h2>
                     <p className="text-neutral-600 dark:text-neutral-400">
                       {jobTitle}
                     </p>
@@ -311,105 +369,288 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
               <div className="p-6 max-h-[60vh] overflow-y-auto">
                 {activeTab === "overview" && (
                   <div className="space-y-6">
-                    {/* Contact Information */}
-                    <div className="grid md:grid-cols-2 gap-6">
-                      <div className="space-y-4">
-                        <h3 className="text-lg font-semibold mb-4">
-                          Contact Information
+                    {/* Key Information */}
+                    <div className="grid md:grid-cols-2 gap-4">
+                      {applicant.rating && (
+                        <div className="flex items-center gap-2">
+                          <Star className="w-5 h-5 text-yellow-500 fill-current" />
+                          <span className="font-medium">{applicant.rating} Rating</span>
+                        </div>
+                      )}
+                      <div className="flex items-center gap-2">
+                        <MapPin className="w-5 h-5 text-neutral-400" />
+                        <span>{applicant.location}</span>
+                      </div>
+                      {applicant.experienceYears !== undefined && applicant.experienceYears !== null && (
+                        <div className="flex items-center gap-2">
+                          <GraduationCap className="w-5 h-5 text-neutral-400" />
+                          <span>{applicant.experienceYears} years experience</span>
+                        </div>
+                      )}
+                      {applicant.availability && (
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-5 h-5 text-neutral-400" />
+                          <span>Available: {applicant.availability}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Subjects */}
+                    {applicant.subjects && applicant.subjects.length > 0 && (
+                      <div>
+                        <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                          <BookOpen className="w-5 h-5" />
+                          Subjects Taught
                         </h3>
-                        <div className="space-y-3">
-                          <div className="flex items-center gap-3">
-                            <Mail className="w-5 h-5 text-neutral-400" />
-                            <div>
-                              <span className="text-sm text-neutral-500">
-                                Email
-                              </span>
-                              <p className="font-medium">{applicant.email}</p>
-                            </div>
+                        <div className="flex flex-wrap gap-2">
+                          {applicant.subjects.map((subject, index) => (
+                            <span
+                              key={index}
+                              className="px-3 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-full text-sm"
+                            >
+                              {subject}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Bio/Summary */}
+                    {applicant.bio && applicant.bio.trim() && (
+                      <div>
+                        <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                          <User className="w-5 h-5" />
+                          About
+                        </h3>
+                        <p className="text-neutral-700 dark:text-neutral-300 whitespace-pre-wrap">
+                          {applicant.bio}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Languages */}
+                    {applicant.languages && applicant.languages.length > 0 && (
+                      <div>
+                        <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                          <Globe className="w-5 h-5" />
+                          Languages
+                        </h3>
+                        <div className="flex flex-wrap gap-2">
+                          {applicant.languages.map((language, index) => (
+                            <span
+                              key={index}
+                              className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-sm"
+                            >
+                              {language}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Age Groups */}
+                    {applicant.ageGroups && applicant.ageGroups.length > 0 && (
+                      <div>
+                        <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                          <Users className="w-5 h-5" />
+                          Age Groups
+                        </h3>
+                        <div className="flex flex-wrap gap-2">
+                          {applicant.ageGroups.map((ageGroup, index) => (
+                            <span
+                              key={index}
+                              className="px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full text-sm"
+                            >
+                              {ageGroup}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Qualifications - Certifications and Education */}
+                    {(() => {
+                      const hasCertInArray = (certName: string) => {
+                        if (!applicant.certifications || applicant.certifications.length === 0) return false;
+                        return applicant.certifications.some(cert => 
+                          cert.toLowerCase().includes(certName.toLowerCase())
+                        );
+                      };
+
+                      const hasCertInEducation = (certName: string) => {
+                        if (!applicant.education || applicant.education.length === 0) return false;
+                        return applicant.education.some((edu: any) => {
+                          if (!edu?.degree) return false;
+                          const degree = edu.degree.toLowerCase();
+                          return degree.includes(certName.toLowerCase());
+                        });
+                      };
+
+                      const hasCertInQualification = (certName: string) => {
+                        if (!applicant.qualification) return false;
+                        return applicant.qualification.toLowerCase().includes(certName.toLowerCase());
+                      };
+
+                      const hasCertification = (certName: string) => {
+                        return hasCertInArray(certName) || hasCertInEducation(certName) || hasCertInQualification(certName);
+                      };
+
+                      const certs = [];
+                      if (hasCertification('TEFL')) certs.push({ name: 'TEFL', icon: Award });
+                      if (hasCertification('CELTA')) certs.push({ name: 'CELTA', icon: Award });
+                      if (hasCertification('TESOL')) certs.push({ name: 'TESOL', icon: Award });
+                      if (hasCertification('DELTA')) certs.push({ name: 'DELTA', icon: Award });
+
+                      const degrees = applicant.education && applicant.education.length > 0
+                        ? applicant.education.filter((edu: any) => {
+                            if (!edu?.degree) return false;
+                            const degree = edu.degree.toLowerCase();
+                            return degree.includes("master") || degree.includes("bachelor") || degree.includes("phd") || degree.includes("degree");
+                          })
+                        : [];
+
+                      if (certs.length > 0 || degrees.length > 0) {
+                        return (
+                          <div>
+                            <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                              <GraduationCap className="w-5 h-5" />
+                              Qualifications
+                            </h3>
+                            
+                            {certs.length > 0 && (
+                              <div className="mb-4">
+                                <div className="flex flex-wrap gap-4">
+                                  {certs.map((cert, index) => {
+                                    const Icon = cert.icon;
+                                    return (
+                                      <div key={index} className="flex items-center gap-2" title={`${cert.name} Certified`}>
+                                        <Icon className="w-5 h-5 text-primary-600" />
+                                        <span className="text-sm text-neutral-600 dark:text-neutral-400">{cert.name}</span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            )}
+
+                            {degrees.length > 0 && (
+                              <div className="space-y-3">
+                                {degrees.map((edu: any, index: number) => (
+                                  <div
+                                    key={index}
+                                    className="p-4 bg-neutral-50 dark:bg-neutral-900/50 rounded-lg"
+                                  >
+                                    <p className="font-medium">
+                                      {edu.degree}
+                                      {edu.field && edu.field.trim() && ` in ${edu.field}`}
+                                    </p>
+                                    <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                                      {edu.institution && edu.institution.trim() && `${edu.institution}`}
+                                      {edu.institution && edu.institution.trim() && edu.year && ` • `}
+                                      {edu.year && edu.year.trim() && `${edu.year}`}
+                                    </p>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
+                        );
+                      }
+                      return null;
+                    })()}
+
+                    {/* Teaching Experience */}
+                    {applicant.teachingExperience && applicant.teachingExperience.length > 0 && (
+                      <div>
+                        <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                          <Briefcase className="w-5 h-5" />
+                          Teaching Experience
+                        </h3>
+                        <div className="space-y-4">
+                          {applicant.teachingExperience.map((exp, index) => (
+                            <div
+                              key={index}
+                              className="p-4 bg-neutral-50 dark:bg-neutral-900/50 rounded-lg"
+                            >
+                              <div className="flex items-start justify-between mb-2">
+                                <div>
+                                  <p className="font-medium">{exp.schoolName}</p>
+                                  <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                                    {exp.country}
+                                  </p>
+                                </div>
+                                <span className="text-sm text-neutral-500">
+                                  {exp.startDate} - {exp.endDate}
+                                </span>
+                              </div>
+                              {exp.subjectsTaught && exp.subjectsTaught.length > 0 && (
+                                <div className="mt-2">
+                                  <p className="text-sm font-medium mb-1">Subjects:</p>
+                                  <div className="flex flex-wrap gap-1">
+                                    {exp.subjectsTaught.map((subject, idx) => (
+                                      <span
+                                        key={idx}
+                                        className="px-2 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded text-xs"
+                                      >
+                                        {subject}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                              {exp.keyAchievements && (
+                                <p className="text-sm text-neutral-700 dark:text-neutral-300 mt-2">
+                                  {exp.keyAchievements}
+                                </p>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Specializations */}
+                    {applicant.specializations && applicant.specializations.length > 0 && (
+                      <div>
+                        <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                          <Award className="w-5 h-5" />
+                          Specializations
+                        </h3>
+                        <div className="flex flex-wrap gap-2">
+                          {applicant.specializations.map((spec, index) => (
+                            <span
+                              key={index}
+                              className="px-3 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 rounded-full text-sm"
+                            >
+                              {spec}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Contact Information */}
+                    <div>
+                      <h3 className="text-lg font-semibold mb-4">
+                        Contact Information
+                      </h3>
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-3">
+                          <Mail className="w-5 h-5 text-neutral-400" />
+                          <div>
+                            <span className="text-sm text-neutral-500">Email</span>
+                            <p className="font-medium">{applicant.email}</p>
+                          </div>
+                        </div>
+                        {applicant.phone && applicant.phone !== 'N/A' && (
                           <div className="flex items-center gap-3">
                             <Phone className="w-5 h-5 text-neutral-400" />
                             <div>
-                              <span className="text-sm text-neutral-500">
-                                Phone
-                              </span>
+                              <span className="text-sm text-neutral-500">Phone</span>
                               <p className="font-medium">{applicant.phone}</p>
                             </div>
                           </div>
-                          <div className="flex items-center gap-3">
-                            <MapPin className="w-5 h-5 text-neutral-400" />
-                            <div>
-                              <span className="text-sm text-neutral-500">
-                                Location
-                              </span>
-                              <p className="font-medium">
-                                {applicant.location}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="space-y-4">
-                        <h3 className="text-lg font-semibold mb-4">
-                          Qualifications
-                        </h3>
-                        <div className="space-y-3">
-                          <div className="flex items-center gap-3">
-                            <Award className="w-5 h-5 text-neutral-400" />
-                            <div>
-                              <span className="text-sm text-neutral-500">
-                                Qualification
-                              </span>
-                              <p className="font-medium">
-                                {applicant.qualification}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <BookOpen className="w-5 h-5 text-neutral-400" />
-                            <div>
-                              <span className="text-sm text-neutral-500">
-                                Experience
-                              </span>
-                              <p className="font-medium">
-                                {applicant.experience}
-                              </p>
-                            </div>
-                          </div>
-                          {applicant.languages && (
-                            <div className="flex items-center gap-3">
-                              <Globe className="w-5 h-5 text-neutral-400" />
-                              <div>
-                                <span className="text-sm text-neutral-500">
-                                  Languages
-                                </span>
-                                <p className="font-medium">
-                                  {applicant.languages.join(", ")}
-                                </p>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Rating */}
-                    <div>
-                      <h3 className="text-lg font-semibold mb-4">Rating</h3>
-                      <div className="flex items-center gap-2">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <button
-                            key={star}
-                            onClick={() => setRating(star)}
-                            className={`text-2xl ${star <= rating ? "text-amber-500" : "text-neutral-300"}`}
-                          >
-                            ★
-                          </button>
-                        ))}
-                        <span className="ml-2 text-neutral-600 dark:text-neutral-400">
-                          {rating}/5
-                        </span>
+                        )}
                       </div>
                     </div>
 

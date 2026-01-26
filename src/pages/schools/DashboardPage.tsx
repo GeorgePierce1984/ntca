@@ -132,6 +132,39 @@ interface Application {
     country: string;
     bio?: string;
     photoUrl?: string;
+    nationality?: string;
+    experienceYears?: number;
+    verified?: boolean;
+    rating?: number;
+    certifications?: string[];
+    subjects?: string[];
+    ageGroups?: string[];
+    education?: Array<{
+      degree: string;
+      field: string;
+      institution: string;
+      year: string;
+    }>;
+    teachingExperience?: Array<{
+      schoolName: string;
+      country: string;
+      startDate: string;
+      endDate: string;
+      studentAgeGroups: string[];
+      subjectsTaught: string[];
+      keyAchievements: string;
+    }>;
+    specializations?: string[];
+    teachingStyle?: string;
+    nativeLanguage?: string;
+    otherLanguages?: string;
+    visaStatus?: string;
+    workAuthorization?: string[];
+    availability?: string;
+    startDate?: string;
+    currentLocation?: string;
+    willingToRelocate?: boolean;
+    preferredLocations?: string[];
   } | null;
 }
 
@@ -1027,6 +1060,8 @@ export const SchoolDashboardPage: React.FC = () => {
       id: application.id,
       jobId: application.jobId,
       name: `${firstName} ${lastName}`,
+      firstName: firstName,
+      lastName: lastName,
       email: email,
       phone: isGuestApplication ? 'N/A' : application.teacher?.phone || 'N/A',
       qualification: isGuestApplication ? 'Guest Applicant' : application.teacher?.qualification || 'N/A',
@@ -1039,6 +1074,29 @@ export const SchoolDashboardPage: React.FC = () => {
       portfolioUrl: application.portfolioUrl,
       rating: application.rating,
       interviewDate: application.interviewDate,
+      // Teacher profile fields
+      photoUrl: application.teacher?.photoUrl,
+      nationality: application.teacher?.nationality,
+      verified: application.teacher?.verified,
+      experienceYears: application.teacher?.experienceYears,
+      certifications: application.teacher?.certifications,
+      subjects: application.teacher?.subjects,
+      ageGroups: application.teacher?.ageGroups,
+      bio: application.teacher?.bio,
+      education: application.teacher?.education,
+      teachingExperience: application.teacher?.teachingExperience,
+      specializations: application.teacher?.specializations,
+      teachingStyle: application.teacher?.teachingStyle,
+      nativeLanguage: application.teacher?.nativeLanguage,
+      otherLanguages: application.teacher?.otherLanguages,
+      visaStatus: application.teacher?.visaStatus,
+      workAuthorization: application.teacher?.workAuthorization,
+      availability: application.teacher?.availability,
+      startDate: application.teacher?.startDate,
+      currentLocation: application.teacher?.currentLocation,
+      willingToRelocate: application.teacher?.willingToRelocate,
+      preferredLocations: application.teacher?.preferredLocations,
+      languages: application.teacher?.otherLanguages ? [application.teacher.otherLanguages] : undefined,
     };
   };
 

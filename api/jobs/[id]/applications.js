@@ -87,6 +87,13 @@ export default async function handler(req, res) {
             salaryExpectation: true,
             verified: true,
             rating: true,
+            nationality: true,
+            teachingExperience: true,
+            teachingStyle: true,
+            nativeLanguage: true,
+            otherLanguages: true,
+            visaStatus: true,
+            workAuthorization: true,
           },
         },
         notes: {
