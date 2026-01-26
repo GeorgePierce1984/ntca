@@ -140,13 +140,6 @@ const JobDetail: React.FC = () => {
     }
   }, [id, user]);
 
-  // Refetch job details when user changes (to update hasApplied status)
-  useEffect(() => {
-    if (user && id) {
-      fetchJobDetails();
-    }
-  }, [user, id]);
-
   // Update form when teacher profile loads and form is open
   useEffect(() => {
     if (showApplicationForm && teacherProfile && user?.userType === "TEACHER") {
