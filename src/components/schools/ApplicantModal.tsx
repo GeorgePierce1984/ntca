@@ -30,6 +30,15 @@ import {
 import { Paywall } from "@/components/paywall/Paywall";
 import { canAccessPremiumFeatures } from "@/utils/subscription";
 import { getCountryByName } from "@/data/countries";
+import toast from "react-hot-toast";
+
+interface ApplicationNote {
+  id: string;
+  content: string;
+  authorType: string;
+  authorName?: string;
+  createdAt: string;
+}
 
 interface Applicant {
   id: string;
@@ -46,7 +55,7 @@ interface Applicant {
   coverLetter?: string;
   portfolioUrl?: string;
   rating?: number;
-  notes?: string[];
+  notes?: ApplicationNote[];
   interviewDate?: string;
   skills?: string[];
   languages?: string[];
@@ -118,8 +127,85 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
   const [rating, setRating] = useState(applicant?.rating || 0);
   const [showInterviewModal, setShowInterviewModal] = useState(false);
   const [isDownloading, setIsDownloading] = useState<string | null>(null);
+  const [notes, setNotes] = useState<ApplicationNote[]>(applicant?.notes || []);
+  const [loadingNotes, setLoadingNotes] = useState(false);
+  const [addingNote, setAddingNote] = useState(false);
 
   if (!applicant) return null;
+
+  // Fetch notes when notes tab is opened
+  React.useEffect(() => {
+    if (activeTab === "notes" && applicant?.id && notes.length === 0 && !loadingNotes) {
+      fetchNotes();
+    }
+  }, [activeTab, applicant?.id]);
+
+  const fetchNotes = async () => {
+    if (!applicant?.id) return;
+    
+    setLoadingNotes(true);
+    try {
+      const token = localStorage.getItem("authToken");
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+
+      const response = await fetch(`/api/applications/${applicant.id}/notes`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setNotes(data.notes || []);
+      } else {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to fetch notes");
+      }
+    } catch (error) {
+      console.error("Error fetching notes:", error);
+      toast.error("Failed to load notes");
+    } finally {
+      setLoadingNotes(false);
+    }
+  };
+
+  const addNote = async () => {
+    if (!newNote.trim() || !applicant?.id || addingNote) return;
+
+    setAddingNote(true);
+    try {
+      const token = localStorage.getItem("authToken");
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+
+      const response = await fetch(`/api/applications/${applicant.id}/notes`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ content: newNote.trim() }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setNotes([data.note, ...notes]);
+        setNewNote("");
+        toast.success("Note added successfully");
+      } else {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to add note");
+      }
+    } catch (error) {
+      console.error("Error adding note:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to add note");
+    } finally {
+      setAddingNote(false);
+    }
+  };
 
   // Only block if we have a subscription status and it's not active
   // If subscriptionStatus is null/undefined, allow access to prevent flash
@@ -744,36 +830,42 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
                         <Button
                           size="sm"
                           onClick={addNote}
-                          disabled={!newNote.trim()}
+                          disabled={!newNote.trim() || addingNote}
                         >
-                          Add Note
+                          {addingNote ? "Adding..." : "Add Note"}
                         </Button>
                       </div>
                     </div>
 
                     {/* Existing notes */}
-                    <div className="space-y-3">
-                      {(
-                        applicant.notes || [
-                          "Strong teaching background",
-                          "Excellent communication skills",
-                          "Available for immediate start",
-                        ]
-                      ).map((note, index) => (
-                        <div
-                          key={index}
-                          className="p-4 border border-neutral-200 dark:border-neutral-800 rounded-lg"
-                        >
-                          <p className="text-neutral-700 dark:text-neutral-300">
-                            {note}
-                          </p>
-                          <p className="text-xs text-neutral-500 mt-2">
-                            Added on {new Date().toLocaleDateString()} by HR
-                            Team
-                          </p>
-                        </div>
-                      ))}
-                    </div>
+                    {loadingNotes ? (
+                      <div className="text-center py-8 text-neutral-500">
+                        <Clock className="w-8 h-8 mx-auto mb-3 text-neutral-300 animate-spin" />
+                        <p>Loading notes...</p>
+                      </div>
+                    ) : notes.length > 0 ? (
+                      <div className="space-y-3">
+                        {notes.map((note) => (
+                          <div
+                            key={note.id}
+                            className="p-4 border border-neutral-200 dark:border-neutral-800 rounded-lg"
+                          >
+                            <p className="text-neutral-700 dark:text-neutral-300">
+                              {note.content}
+                            </p>
+                            <p className="text-xs text-neutral-500 mt-2">
+                              Added on {new Date(note.createdAt).toLocaleDateString()}
+                              {note.authorName && ` by ${note.authorName}`}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-neutral-500">
+                        <MessageSquare className="w-12 h-12 mx-auto mb-3 text-neutral-300" />
+                        <p>No notes yet. Add your first note above.</p>
+                      </div>
+                    )}
                   </div>
                 )}
 

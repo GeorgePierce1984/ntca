@@ -1101,6 +1101,7 @@ export const SchoolDashboardPage: React.FC = () => {
       willingToRelocate: application.teacher?.willingToRelocate,
       preferredLocations: application.teacher?.preferredLocations,
       languages: application.teacher?.otherLanguages ? [application.teacher.otherLanguages] : undefined,
+      notes: application.notes || [],
     };
   };
 
