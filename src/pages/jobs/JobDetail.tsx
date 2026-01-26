@@ -220,8 +220,13 @@ const JobDetail: React.FC = () => {
         throw new Error(errorData.message || "Failed to fetch job details");
       }
       const data = await response.json();
-      console.log("Job details fetched:", data.job?.hasApplied, data.job?.applicationStatus);
-      setJob(data.job);
+      console.log("Job details fetched - hasApplied:", data.job?.hasApplied, "status:", data.job?.applicationStatus, "full job:", data.job);
+      // Ensure hasApplied and applicationStatus are set on the job object
+      setJob({
+        ...data.job,
+        hasApplied: data.job?.hasApplied || false,
+        applicationStatus: data.job?.applicationStatus || null,
+      });
     } catch (error) {
       console.error("Error fetching job details:", error);
       toast.error("Failed to load job details");
