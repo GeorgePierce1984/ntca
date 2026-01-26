@@ -2237,6 +2237,12 @@ export const SchoolDashboardPage: React.FC = () => {
             : ""
         }
         isUpdating={updatingStatus === selectedApplicant?.id}
+        school={{
+          name: fullSchoolData?.name || schoolProfile?.name || "School",
+          city: fullSchoolData?.city,
+          country: fullSchoolData?.country,
+          timezone: fullSchoolData?.timezone || "UTC",
+        }}
       />
 
       {/* Profile Completion Modal */}

@@ -23,10 +23,7 @@ import {
   Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import {
-  InterviewScheduleModal,
-  InterviewData,
-} from "./InterviewScheduleModal";
+import { InterviewInviteModal } from "./InterviewInviteModal";
 import { Paywall } from "@/components/paywall/Paywall";
 import { canAccessPremiumFeatures } from "@/utils/subscription";
 import { getCountryByName } from "@/data/countries";
@@ -112,6 +109,12 @@ interface ApplicantModalProps {
   jobTitle?: string;
   subscriptionStatus?: string | null;
   isUpdating?: boolean;
+  school?: {
+    name: string;
+    city?: string;
+    country?: string;
+    timezone?: string;
+  };
 }
 
 export const ApplicantModal: React.FC<ApplicantModalProps> = ({
@@ -122,6 +125,7 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
   jobTitle,
   subscriptionStatus,
   isUpdating = false,
+  school,
 }) => {
   const [activeTab, setActiveTab] = useState<
     "overview" | "documents" | "notes" | "timeline"
@@ -247,11 +251,43 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
     setInterviewDate("");
   };
 
-  const handleScheduleInterview = (interviewData: InterviewData) => {
-    // Update the applicant status with interview details
-    const note = `Interview scheduled for ${new Date(interviewData.date + " " + interviewData.time).toLocaleString()}`;
-    onStatusUpdate(applicant.id, "interview", note);
-    setShowInterviewModal(false);
+  const handleSendInterviewInvite = async (data: {
+    applicationId: string;
+    duration: number;
+    locationType: "video" | "phone" | "onsite";
+    location: string;
+    message?: string;
+    timeSlots: Array<{ date: string; time: string; timezone: string }>;
+  }) => {
+    try {
+      const token = localStorage.getItem("authToken");
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+
+      const response = await fetch(`/api/applications/${data.applicationId}/interview-request`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ error: "Failed to send interview invite" }));
+        throw new Error(error.error || "Failed to send interview invite");
+      }
+
+      // Status will be updated to INTERVIEW by the API
+      toast.success("Interview invite sent successfully!");
+      setShowInterviewModal(false);
+      // Refresh the applicant data by calling onStatusUpdate
+      onStatusUpdate(applicant.id, "interview");
+    } catch (error) {
+      console.error("Error sending interview invite:", error);
+      throw error; // Re-throw to let modal handle the error
+    }
   };
 
   const openInterviewModal = () => {
@@ -1043,18 +1079,22 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
       </AnimatePresence>
 
       {/* Interview Schedule Modal */}
-      <InterviewScheduleModal
-        isOpen={showInterviewModal}
-        onClose={() => setShowInterviewModal(false)}
-        applicant={{
-          id: applicant.id,
-          name: applicant.name,
-          email: applicant.email,
-          phone: applicant.phone,
-        }}
-        jobTitle={jobTitle || ""}
-        onSchedule={handleScheduleInterview}
-      />
+      {school && applicant && (
+        <InterviewInviteModal
+          isOpen={showInterviewModal}
+          onClose={() => setShowInterviewModal(false)}
+          applicant={{
+            id: applicant.id,
+            name: applicant.name,
+            email: applicant.email,
+            currentLocation: applicant.currentLocation,
+            timezone: applicant.currentLocation ? "UTC" : undefined, // TODO: Get actual teacher timezone
+          }}
+          school={school}
+          jobTitle={jobTitle || ""}
+          onSend={handleSendInterviewInvite}
+        />
+      )}
     </>
   );
 };

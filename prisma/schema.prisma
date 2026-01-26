@@ -298,9 +298,10 @@ model Application {
   updatedAt DateTime @updatedAt
 
   // Relations
-  job     Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  teacher Teacher? @relation(fields: [teacherId], references: [id], onDelete: Cascade)
-  notes   ApplicationNote[]
+  job              Job               @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  teacher          Teacher?          @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  notes            ApplicationNote[]
+  interviewRequest InterviewRequest?
 
   @@map("applications")
 }
@@ -318,6 +319,31 @@ model ApplicationNote {
   application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
 
   @@map("application_notes")
+}
+
+model InterviewRequest {
+  id            String   @id @default(cuid())
+  applicationId String
+  duration      Int      // Duration in minutes (30, 45, 60, etc.)
+  locationType  String   // "video" | "phone" | "onsite"
+  location      String?  // Video link, phone number, or onsite address
+  message       String?  // Optional message from school
+  
+  // Three suggested time slots (stored as JSON)
+  timeSlots     Json     // Array of { date: string, time: string, timezone: string }
+  
+  // Teacher response
+  selectedSlot  Int?     // Index of selected slot (0, 1, or 2) or null if alternative suggested
+  alternativeSlot Json?  // If teacher suggests alternative: { date: string, time: string, timezone: string }
+  status        String   @default("pending") // "pending" | "accepted" | "alternative_suggested"
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Relations
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@map("interview_requests")
 }
 
 model JobAlert {
