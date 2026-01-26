@@ -2992,17 +2992,6 @@ const TeacherDashboard: React.FC = () => {
                         </div>
                       </div>
 
-                      {app.coverLetter && (
-                        <div className="mt-4 p-4 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
-                          <h4 className="font-medium mb-2">Cover Letter</h4>
-                          <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                            {app.coverLetter.length > 200
-                              ? `${app.coverLetter.substring(0, 200)}...`
-                              : app.coverLetter}
-                          </p>
-                        </div>
-                      )}
-
                       {/* Interview Request Section */}
                       {(app.interviewRequest || interviewRequests[app.id]) && (
                         <div className="mt-4 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
