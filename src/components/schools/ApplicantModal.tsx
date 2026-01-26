@@ -954,7 +954,7 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
                                   <div
                                     key={index}
                                     className={`p-2 rounded text-sm ${
-                                      applicant.interviewRequest?.selectedSlot === index
+                                      safeApplicant.interviewRequest?.selectedSlot === index
                                         ? "bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700"
                                         : "bg-white dark:bg-neutral-800"
                                     }`}
@@ -963,7 +963,7 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
                                       <span>
                                         Option {index + 1}: {formatTime(slot.date, slot.time, slot.timezone)}
                                       </span>
-                                      {applicant.interviewRequest?.selectedSlot === index && (
+                                      {safeApplicant.interviewRequest?.selectedSlot === index && (
                                         <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
                                       )}
                                     </div>
