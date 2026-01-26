@@ -932,7 +932,7 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
                               Suggested Time Slots:
                             </p>
                             <div className="space-y-2">
-                              {applicant.interviewRequest.timeSlots.map((slot, index) => {
+                              {safeApplicant.interviewRequest.timeSlots.map((slot, index) => {
                                 const formatTime = (date: string, time: string, timezone: string) => {
                                   try {
                                     const dateTime = new Date(`${date}T${time}`);
