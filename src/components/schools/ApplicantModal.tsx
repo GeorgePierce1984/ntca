@@ -200,10 +200,10 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
 
   // Fetch notes when notes tab is opened or when applicant changes
   useEffect(() => {
-    if (activeTab === "notes" && applicant?.id && !loadingNotes) {
+    if (activeTab === "notes" && applicant?.id) {
       fetchNotes();
     }
-  }, [activeTab, applicant?.id, fetchNotes, loadingNotes]);
+  }, [activeTab, applicant?.id, fetchNotes]);
 
   if (!applicant) return null;
 
