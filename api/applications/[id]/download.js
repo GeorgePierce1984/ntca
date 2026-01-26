@@ -188,10 +188,12 @@ export default async function handler(req, res) {
       }
 
       // Set headers for download - ensure binary data is handled correctly
+      // Use inline instead of attachment to allow browser to recognize file type
       res.setHeader("Content-Type", contentType);
-      res.setHeader("Content-Disposition", `attachment; filename="${encodeURIComponent(fileName)}"`);
+      res.setHeader("Content-Disposition", `inline; filename="${encodeURIComponent(fileName)}"; filename*=UTF-8''${encodeURIComponent(fileName)}`);
       res.setHeader("Content-Length", fileBuffer.length);
       res.setHeader("Cache-Control", "no-cache");
+      res.setHeader("X-Content-Type-Options", "nosniff");
 
       // Send the file buffer directly - use end() for binary data
       return res.end(fileBuffer);
