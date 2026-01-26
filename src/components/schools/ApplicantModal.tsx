@@ -250,22 +250,18 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
   if (!applicant) return null;
 
   // Safely parse interviewRequest.alternativeSlot if it exists and is a string
-  const safeApplicant = useMemo(() => {
+  // Use applicant directly, but safely access interviewRequest when needed
+  const safeInterviewRequest = useMemo(() => {
     try {
-      // If no interviewRequest, return applicant as-is
-      if (!applicant.interviewRequest) {
-        return applicant;
+      // If no interviewRequest, return null
+      if (!applicant?.interviewRequest) {
+        return null;
       }
       
-      // If interviewRequest exists but no alternativeSlot, return as-is
-      if (!applicant.interviewRequest.alternativeSlot) {
-        return applicant;
-      }
-      
-      // Parse alternativeSlot if it's a JSON string
       const interviewRequest = { ...applicant.interviewRequest };
       
-      if (typeof interviewRequest.alternativeSlot === 'string') {
+      // Parse alternativeSlot if it exists and is a JSON string
+      if (interviewRequest.alternativeSlot && typeof interviewRequest.alternativeSlot === 'string') {
         try {
           const parsed = JSON.parse(interviewRequest.alternativeSlot);
           // Validate parsed object has required properties
@@ -282,16 +278,13 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
         }
       }
       
-      return {
-        ...applicant,
-        interviewRequest,
-      };
+      return interviewRequest;
     } catch (error) {
-      console.error("Error processing applicant interviewRequest:", error);
-      // Return applicant as-is if there's any error
-      return applicant;
+      console.error("Error processing interviewRequest:", error);
+      // Return null if there's any error
+      return null;
     }
-  }, [applicant]);
+  }, [applicant?.interviewRequest]);
 
   // Only block if we have a subscription status and it's not active
   // If subscriptionStatus is null/undefined, allow access to prevent flash
@@ -913,7 +906,7 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
                     </div>
 
                     {/* Interview Request Information - Moved to main body */}
-                    {safeApplicant.interviewRequest && (
+                    {safeInterviewRequest && (
                       <div className="mt-6 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-2">
@@ -923,28 +916,28 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
                             </h3>
                           </div>
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            safeApplicant.interviewRequest.status === "pending"
+                            safeInterviewRequest.status === "pending"
                               ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400"
-                              : safeApplicant.interviewRequest.status === "accepted"
+                              : safeInterviewRequest.status === "accepted"
                               ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400"
                               : "bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-400"
                           }`}>
-                            {safeApplicant.interviewRequest.status === "pending"
+                            {safeInterviewRequest.status === "pending"
                               ? "Pending Response"
-                              : safeApplicant.interviewRequest.status === "accepted"
+                              : safeInterviewRequest.status === "accepted"
                               ? "Accepted"
                               : "Alternative Suggested"}
                           </span>
                         </div>
 
                         {/* Original Time Slots */}
-                        {safeApplicant.interviewRequest.timeSlots && safeApplicant.interviewRequest.timeSlots.length > 0 && (
+                        {safeInterviewRequest.timeSlots && safeInterviewRequest.timeSlots.length > 0 && (
                           <div className="mb-3">
                             <p className="text-sm font-medium text-purple-900 dark:text-purple-300 mb-2">
                               Suggested Time Slots:
                             </p>
                             <div className="space-y-2">
-                              {safeApplicant.interviewRequest.timeSlots.map((slot, index) => {
+                              {safeInterviewRequest.timeSlots.map((slot, index) => {
                                 const formatTime = (date: string, time: string, timezone: string) => {
                                   try {
                                     const dateTime = new Date(`${date}T${time}`);
@@ -966,7 +959,7 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
                                   <div
                                     key={index}
                                     className={`p-2 rounded text-sm ${
-                                      safeApplicant.interviewRequest?.selectedSlot === index
+                                      safeInterviewRequest?.selectedSlot === index
                                         ? "bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700"
                                         : "bg-white dark:bg-neutral-800"
                                     }`}
@@ -975,7 +968,7 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
                                       <span>
                                         Option {index + 1}: {formatTime(slot.date, slot.time, slot.timezone)}
                                       </span>
-                                      {safeApplicant.interviewRequest?.selectedSlot === index && (
+                                      {safeInterviewRequest?.selectedSlot === index && (
                                         <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
                                       )}
                                     </div>
@@ -987,9 +980,9 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
                         )}
 
                         {/* Alternative Time Slot Suggested */}
-                        {safeApplicant.interviewRequest.status === "alternative_suggested" && (() => {
+                        {safeInterviewRequest && safeInterviewRequest.status === "alternative_suggested" && (() => {
                           // Safely parse alternativeSlot - it might be JSON string or object
-                          let alternativeSlot = safeApplicant.interviewRequest.alternativeSlot;
+                          let alternativeSlot = safeInterviewRequest.alternativeSlot;
                           if (!alternativeSlot) return null;
                           
                           // If it's a string, try to parse it
@@ -1226,16 +1219,16 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
                               })()}
                             </p>
                             <p className="text-xs text-green-700 dark:text-green-500 mt-1">
-                              {safeApplicant.interviewRequest.locationType === "video"
+                              {safeInterviewRequest.locationType === "video"
                                 ? "Video Interview"
-                                : safeApplicant.interviewRequest.locationType === "phone"
+                                : safeInterviewRequest.locationType === "phone"
                                 ? "Phone Interview"
                                 : "Onsite Interview"}{" "}
-                              - {safeApplicant.interviewRequest.duration} minutes
+                              - {safeInterviewRequest.duration} minutes
                             </p>
-                            {safeApplicant.interviewRequest.location && (
+                            {safeInterviewRequest.location && (
                               <p className="text-xs text-green-700 dark:text-green-500 mt-1">
-                                Location: {safeApplicant.interviewRequest.location}
+                                Location: {safeInterviewRequest.location}
                               </p>
                             )}
                           </div>
@@ -1244,23 +1237,23 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
                         {/* Interview Details */}
                         <div className="mt-3 pt-3 border-t border-purple-200 dark:border-purple-800">
                           <p className="text-xs text-purple-700 dark:text-purple-400">
-                            <strong>Type:</strong> {safeApplicant.interviewRequest.locationType === "video"
+                            <strong>Type:</strong> {safeInterviewRequest.locationType === "video"
                               ? "Video Interview"
-                              : safeApplicant.interviewRequest.locationType === "phone"
+                              : safeInterviewRequest.locationType === "phone"
                               ? "Phone Interview"
                               : "Onsite Interview"}
                           </p>
                           <p className="text-xs text-purple-700 dark:text-purple-400">
-                            <strong>Duration:</strong> {safeApplicant.interviewRequest.duration} minutes
+                            <strong>Duration:</strong> {safeInterviewRequest.duration} minutes
                           </p>
-                          {safeApplicant.interviewRequest.location && (
+                          {safeInterviewRequest.location && (
                             <p className="text-xs text-purple-700 dark:text-purple-400">
-                              <strong>Location:</strong> {safeApplicant.interviewRequest.location}
+                              <strong>Location:</strong> {safeInterviewRequest.location}
                             </p>
                           )}
-                          {safeApplicant.interviewRequest.message && (
+                          {safeInterviewRequest.message && (
                             <p className="text-xs text-purple-700 dark:text-purple-400 mt-2">
-                              <strong>Message:</strong> {safeApplicant.interviewRequest.message}
+                              <strong>Message:</strong> {safeInterviewRequest.message}
                             </p>
                           )}
                         </div>
