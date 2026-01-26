@@ -165,6 +165,11 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
   const [processingAlternative, setProcessingAlternative] = useState(false);
   const fetchingRef = useRef(false);
 
+  // Early return with null check to prevent white screen
+  if (!applicant) {
+    return null;
+  }
+
   const fetchNotes = useCallback(async () => {
     if (!applicant?.id || fetchingRef.current) return;
     
@@ -938,54 +943,83 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
                         )}
 
                         {/* Alternative Time Slot Suggested */}
-                        {applicant.interviewRequest.status === "alternative_suggested" && applicant.interviewRequest.alternativeSlot && (
-                          <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
-                            <div className="flex items-center justify-between mb-2">
-                              <p className="text-sm font-medium text-amber-900 dark:text-amber-300">
-                                Teacher Suggested Alternative Time:
-                              </p>
-                              <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                            </div>
-                            <p className="text-sm text-amber-800 dark:text-amber-400 mb-3">
-                              {(() => {
-                                const alt = applicant.interviewRequest.alternativeSlot;
-                                try {
-                                  const dateTime = new Date(`${alt.date}T${alt.time}`);
-                                  return new Intl.DateTimeFormat("en-US", {
-                                    timeZone: alt.timezone,
-                                    weekday: "short",
-                                    month: "short",
-                                    day: "numeric",
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                    hour12: true,
-                                  }).format(dateTime);
-                                } catch {
-                                  return `${alt.date} ${alt.time}`;
-                                }
-                              })()}
-                              {school?.timezone && applicant.interviewRequest.alternativeSlot.timezone !== school.timezone && (
-                                <span className="ml-2 text-xs">
-                                  ({school.timezone}: {(() => {
-                                    const alt = applicant.interviewRequest.alternativeSlot;
-                                    try {
-                                      const dateTime = new Date(`${alt.date}T${alt.time}`);
-                                      return new Intl.DateTimeFormat("en-US", {
-                                        timeZone: school.timezone,
-                                        weekday: "short",
-                                        month: "short",
-                                        day: "numeric",
-                                        hour: "2-digit",
-                                        minute: "2-digit",
-                                        hour12: true,
-                                      }).format(dateTime);
-                                    } catch {
+                        {applicant.interviewRequest.status === "alternative_suggested" && (() => {
+                          // Safely parse alternativeSlot - it might be JSON string or object
+                          let alternativeSlot = applicant.interviewRequest.alternativeSlot;
+                          if (!alternativeSlot) return null;
+                          
+                          // If it's a string, try to parse it
+                          if (typeof alternativeSlot === 'string') {
+                            try {
+                              alternativeSlot = JSON.parse(alternativeSlot);
+                            } catch (e) {
+                              console.error("Error parsing alternativeSlot:", e);
+                              return null;
+                            }
+                          }
+                          
+                          // Ensure it has required properties
+                          if (!alternativeSlot || typeof alternativeSlot !== 'object' || !alternativeSlot.date || !alternativeSlot.time) {
+                            return null;
+                          }
+                          
+                          const alt = alternativeSlot;
+                          const altTimezone = alt.timezone || "UTC";
+                          
+                          return (
+                            <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
+                              <div className="flex items-center justify-between mb-2">
+                                <p className="text-sm font-medium text-amber-900 dark:text-amber-300">
+                                  Teacher Suggested Alternative Time:
+                                </p>
+                                <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                              </div>
+                              <p className="text-sm text-amber-800 dark:text-amber-400 mb-3">
+                                {(() => {
+                                  try {
+                                    const dateTime = new Date(`${alt.date}T${alt.time}`);
+                                    if (isNaN(dateTime.getTime())) {
                                       return `${alt.date} ${alt.time}`;
                                     }
-                                  })()})
-                                </span>
-                              )}
-                            </p>
+                                    return new Intl.DateTimeFormat("en-US", {
+                                      timeZone: altTimezone,
+                                      weekday: "short",
+                                      month: "short",
+                                      day: "numeric",
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                      hour12: true,
+                                    }).format(dateTime);
+                                  } catch (e) {
+                                    console.error("Error formatting alternative time:", e);
+                                    return `${alt.date} ${alt.time}`;
+                                  }
+                                })()}
+                                {school?.timezone && altTimezone !== school.timezone && (
+                                  <span className="ml-2 text-xs">
+                                    ({school.timezone}: {(() => {
+                                      try {
+                                        const dateTime = new Date(`${alt.date}T${alt.time}`);
+                                        if (isNaN(dateTime.getTime())) {
+                                          return `${alt.date} ${alt.time}`;
+                                        }
+                                        return new Intl.DateTimeFormat("en-US", {
+                                          timeZone: school.timezone,
+                                          weekday: "short",
+                                          month: "short",
+                                          day: "numeric",
+                                          hour: "2-digit",
+                                          minute: "2-digit",
+                                          hour12: true,
+                                        }).format(dateTime);
+                                      } catch (e) {
+                                        console.error("Error formatting alternative time in school timezone:", e);
+                                        return `${alt.date} ${alt.time}`;
+                                      }
+                                    })()})
+                                  </span>
+                                )}
+                              </p>
                             <div className="flex gap-2 mt-3">
                               <Button
                                 size="sm"
