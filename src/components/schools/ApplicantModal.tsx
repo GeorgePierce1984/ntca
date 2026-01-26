@@ -132,7 +132,7 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
   const [addingNote, setAddingNote] = useState(false);
 
   const fetchNotes = useCallback(async () => {
-    if (!applicant?.id) return;
+    if (!applicant?.id || loadingNotes) return;
     
     setLoadingNotes(true);
     try {
@@ -160,7 +160,7 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
     } finally {
       setLoadingNotes(false);
     }
-  }, [applicant?.id]);
+  }, [applicant?.id, loadingNotes]);
 
   const addNote = async () => {
     if (!newNote.trim() || !applicant?.id || addingNote) return;
