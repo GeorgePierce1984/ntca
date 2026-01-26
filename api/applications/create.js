@@ -210,7 +210,6 @@ export default async function handler(req, res) {
             id: true,
             firstName: true,
             lastName: true,
-            email: true,
             phone: true,
             city: true,
             country: true,
