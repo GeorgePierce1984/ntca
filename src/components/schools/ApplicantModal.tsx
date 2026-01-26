@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -130,14 +130,13 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
   const [notes, setNotes] = useState<ApplicationNote[]>(applicant?.notes || []);
   const [loadingNotes, setLoadingNotes] = useState(false);
   const [addingNote, setAddingNote] = useState(false);
+  const fetchingRef = useRef(false);
 
   const fetchNotes = useCallback(async () => {
-    if (!applicant?.id) return;
+    if (!applicant?.id || fetchingRef.current) return;
     
-    setLoadingNotes((prev) => {
-      if (prev) return prev; // Already loading, don't start another fetch
-      return true;
-    });
+    fetchingRef.current = true;
+    setLoadingNotes(true);
     
     try {
       const token = localStorage.getItem("authToken");
@@ -163,6 +162,7 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
       toast.error("Failed to load notes");
     } finally {
       setLoadingNotes(false);
+      fetchingRef.current = false;
     }
   }, [applicant?.id]);
 
