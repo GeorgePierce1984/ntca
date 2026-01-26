@@ -1153,7 +1153,8 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
                               </Button>
                             </div>
                           </div>
-                        )}
+                          );
+                        })()}
 
                         {/* Accepted Interview Details */}
                         {applicant.interviewRequest.status === "accepted" && applicant.interviewRequest.selectedSlot !== undefined && (
