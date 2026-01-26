@@ -111,6 +111,7 @@ interface ApplicantModalProps {
   ) => void;
   jobTitle?: string;
   subscriptionStatus?: string | null;
+  isUpdating?: boolean;
 }
 
 export const ApplicantModal: React.FC<ApplicantModalProps> = ({
@@ -120,6 +121,7 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
   onStatusUpdate,
   jobTitle,
   subscriptionStatus,
+  isUpdating = false,
 }) => {
   const [activeTab, setActiveTab] = useState<
     "overview" | "documents" | "notes" | "timeline"
@@ -970,13 +972,15 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
                         <Button
                           variant="secondary"
                           onClick={() => handleStatusUpdate("reviewing")}
+                          disabled={isUpdating}
                         >
-                          Move to Review
+                          {isUpdating ? "Updating..." : "Move to Review"}
                         </Button>
                         <Button
                           variant="gradient"
                           leftIcon={<Calendar className="w-4 h-4" />}
                           onClick={openInterviewModal}
+                          disabled={isUpdating}
                         >
                           Schedule Interview
                         </Button>
@@ -988,6 +992,7 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
                         variant="gradient"
                         leftIcon={<Calendar className="w-4 h-4" />}
                         onClick={openInterviewModal}
+                        disabled={isUpdating}
                       >
                         Schedule Interview
                       </Button>
@@ -999,8 +1004,9 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
                           variant="gradient"
                           leftIcon={<CheckCircle className="w-4 h-4" />}
                           onClick={() => handleStatusUpdate("hired")}
+                          disabled={isUpdating}
                         >
-                          Hire Candidate
+                          {isUpdating ? "Updating..." : "Hire Candidate"}
                         </Button>
                       </>
                     )}

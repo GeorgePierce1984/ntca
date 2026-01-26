@@ -193,6 +193,7 @@ export const SchoolDashboardPage: React.FC = () => {
   const [showInterviewModal, setShowInterviewModal] = useState(false);
   const [selectedApplicantForInterview, setSelectedApplicantForInterview] =
     useState<Application | null>(null);
+  const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
 
   // Add refs for post job form and heading
   const postJobFormRef = useRef<HTMLDivElement>(null);
@@ -1112,7 +1113,14 @@ export const SchoolDashboardPage: React.FC = () => {
     newStatus: "applied" | "reviewing" | "interview" | "declined" | "hired",
     note?: string,
   ) => {
+    // Prevent multiple simultaneous updates
+    if (updatingStatus === applicantId) {
+      return;
+    }
+
     try {
+      setUpdatingStatus(applicantId);
+      
       // Convert lowercase status to uppercase for API
       const apiStatus = newStatus.toUpperCase() as Application["status"];
       
@@ -1155,6 +1163,8 @@ export const SchoolDashboardPage: React.FC = () => {
     } catch (error) {
       console.error("Error updating application status:", error);
       toast.error(error instanceof Error ? error.message : "Failed to update application status");
+    } finally {
+      setUpdatingStatus(null);
     }
   };
 
