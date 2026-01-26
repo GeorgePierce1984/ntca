@@ -675,17 +675,27 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
                 {activeTab === "documents" && (
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold mb-4">
-                      Documents & Portfolio
+                      CV/Resume
                     </h3>
                     <div className="space-y-3">
-                      {applicant.resumeUrl && (
+                      {applicant.resumeUrl ? (
                         <div className="flex items-center justify-between p-4 border border-neutral-200 dark:border-neutral-800 rounded-lg">
                           <div className="flex items-center gap-3">
                             <FileText className="w-8 h-8 text-blue-500" />
                             <div>
                               <h4 className="font-medium">Resume/CV</h4>
                               <p className="text-sm text-neutral-500">
-                                PDF Document
+                                {(() => {
+                                  const url = applicant.resumeUrl || '';
+                                  if (url.toLowerCase().includes('.pdf')) {
+                                    return 'PDF Document';
+                                  } else if (url.toLowerCase().includes('.docx')) {
+                                    return 'DOCX Document';
+                                  } else if (url.toLowerCase().includes('.doc')) {
+                                    return 'DOC Document';
+                                  }
+                                  return 'Document';
+                                })()}
                               </p>
                             </div>
                           </div>
@@ -701,71 +711,12 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
                               : "Download"}
                           </Button>
                         </div>
-                      )}
-
-                      {applicant.coverLetter && (
-                        <div className="flex items-center justify-between p-4 border border-neutral-200 dark:border-neutral-800 rounded-lg">
-                          <div className="flex items-center gap-3">
-                            <FileText className="w-8 h-8 text-green-500" />
-                            <div>
-                              <h4 className="font-medium">Cover Letter</h4>
-                              <p className="text-sm text-neutral-500">
-                                Text Document
-                              </p>
-                            </div>
-                          </div>
-                          <Button
-                            size="sm"
-                            variant="secondary"
-                            leftIcon={<Download className="w-4 h-4" />}
-                            onClick={() =>
-                              handleDownloadDocument("coverletter")
-                            }
-                            disabled={isDownloading === "coverletter"}
-                          >
-                            {isDownloading === "coverletter"
-                              ? "Downloading..."
-                              : "Download"}
-                          </Button>
+                      ) : (
+                        <div className="text-center py-8 text-neutral-500">
+                          <FileText className="w-12 h-12 mx-auto mb-3 text-neutral-300" />
+                          <p>No CV/Resume available</p>
                         </div>
                       )}
-
-                      {/* Portfolio download - check if portfolioUrl exists on applicant */}
-                      {applicant.portfolioUrl && (
-                        <div className="flex items-center justify-between p-4 border border-neutral-200 dark:border-neutral-800 rounded-lg">
-                          <div className="flex items-center gap-3">
-                            <FileText className="w-8 h-8 text-purple-500" />
-                            <div>
-                              <h4 className="font-medium">
-                                Teaching Portfolio
-                              </h4>
-                              <p className="text-sm text-neutral-500">
-                                PDF Document
-                              </p>
-                            </div>
-                          </div>
-                          <Button
-                            size="sm"
-                            variant="secondary"
-                            leftIcon={<Download className="w-4 h-4" />}
-                            onClick={() => handleDownloadDocument("portfolio")}
-                            disabled={isDownloading === "portfolio"}
-                          >
-                            {isDownloading === "portfolio"
-                              ? "Downloading..."
-                              : "Download"}
-                          </Button>
-                        </div>
-                      )}
-
-                      {!applicant.resumeUrl &&
-                        !applicant.coverLetter &&
-                        !applicant.portfolioUrl && (
-                          <div className="text-center py-8 text-neutral-500">
-                            <FileText className="w-12 h-12 mx-auto mb-3 text-neutral-300" />
-                            <p>No documents available</p>
-                          </div>
-                        )}
                     </div>
                   </div>
                 )}
