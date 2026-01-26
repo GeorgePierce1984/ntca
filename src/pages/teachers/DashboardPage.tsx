@@ -2997,56 +2997,65 @@ const TeacherDashboard: React.FC = () => {
                       )}
 
                       {/* Interview Request Section */}
-                      {app.status === "INTERVIEW" && interviewRequests[app.id] && (
+                      {(app.interviewRequest || interviewRequests[app.id]) && (
                         <div className="mt-4 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center gap-2">
-                              <Calendar className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                              <h4 className="font-medium text-purple-900 dark:text-purple-300">
-                                Interview Invitation
-                              </h4>
-                            </div>
-                            {interviewRequests[app.id].status === "pending" && (
-                              <span className="px-2 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 rounded-full text-xs font-medium">
-                                Action Required
-                              </span>
-                            )}
-                            {interviewRequests[app.id].status === "accepted" && (
-                              <span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 rounded-full text-xs font-medium">
-                                Accepted
-                              </span>
-                            )}
-                            {interviewRequests[app.id].status === "alternative_suggested" && (
-                              <span className="px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-400 rounded-full text-xs font-medium">
-                                Alternative Suggested
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-sm text-purple-700 dark:text-purple-400 mb-3">
-                            {interviewRequests[app.id].locationType === "video"
-                              ? "Video Interview"
-                              : interviewRequests[app.id].locationType === "phone"
-                              ? "Phone Interview"
-                              : "Onsite Interview"}{" "}
-                            - {interviewRequests[app.id].duration} minutes
-                          </p>
-                          <Button
-                            size="sm"
-                            variant="gradient"
-                            onClick={() => {
-                              setSelectedInterviewRequest({
-                                applicationId: app.id,
-                                interviewRequest: interviewRequests[app.id],
-                                jobTitle: app.job.title,
-                                schoolName: app.job.school.name,
-                              });
-                              setShowInterviewModal(true);
-                            }}
-                          >
-                            {interviewRequests[app.id].status === "pending"
-                              ? "View & Respond"
-                              : "View Details"}
-                          </Button>
+                          {(() => {
+                            const interviewReq = app.interviewRequest || interviewRequests[app.id];
+                            if (!interviewReq) return null;
+                            
+                            return (
+                              <>
+                                <div className="flex items-center justify-between mb-3">
+                                  <div className="flex items-center gap-2">
+                                    <Calendar className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                                    <h4 className="font-medium text-purple-900 dark:text-purple-300">
+                                      Interview Invitation
+                                    </h4>
+                                  </div>
+                                  {interviewReq.status === "pending" && (
+                                    <span className="px-2 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 rounded-full text-xs font-medium">
+                                      Action Required
+                                    </span>
+                                  )}
+                                  {interviewReq.status === "accepted" && (
+                                    <span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 rounded-full text-xs font-medium">
+                                      Accepted
+                                    </span>
+                                  )}
+                                  {interviewReq.status === "alternative_suggested" && (
+                                    <span className="px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-400 rounded-full text-xs font-medium">
+                                      Alternative Suggested
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-sm text-purple-700 dark:text-purple-400 mb-3">
+                                  {interviewReq.locationType === "video"
+                                    ? "Video Interview"
+                                    : interviewReq.locationType === "phone"
+                                    ? "Phone Interview"
+                                    : "Onsite Interview"}{" "}
+                                  - {interviewReq.duration} minutes
+                                </p>
+                                <Button
+                                  size="sm"
+                                  variant="gradient"
+                                  onClick={() => {
+                                    setSelectedInterviewRequest({
+                                      applicationId: app.id,
+                                      interviewRequest: interviewReq,
+                                      jobTitle: app.job.title,
+                                      schoolName: app.job.school.name,
+                                    });
+                                    setShowInterviewModal(true);
+                                  }}
+                                >
+                                  {interviewReq.status === "pending"
+                                    ? "View & Respond"
+                                    : "View Details"}
+                                </Button>
+                              </>
+                            );
+                          })()}
                         </div>
                       )}
                     </div>
