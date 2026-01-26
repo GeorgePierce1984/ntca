@@ -133,15 +133,7 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
 
   if (!applicant) return null;
 
-  // Fetch notes when notes tab is opened or when applicant changes
-  useEffect(() => {
-    if (activeTab === "notes" && applicant?.id && !loadingNotes) {
-      fetchNotes();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, applicant?.id]);
-
-  const fetchNotes = async () => {
+  const fetchNotes = useCallback(async () => {
     if (!applicant?.id) return;
     
     setLoadingNotes(true);
@@ -170,7 +162,7 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
     } finally {
       setLoadingNotes(false);
     }
-  };
+  }, [applicant?.id]);
 
   const addNote = async () => {
     if (!newNote.trim() || !applicant?.id || addingNote) return;
@@ -207,6 +199,13 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
       setAddingNote(false);
     }
   };
+
+  // Fetch notes when notes tab is opened or when applicant changes
+  useEffect(() => {
+    if (activeTab === "notes" && applicant?.id && !loadingNotes) {
+      fetchNotes();
+    }
+  }, [activeTab, applicant?.id, fetchNotes, loadingNotes]);
 
   // Only block if we have a subscription status and it's not active
   // If subscriptionStatus is null/undefined, allow access to prevent flash
