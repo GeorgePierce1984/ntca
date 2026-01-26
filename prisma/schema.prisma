@@ -323,7 +323,7 @@ model ApplicationNote {
 
 model InterviewRequest {
   id            String   @id @default(cuid())
-  applicationId String
+  applicationId String   @unique
   duration      Int      // Duration in minutes (30, 45, 60, etc.)
   locationType  String   // "video" | "phone" | "onsite"
   location      String?  // Video link, phone number, or onsite address
