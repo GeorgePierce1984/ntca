@@ -758,6 +758,56 @@ export default async function handler(req, res) {
       console.log("resetTokenExpiry column already exists");
     }
 
+    // Check if interview_requests table exists
+    const interviewRequestsTableCheck = await prisma.$queryRaw`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = 'interview_requests'
+      );
+    `;
+
+    if (!interviewRequestsTableCheck[0].exists) {
+      console.log("Creating interview_requests table...");
+      
+      await prisma.$executeRaw`
+        CREATE TABLE "interview_requests" (
+          "id" TEXT NOT NULL,
+          "applicationId" TEXT NOT NULL,
+          "duration" INTEGER NOT NULL,
+          "locationType" TEXT NOT NULL,
+          "location" TEXT,
+          "message" TEXT,
+          "timeSlots" JSONB NOT NULL,
+          "selectedSlot" INTEGER,
+          "alternativeSlot" JSONB,
+          "status" TEXT NOT NULL DEFAULT 'pending',
+          "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          "updatedAt" TIMESTAMP(3) NOT NULL,
+
+          CONSTRAINT "interview_requests_pkey" PRIMARY KEY ("id")
+        );
+      `;
+
+      await prisma.$executeRaw`
+        CREATE UNIQUE INDEX "interview_requests_applicationId_key" 
+        ON "interview_requests"("applicationId");
+      `;
+
+      await prisma.$executeRaw`
+        ALTER TABLE "interview_requests" 
+        ADD CONSTRAINT "interview_requests_applicationId_fkey" 
+        FOREIGN KEY ("applicationId") 
+        REFERENCES "applications"("id") 
+        ON DELETE CASCADE 
+        ON UPDATE CASCADE;
+      `;
+
+      console.log("✓ Created interview_requests table");
+    } else {
+      console.log("interview_requests table already exists");
+    }
+
     console.log("Migration completed successfully!");
 
     res.status(200).json({
