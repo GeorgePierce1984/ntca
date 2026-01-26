@@ -1419,32 +1419,49 @@ const TeacherDashboard: React.FC = () => {
                   </Button>
                 </div>
                 <div className="space-y-4">
-                  {teacher.applications?.slice(0, 3).map((app) => (
-                    <div
-                      key={app.id}
-                      className="flex items-center justify-between p-4 bg-neutral-50 dark:bg-neutral-800 rounded-lg"
-                    >
-                      <div>
-                        <h4 className="font-medium">{app.job.title}</h4>
-                        <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                          {app.job.school.name}
-                        </p>
-                        <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                          {app.job.city}, {app.job.country}
-                        </p>
+                  {teacher.applications?.slice(0, 3).map((app) => {
+                    const interviewReq = app.interviewRequest || interviewRequests[app.id];
+                    const hasPendingInterview = interviewReq && interviewReq.status === "pending";
+                    
+                    return (
+                      <div
+                        key={app.id}
+                        className={`flex items-center justify-between p-4 rounded-lg ${
+                          hasPendingInterview 
+                            ? "bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-200 dark:border-yellow-800" 
+                            : "bg-neutral-50 dark:bg-neutral-800"
+                        }`}
+                      >
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className="font-medium">{app.job.title}</h4>
+                            {hasPendingInterview && (
+                              <span className="px-2 py-0.5 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 rounded-full text-xs font-medium flex items-center gap-1">
+                                <AlertCircle className="w-3 h-3" />
+                                Action Required
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                            {app.job.school.name}
+                          </p>
+                          <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                            {app.job.city}, {app.job.country}
+                          </p>
+                        </div>
+                        <div className="text-right ml-4">
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(app.status)}`}
+                          >
+                            {app.status}
+                          </span>
+                          <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
+                            {new Date(app.createdAt).toLocaleDateString()}
+                          </p>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(app.status)}`}
-                        >
-                          {app.status}
-                        </span>
-                        <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
-                          {new Date(app.createdAt).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                   {(!teacher.applications ||
                     teacher.applications.length === 0) && (
                     <div className="text-center py-8">
