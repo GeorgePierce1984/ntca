@@ -416,17 +416,48 @@ async function handleInvoicePaymentFailed(invoice) {
 }
 
 async function handleInvoiceUpcoming(invoice) {
-  console.log("Processing invoice.upcoming:", invoice.id);
+  try {
+    // Validate invoice object
+    if (!invoice) {
+      console.error("handleInvoiceUpcoming: invoice object is missing");
+      return;
+    }
 
-  const user = await getUserByStripeCustomerId(invoice.customer);
-  if (!user) return;
+    // Handle case where invoice might be nested or have different structure
+    const invoiceId = invoice.id;
+    const customerId = invoice.customer;
 
-  await logActivity(user.id, "INVOICE_UPCOMING", {
-    amount: invoice.amount_due,
-    dueDate: new Date(invoice.period_end * 1000),
-  });
+    if (!invoiceId) {
+      console.error("handleInvoiceUpcoming: invoice.id is missing", {
+        invoiceKeys: invoice ? Object.keys(invoice) : "invoice is null/undefined",
+        invoiceType: typeof invoice,
+        objectType: invoice.object,
+      });
+      return;
+    }
 
-  // TODO: Send upcoming invoice reminder email
+    if (!customerId) {
+      console.error("handleInvoiceUpcoming: invoice.customer is missing", {
+        invoiceId: invoiceId,
+      });
+      return;
+    }
+
+    console.log("Processing invoice.upcoming:", invoiceId);
+
+    const user = await getUserByStripeCustomerId(customerId);
+    if (!user) return;
+
+    await logActivity(user.id, "INVOICE_UPCOMING", {
+      invoiceId: invoiceId,
+      amount: invoice.amount_due,
+      dueDate: invoice.period_end ? new Date(invoice.period_end * 1000) : null,
+    });
+
+    // TODO: Send upcoming invoice reminder email
+  } catch (error) {
+    console.error("Error handling invoice upcoming:", error);
+  }
 }
 
 async function handlePaymentMethodAttached(paymentMethod) {

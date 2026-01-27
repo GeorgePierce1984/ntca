@@ -730,7 +730,37 @@ async function handleInvoiceUpcoming(invoice) {
       return;
     }
 
-    if (!invoice.id) {
+    // Handle case where invoice might be nested or have different structure
+    // Stripe sometimes sends expanded objects or different formats
+    let invoiceId = invoice.id;
+    let customerId = invoice.customer;
+    
+    // If id is missing, check if it's a string ID in the object field
+    if (!invoiceId && invoice.object === 'invoice') {
+      // Try to extract from other fields or log for debugging
+      console.warn("handleInvoiceUpcoming: invoice.id is missing, checking alternative fields", {
+        hasObject: !!invoice.object,
+        objectType: invoice.object,
+        invoiceKeys: Object.keys(invoice),
+      });
+      
+      // Some Stripe events might send invoice data differently
+      // Check if we can get the ID from a different field
+      if (invoice.number) {
+        console.log("Invoice has number but no id:", invoice.number);
+      }
+      
+      // If we can't find an ID, we can't process this invoice
+      if (!invoiceId) {
+        console.error("handleInvoiceUpcoming: Cannot process invoice without ID", {
+          invoiceKeys: Object.keys(invoice),
+          invoiceType: typeof invoice,
+        });
+        return;
+      }
+    }
+
+    if (!invoiceId) {
       console.error("handleInvoiceUpcoming: invoice.id is missing", {
         invoiceKeys: invoice ? Object.keys(invoice) : "invoice is null/undefined",
         invoiceType: typeof invoice,
@@ -738,21 +768,22 @@ async function handleInvoiceUpcoming(invoice) {
       return;
     }
 
-    if (!invoice.customer) {
+    if (!customerId) {
       console.error("handleInvoiceUpcoming: invoice.customer is missing", {
-        invoiceId: invoice.id,
+        invoiceId: invoiceId,
       });
       return;
     }
 
-    console.log("Processing invoice upcoming:", invoice.id);
+    console.log("Processing invoice upcoming:", invoiceId);
 
-    const user = await getUserByStripeCustomerId(invoice.customer);
+    const user = await getUserByStripeCustomerId(customerId);
     if (!user) return;
 
     await logActivity(user.id, "INVOICE_UPCOMING", {
+      invoiceId: invoiceId,
       amount: invoice.amount_due,
-      dueDate: new Date(invoice.period_end * 1000),
+      dueDate: invoice.period_end ? new Date(invoice.period_end * 1000) : null,
     });
 
     // Send renewal reminder email
