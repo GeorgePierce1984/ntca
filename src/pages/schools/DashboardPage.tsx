@@ -1611,7 +1611,7 @@ export const SchoolDashboardPage: React.FC = () => {
                                   {getEffectiveStatus(job)}
                                 </span>
                                 <span className="text-sm text-neutral-500">
-                                  {job._count.applications} applicants
+                                  {job._count?.applications ?? 0} applicants
                                 </span>
                               </div>
                             </div>
