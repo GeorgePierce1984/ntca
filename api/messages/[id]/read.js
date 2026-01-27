@@ -1,14 +1,6 @@
-import { PrismaClient, UserType } from "@prisma/client";
+import { UserType } from "@prisma/client";
 import jwt from "jsonwebtoken";
-
-const prisma = new PrismaClient({
-  log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
-  datasources: {
-    db: {
-      url: process.env.DATABASE_URL,
-    },
-  },
-});
+import { prisma } from "../../_utils/prisma.js";
 
 // Helper function to retry database operations
 // In serverless environments, Prisma handles connections automatically

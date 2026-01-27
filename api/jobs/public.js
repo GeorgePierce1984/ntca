@@ -1,6 +1,4 @@
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { prisma } from "../_utils/prisma.js";
 
 export default async function handler(req, res) {
   if (req.method !== "GET") {
@@ -9,6 +7,8 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Public endpoint: allow edge/browser caching for a short time to improve perceived performance
+    res.setHeader("Cache-Control", "public, s-maxage=30, stale-while-revalidate=120");
     const {
       page = 1,
       limit = 20,

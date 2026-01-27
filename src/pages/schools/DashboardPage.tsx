@@ -375,16 +375,6 @@ export const SchoolDashboardPage: React.FC = () => {
       if (response.ok) {
         const data = await response.json();
         setJobs(data.jobs || []);
-        // Fetch matches for all active jobs after state is set
-        setTimeout(() => {
-          data.jobs?.forEach((job: JobPosting) => {
-            const effectiveStatus = getEffectiveStatus(job);
-            if (effectiveStatus === "ACTIVE") {
-              console.log(`Fetching matches for job ${job.id} (${job.title})`);
-              fetchJobMatches(job.id);
-            }
-          });
-        }, 100);
       }
     } catch (error) {
       console.error("Error fetching jobs:", error);
@@ -425,6 +415,43 @@ export const SchoolDashboardPage: React.FC = () => {
       setLoadingMatches(prev => ({ ...prev, [jobId]: false }));
     }
   };
+
+  // Reduce API spam: only fetch match insights when user is on Job Postings tab,
+  // and only for the first few active jobs (then fetch more as needed).
+  useEffect(() => {
+    if (activeTab !== "jobs") return;
+    if (!jobs || jobs.length === 0) return;
+
+    const activeJobIds = jobs
+      .filter((j) => getEffectiveStatus(j) === "ACTIVE")
+      .slice(0, 6) // keep initial batch small
+      .map((j) => j.id)
+      .filter(Boolean);
+
+    // Concurrency limit to avoid overloading serverless + DB
+    const maxConcurrent = 3;
+    let idx = 0;
+
+    const runNext = async () => {
+      while (idx < activeJobIds.length) {
+        const current = idx++;
+        const jobId = activeJobIds[current];
+
+        // Skip if already have results or currently loading
+        if (jobMatches[jobId]?.totalMatches !== undefined) continue;
+        if (loadingMatches[jobId]) continue;
+
+        await fetchJobMatches(jobId);
+      }
+    };
+
+    const runners = Array.from({ length: Math.min(maxConcurrent, activeJobIds.length) }, () =>
+      runNext(),
+    );
+
+    void Promise.all(runners);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, jobs]);
 
   const fetchApplications = async () => {
     try {

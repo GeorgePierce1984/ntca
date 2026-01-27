@@ -1,14 +1,5 @@
-import { PrismaClient } from "@prisma/client";
 import jwt from "jsonwebtoken";
-
-const prisma = new PrismaClient({
-  log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
-  datasources: {
-    db: {
-      url: process.env.DATABASE_URL,
-    },
-  },
-});
+import { prisma } from "../_utils/prisma.js";
 
 // Helper function to retry database operations with exponential backoff
 async function retryOperation(operation, maxRetries = 3, delay = 1000) {
@@ -28,7 +19,7 @@ async function retryOperation(operation, maxRetries = 3, delay = 1000) {
       if (isConnectionError && attempt < maxRetries) {
         console.log(`Connection error on attempt ${attempt}, retrying in ${delay}ms...`);
         await new Promise(resolve => setTimeout(resolve, delay));
-        delay *= 2; // Exponential backoff
+        delay = Math.min(delay * 2, 2000); // Cap delay to keep requests snappy
         continue;
       }
       throw error;
@@ -68,12 +59,7 @@ export default async function handler(req, res) {
           const allJobs = await prisma.job.findMany({
             where: { schoolId: school.id },
             include: {
-              school: true,
-              applications: {
-                include: {
-                  teacher: true,
-                },
-              },
+              school: true, // needed for some UI surfaces
               _count: {
                 select: { applications: true },
               },
