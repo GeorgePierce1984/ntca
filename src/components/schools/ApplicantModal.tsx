@@ -177,6 +177,26 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
       
       try {
         const interviewRequest = { ...applicant.interviewRequest };
+
+        // Normalize timeSlots (Prisma Json can sometimes arrive as a string)
+        try {
+          if (typeof (interviewRequest as any).timeSlots === "string") {
+            const parsed = JSON.parse((interviewRequest as any).timeSlots);
+            (interviewRequest as any).timeSlots = parsed;
+          }
+        } catch (e) {
+          console.error("Error parsing timeSlots:", e);
+          (interviewRequest as any).timeSlots = [];
+        }
+
+        if (!Array.isArray((interviewRequest as any).timeSlots)) {
+          (interviewRequest as any).timeSlots = [];
+        } else {
+          // Filter to only valid slot objects
+          (interviewRequest as any).timeSlots = (interviewRequest as any).timeSlots.filter(
+            (s: any) => s && typeof s === "object" && s.date && s.time,
+          );
+        }
         
         // Parse alternativeSlot if it exists and is a JSON string
         if (interviewRequest.alternativeSlot && typeof interviewRequest.alternativeSlot === 'string') {
@@ -194,6 +214,16 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
             // If parsing fails, remove it to prevent errors
             delete interviewRequest.alternativeSlot;
           }
+        }
+
+        // Normalize/validate selectedSlot (can be null/out of range)
+        const slots = (interviewRequest as any).timeSlots as any[];
+        const idx = (interviewRequest as any).selectedSlot;
+        if (idx === null || idx === undefined || typeof idx !== "number" || !Number.isFinite(idx)) {
+          delete (interviewRequest as any).selectedSlot;
+        } else if (idx < 0 || idx >= slots.length) {
+          console.warn("selectedSlot out of range, clearing it", { idx, slotsLength: slots.length });
+          delete (interviewRequest as any).selectedSlot;
         }
         
         return interviewRequest;
@@ -1205,7 +1235,17 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
                             </p>
                             <p className="text-sm text-green-800 dark:text-green-400">
                               {(() => {
-                                const slot = safeInterviewRequest.timeSlots[safeInterviewRequest.selectedSlot];
+                                const idx =
+                                  typeof safeInterviewRequest.selectedSlot === "number"
+                                    ? safeInterviewRequest.selectedSlot
+                                    : null;
+                                const slot =
+                                  idx !== null && Array.isArray(safeInterviewRequest.timeSlots)
+                                    ? safeInterviewRequest.timeSlots[idx]
+                                    : null;
+                                if (!slot || !slot.date || !slot.time) {
+                                  return "Time not available";
+                                }
                                 try {
                                   const dateTime = new Date(`${slot.date}T${slot.time}`);
                                   return new Intl.DateTimeFormat("en-US", {
