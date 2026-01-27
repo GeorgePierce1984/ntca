@@ -285,52 +285,10 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
     }
   }, [activeTab, applicant?.id, fetchNotes]);
 
-  // Early return with null check
+  // Early return with null check - must be after all hooks
   if (!applicant) {
     return null;
   }
-
-  // Safely parse interviewRequest.alternativeSlot if it exists and is a string
-  // Use applicant directly, but safely access interviewRequest when needed
-  const safeInterviewRequest = useMemo(() => {
-    try {
-      // If no interviewRequest, return null
-      if (!applicant || !applicant.interviewRequest) {
-        return null;
-      }
-      
-      try {
-        const interviewRequest = { ...applicant.interviewRequest };
-        
-        // Parse alternativeSlot if it exists and is a JSON string
-        if (interviewRequest.alternativeSlot && typeof interviewRequest.alternativeSlot === 'string') {
-          try {
-            const parsed = JSON.parse(interviewRequest.alternativeSlot);
-            // Validate parsed object has required properties
-            if (parsed && typeof parsed === 'object' && parsed.date && parsed.time) {
-              interviewRequest.alternativeSlot = parsed;
-            } else {
-              // Invalid structure, remove it
-              delete interviewRequest.alternativeSlot;
-            }
-          } catch (e) {
-            console.error("Error parsing alternativeSlot:", e);
-            // If parsing fails, remove it to prevent errors
-            delete interviewRequest.alternativeSlot;
-          }
-        }
-        
-        return interviewRequest;
-      } catch (e) {
-        console.error("Error copying interviewRequest:", e);
-        return null;
-      }
-    } catch (error) {
-      console.error("Error processing interviewRequest:", error);
-      // Return null if there's any error
-      return null;
-    }
-  }, [applicant]);
 
   // Only block if we have a subscription status and it's not active
   // If subscriptionStatus is null/undefined, allow access to prevent flash
