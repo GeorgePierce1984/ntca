@@ -128,6 +128,27 @@ export const InterviewInviteResponse: React.FC<InterviewInviteResponseProps> = (
     }
   };
 
+  const getLocationHref = () => {
+    const raw = safeInterviewRequest.location || "";
+    if (!raw) return null;
+
+    if (safeInterviewRequest.locationType === "phone") {
+      // Strip spaces for tel: links
+      const tel = raw.replace(/\s+/g, "");
+      return `tel:${tel}`;
+    }
+
+    if (safeInterviewRequest.locationType === "video") {
+      // If it's already a URL, use it; otherwise try to coerce common cases.
+      if (/^https?:\/\//i.test(raw)) return raw;
+      if (/^[\w-]+(\.[\w-]+)+/i.test(raw)) return `https://${raw}`;
+    }
+
+    return null;
+  };
+
+  const locationHref = getLocationHref();
+
   const handleAcceptSlot = async (slotIndex: number) => {
     setIsSubmitting(true);
     try {
@@ -222,7 +243,22 @@ export const InterviewInviteResponse: React.FC<InterviewInviteResponseProps> = (
 
                   <div className="p-4 bg-neutral-50 dark:bg-neutral-900/50 rounded-lg">
                     <p className="text-sm font-medium mb-1">Location/Contact:</p>
-                    <p className="text-sm">{safeInterviewRequest.location}</p>
+                    {locationHref ? (
+                      <a
+                        href={locationHref}
+                        target={safeInterviewRequest.locationType === "video" ? "_blank" : undefined}
+                        rel={safeInterviewRequest.locationType === "video" ? "noreferrer" : undefined}
+                        className="text-sm text-primary-600 dark:text-primary-400 underline break-all"
+                      >
+                        {safeInterviewRequest.locationType === "video"
+                          ? "Join meeting"
+                          : safeInterviewRequest.locationType === "phone"
+                          ? safeInterviewRequest.location
+                          : safeInterviewRequest.location}
+                      </a>
+                    ) : (
+                      <p className="text-sm break-words">{safeInterviewRequest.location}</p>
+                    )}
                   </div>
 
                   {safeInterviewRequest.message && (

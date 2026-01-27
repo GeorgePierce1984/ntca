@@ -58,6 +58,14 @@ import { CENTRAL_ASIA_COUNTRIES } from "@/constants/options";
 import toast from "react-hot-toast";
 import { format } from "date-fns";
 
+const getLocalTimezone = () => {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+  } catch {
+    return "UTC";
+  }
+};
+
 interface Teacher {
   id: string;
   firstName: string;
@@ -889,6 +897,92 @@ const TeacherDashboard: React.FC = () => {
     }
   };
 
+  const normalizeInterviewRequest = (raw: any) => {
+    if (!raw || typeof raw !== "object") return null;
+    const ir: any = { ...raw };
+
+    if (typeof ir.timeSlots === "string") {
+      try {
+        ir.timeSlots = JSON.parse(ir.timeSlots);
+      } catch {
+        ir.timeSlots = [];
+      }
+    }
+    if (!Array.isArray(ir.timeSlots)) ir.timeSlots = [];
+    ir.timeSlots = ir.timeSlots.filter((s: any) => s && typeof s === "object" && s.date && s.time);
+
+    if (typeof ir.alternativeSlot === "string") {
+      try {
+        ir.alternativeSlot = JSON.parse(ir.alternativeSlot);
+      } catch {
+        delete ir.alternativeSlot;
+      }
+    }
+    if (ir.alternativeSlot && (!ir.alternativeSlot.date || !ir.alternativeSlot.time)) {
+      delete ir.alternativeSlot;
+    }
+
+    if (ir.selectedSlot === null || ir.selectedSlot === undefined) {
+      delete ir.selectedSlot;
+    } else if (typeof ir.selectedSlot !== "number" || !Number.isFinite(ir.selectedSlot)) {
+      delete ir.selectedSlot;
+    } else if (ir.selectedSlot < 0 || ir.selectedSlot >= ir.timeSlots.length) {
+      delete ir.selectedSlot;
+    }
+
+    return ir;
+  };
+
+  const getConfirmedInterviewSlot = (ir: any) => {
+    if (!ir) return null;
+    if (typeof ir.selectedSlot === "number" && Array.isArray(ir.timeSlots)) {
+      const slot = ir.timeSlots[ir.selectedSlot];
+      if (slot?.date && slot?.time) return slot;
+    }
+    if (ir.alternativeSlot?.date && ir.alternativeSlot?.time) return ir.alternativeSlot;
+    return null;
+  };
+
+  const formatInterviewSlot = (slot: any, timezone: string) => {
+    if (!slot?.date || !slot?.time) return "";
+    try {
+      const dateTime = new Date(`${slot.date}T${slot.time}`);
+      return new Intl.DateTimeFormat("en-US", {
+        timeZone: timezone,
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      }).format(dateTime);
+    } catch {
+      return `${slot.date} ${slot.time}`;
+    }
+  };
+
+  const getCountdownLabel = (slot: any) => {
+    if (!slot?.date || !slot?.time) return null;
+    const dateTime = new Date(`${slot.date}T${slot.time}`);
+    if (isNaN(dateTime.getTime())) return null;
+    const diffMs = dateTime.getTime() - Date.now();
+    const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+    if (diffDays <= 0) return "Today";
+    if (diffDays === 1) return "In 1 day";
+    return `In ${diffDays} days`;
+  };
+
+  const getInterviewLocationHref = (ir: any) => {
+    const raw = ir?.location || "";
+    if (!raw) return null;
+    if (ir?.locationType === "phone") return `tel:${String(raw).replace(/\\s+/g, "")}`;
+    if (ir?.locationType === "video") {
+      if (/^https?:\\/\\//i.test(raw)) return raw;
+      if (/^[\\w-]+(\\.[\\w-]+)+/i.test(raw)) return `https://${raw}`;
+    }
+    return null;
+  };
+
   const getTypeLabel = (type: string) => {
     switch (type) {
       case "FULL_TIME":
@@ -1420,8 +1514,13 @@ const TeacherDashboard: React.FC = () => {
                 </div>
                 <div className="space-y-4">
                   {teacher.applications?.slice(0, 3).map((app) => {
-                    const interviewReq = app.interviewRequest || interviewRequests[app.id];
+                    const interviewReq = normalizeInterviewRequest(app.interviewRequest || interviewRequests[app.id]);
                     const hasPendingInterview = interviewReq && interviewReq.status === "pending";
+                    const confirmedSlot =
+                      interviewReq && interviewReq.status === "accepted"
+                        ? getConfirmedInterviewSlot(interviewReq)
+                        : null;
+                    const tz = getLocalTimezone();
                     
                     return (
                       <div
@@ -1448,6 +1547,25 @@ const TeacherDashboard: React.FC = () => {
                           <p className="text-sm text-neutral-600 dark:text-neutral-400">
                             {app.job.city}, {app.job.country}
                           </p>
+                          {interviewReq && (
+                            <div className="mt-2 text-xs text-neutral-600 dark:text-neutral-400">
+                              <span className="font-medium">Interview:</span>{" "}
+                              {interviewReq.locationType === "video"
+                                ? "Video"
+                                : interviewReq.locationType === "phone"
+                                ? "Phone"
+                                : "Onsite"}
+                              {confirmedSlot ? (
+                                <>
+                                  {" "}
+                                  • {formatInterviewSlot(confirmedSlot, tz)}
+                                  {getCountdownLabel(confirmedSlot) ? ` • ${getCountdownLabel(confirmedSlot)}` : ""}
+                                </>
+                              ) : interviewReq.status === "pending" ? (
+                                <> • Awaiting your response</>
+                              ) : null}
+                            </div>
+                          )}
                         </div>
                         <div className="text-right ml-4">
                           <span
@@ -3013,8 +3131,13 @@ const TeacherDashboard: React.FC = () => {
                       {(app.interviewRequest || interviewRequests[app.id]) && (
                         <div className="mt-4 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
                           {(() => {
-                            const interviewReq = app.interviewRequest || interviewRequests[app.id];
+                            const interviewReq = normalizeInterviewRequest(app.interviewRequest || interviewRequests[app.id]);
                             if (!interviewReq) return null;
+                            const tz = getLocalTimezone();
+                            const confirmedSlot =
+                              interviewReq.status === "accepted" ? getConfirmedInterviewSlot(interviewReq) : null;
+                            const countdown = confirmedSlot ? getCountdownLabel(confirmedSlot) : null;
+                            const href = getInterviewLocationHref(interviewReq);
                             
                             return (
                               <>
@@ -3049,6 +3172,44 @@ const TeacherDashboard: React.FC = () => {
                                     : "Onsite Interview"}{" "}
                                   - {interviewReq.duration} minutes
                                 </p>
+
+                                {/* Location / Join link */}
+                                {interviewReq.location && (
+                                  <div className="mb-3 text-sm text-purple-800 dark:text-purple-300">
+                                    <span className="font-medium">Details:</span>{" "}
+                                    {href ? (
+                                      <a
+                                        href={href}
+                                        target={interviewReq.locationType === "video" ? "_blank" : undefined}
+                                        rel={interviewReq.locationType === "video" ? "noreferrer" : undefined}
+                                        className="underline text-primary-700 dark:text-primary-300 break-all"
+                                      >
+                                        {interviewReq.locationType === "video"
+                                          ? "Join meeting"
+                                          : interviewReq.location}
+                                      </a>
+                                    ) : (
+                                      <span className="break-words">{interviewReq.location}</span>
+                                    )}
+                                  </div>
+                                )}
+
+                                {/* Confirmed time + countdown */}
+                                {confirmedSlot && (
+                                  <div className="mb-3 text-sm text-purple-800 dark:text-purple-300">
+                                    <span className="font-medium">Confirmed:</span>{" "}
+                                    {formatInterviewSlot(confirmedSlot, tz)}
+                                    {countdown ? ` • ${countdown}` : ""}
+                                  </div>
+                                )}
+
+                                {/* Pending: show the first proposed slot as a hint */}
+                                {interviewReq.status === "pending" && interviewReq.timeSlots?.[0] && (
+                                  <div className="mb-3 text-sm text-purple-800 dark:text-purple-300">
+                                    <span className="font-medium">Next option:</span>{" "}
+                                    {formatInterviewSlot(interviewReq.timeSlots[0], tz)}
+                                  </div>
+                                )}
                                 <Button
                                   size="sm"
                                   variant="gradient"
