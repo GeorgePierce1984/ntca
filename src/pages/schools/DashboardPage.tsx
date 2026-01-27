@@ -1072,59 +1072,105 @@ export const SchoolDashboardPage: React.FC = () => {
 
   // Transform Application to Applicant format for modal compatibility
   const transformToApplicant = (application: Application) => {
-    const isGuestApplication = !application.teacher;
-    const firstName = isGuestApplication ? application.guestFirstName || 'Guest' : application.teacher?.firstName || 'Unknown';
-    const lastName = isGuestApplication ? application.guestLastName || 'User' : application.teacher?.lastName || 'User';
-    const email = isGuestApplication 
-      ? application.guestEmail || 'N/A' 
-      : application.teacher?.user?.email || application.teacher?.email || 'N/A';
-    
-    return {
-      id: application.id,
-      jobId: application.jobId,
-      name: `${firstName} ${lastName}`,
-      firstName: firstName,
-      lastName: lastName,
-      email: email,
-      phone: isGuestApplication ? 'N/A' : application.teacher?.phone || 'N/A',
-      qualification: isGuestApplication ? 'Guest Applicant' : application.teacher?.qualification || 'N/A',
-      experience: isGuestApplication ? 'Not specified' : application.teacher?.experience || 'Not specified',
-      location: isGuestApplication ? 'Not specified' : (application.teacher?.city && application.teacher?.country ? `${application.teacher.city}, ${application.teacher.country}` : 'Not specified'),
-      status: application.status.toLowerCase() as "applied" | "reviewing" | "interview" | "declined" | "hired",
-      appliedDate: application.createdAt,
-      createdAt: application.createdAt,
-      updatedAt: application.updatedAt,
-      resumeUrl: application.resumeUrl,
-      coverLetter: application.coverLetter,
-      portfolioUrl: application.portfolioUrl,
-      rating: application.rating,
-      interviewDate: application.interviewDate,
-      // Teacher profile fields
-      photoUrl: application.teacher?.photoUrl,
-      nationality: application.teacher?.nationality,
-      verified: application.teacher?.verified,
-      experienceYears: application.teacher?.experienceYears,
-      certifications: application.teacher?.certifications,
-      subjects: application.teacher?.subjects,
-      ageGroups: application.teacher?.ageGroups,
-      bio: application.teacher?.bio,
-      education: application.teacher?.education,
-      teachingExperience: application.teacher?.teachingExperience,
-      specializations: application.teacher?.specializations,
-      teachingStyle: application.teacher?.teachingStyle,
-      nativeLanguage: application.teacher?.nativeLanguage,
-      otherLanguages: application.teacher?.otherLanguages,
-      visaStatus: application.teacher?.visaStatus,
-      workAuthorization: application.teacher?.workAuthorization,
-      availability: application.teacher?.availability,
-      startDate: application.teacher?.startDate,
-      currentLocation: application.teacher?.currentLocation,
-      willingToRelocate: application.teacher?.willingToRelocate,
-      preferredLocations: application.teacher?.preferredLocations,
-      languages: application.teacher?.otherLanguages ? [application.teacher.otherLanguages] : undefined,
-      notes: application.notes || [],
-      interviewRequest: application.interviewRequest,
-    };
+    try {
+      const isGuestApplication = !application.teacher;
+      const firstName = isGuestApplication ? application.guestFirstName || 'Guest' : application.teacher?.firstName || 'Unknown';
+      const lastName = isGuestApplication ? application.guestLastName || 'User' : application.teacher?.lastName || 'User';
+      const email = isGuestApplication 
+        ? application.guestEmail || 'N/A' 
+        : application.teacher?.user?.email || application.teacher?.email || 'N/A';
+      
+      // Safely handle interviewRequest - it might have JSON strings that need parsing
+      let safeInterviewRequest = application.interviewRequest;
+      if (safeInterviewRequest?.alternativeSlot && typeof safeInterviewRequest.alternativeSlot === 'string') {
+        try {
+          const parsed = JSON.parse(safeInterviewRequest.alternativeSlot);
+          if (parsed && typeof parsed === 'object' && parsed.date && parsed.time) {
+            safeInterviewRequest = {
+              ...safeInterviewRequest,
+              alternativeSlot: parsed,
+            };
+          }
+        } catch (e) {
+          console.error("Error parsing alternativeSlot in transformToApplicant:", e);
+          // Remove invalid alternativeSlot
+          const { alternativeSlot, ...rest } = safeInterviewRequest;
+          safeInterviewRequest = rest;
+        }
+      }
+      
+      return {
+        id: application.id,
+        jobId: application.jobId,
+        name: `${firstName} ${lastName}`,
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
+        phone: isGuestApplication ? 'N/A' : application.teacher?.phone || 'N/A',
+        qualification: isGuestApplication ? 'Guest Applicant' : application.teacher?.qualification || 'N/A',
+        experience: isGuestApplication ? 'Not specified' : application.teacher?.experience || 'Not specified',
+        location: isGuestApplication ? 'Not specified' : (application.teacher?.city && application.teacher?.country ? `${application.teacher.city}, ${application.teacher.country}` : 'Not specified'),
+        status: application.status.toLowerCase() as "applied" | "reviewing" | "interview" | "declined" | "hired",
+        appliedDate: application.createdAt,
+        createdAt: application.createdAt,
+        updatedAt: application.updatedAt,
+        resumeUrl: application.resumeUrl,
+        coverLetter: application.coverLetter,
+        portfolioUrl: application.portfolioUrl,
+        rating: application.rating,
+        interviewDate: application.interviewDate,
+        // Teacher profile fields
+        photoUrl: application.teacher?.photoUrl,
+        nationality: application.teacher?.nationality,
+        verified: application.teacher?.verified,
+        experienceYears: application.teacher?.experienceYears,
+        certifications: application.teacher?.certifications,
+        subjects: application.teacher?.subjects,
+        ageGroups: application.teacher?.ageGroups,
+        bio: application.teacher?.bio,
+        education: application.teacher?.education,
+        teachingExperience: application.teacher?.teachingExperience,
+        specializations: application.teacher?.specializations,
+        teachingStyle: application.teacher?.teachingStyle,
+        nativeLanguage: application.teacher?.nativeLanguage,
+        otherLanguages: application.teacher?.otherLanguages,
+        visaStatus: application.teacher?.visaStatus,
+        workAuthorization: application.teacher?.workAuthorization,
+        availability: application.teacher?.availability,
+        startDate: application.teacher?.startDate,
+        currentLocation: application.teacher?.currentLocation,
+        willingToRelocate: application.teacher?.willingToRelocate,
+        preferredLocations: application.teacher?.preferredLocations,
+        languages: application.teacher?.otherLanguages ? [application.teacher.otherLanguages] : undefined,
+        notes: application.notes || [],
+        interviewRequest: safeInterviewRequest,
+      };
+    } catch (error) {
+      console.error("Error transforming applicant:", error, application);
+      // Return a minimal safe object to prevent crash
+      return {
+        id: application.id,
+        jobId: application.jobId,
+        name: application.teacher ? `${application.teacher.firstName || ''} ${application.teacher.lastName || ''}`.trim() || 'Unknown' : 'Guest User',
+        firstName: application.teacher?.firstName || application.guestFirstName || 'Unknown',
+        lastName: application.teacher?.lastName || application.guestLastName || 'User',
+        email: application.teacher?.user?.email || application.guestEmail || 'N/A',
+        phone: application.teacher?.phone || application.guestPhone || 'N/A',
+        qualification: application.teacher?.qualification || 'N/A',
+        experience: application.teacher?.experience || 'Not specified',
+        location: 'Not specified',
+        status: (application.status?.toLowerCase() || 'applied') as "applied" | "reviewing" | "interview" | "declined" | "hired",
+        appliedDate: application.createdAt,
+        createdAt: application.createdAt,
+        updatedAt: application.updatedAt,
+        resumeUrl: application.resumeUrl,
+        coverLetter: application.coverLetter,
+        portfolioUrl: application.portfolioUrl,
+        rating: application.rating,
+        interviewDate: application.interviewDate,
+        notes: application.notes || [],
+      };
+    }
   };
 
   const updateApplicantStatus = async (
