@@ -105,6 +105,9 @@ export const SchoolProfilePage: React.FC<{ embedded?: boolean }> = ({
   const [selectedJobForEdit, setSelectedJobForEdit] = useState<any | null>(null);
   const [showChoosePlanModal, setShowChoosePlanModal] = useState(false);
   const [jobs, setJobs] = useState<any[]>([]);
+
+  // In the embedded (dashboard tab) view, we want a fluid "always editable" experience.
+  const isEditing = embedded ? true : editMode;
   const [jobForm, setJobForm] = useState({
     title: "",
     subjectsTaught: "",
@@ -716,12 +719,14 @@ export const SchoolProfilePage: React.FC<{ embedded?: boolean }> = ({
               </p>
             </div>
           <div className="flex items-center gap-4 mt-[15px]">
-            {editMode ? (
+            {isEditing ? (
               <>
                 <Button
                   onClick={() => {
                     setFormData(school);
-                    setEditMode(false);
+                    if (!embedded) {
+                      setEditMode(false);
+                    }
                   }}
                   variant="secondary"
                 >
@@ -770,7 +775,7 @@ export const SchoolProfilePage: React.FC<{ embedded?: boolean }> = ({
                 <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
                   Your profile is {school.completionPercentage}% complete. Complete your profile to start posting jobs and attract qualified teachers.
                 </p>
-                {!editMode && (
+                {!isEditing && (
                   <Button
                     onClick={() => setEditMode(true)}
                     variant="primary"
@@ -799,7 +804,7 @@ export const SchoolProfilePage: React.FC<{ embedded?: boolean }> = ({
                     className="w-full h-full object-cover"
                   />
                 ) : null}
-                {editMode && (
+                {isEditing && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black/40 hover:bg-black/50 transition-colors">
                     <label className="cursor-pointer px-4 py-2 bg-white/90 dark:bg-neutral-800/90 rounded-lg hover:bg-white dark:hover:bg-neutral-800 transition-colors">
                       {uploadingCoverPhoto ? (
@@ -840,7 +845,7 @@ export const SchoolProfilePage: React.FC<{ embedded?: boolean }> = ({
                     ) : (
                       <Building className="w-12 h-12 text-neutral-400" />
                     )}
-                    {editMode && (
+                    {isEditing && (
                       <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-xl opacity-0 hover:opacity-100 transition-opacity">
                         <label className="cursor-pointer">
                           <Camera className="w-5 h-5 text-white" />
@@ -857,7 +862,7 @@ export const SchoolProfilePage: React.FC<{ embedded?: boolean }> = ({
                   </div>
                 </div>
                 
-                {editMode && (
+                {isEditing && (
                   <div className="mb-4">
                     <div className="flex items-center gap-2 mb-2">
                       <h3 className="font-medium text-sm">School Logo</h3>
@@ -909,7 +914,7 @@ export const SchoolProfilePage: React.FC<{ embedded?: boolean }> = ({
                     <label className="block text-sm font-medium mb-2">
                       School Name *
                     </label>
-                    {editMode ? (
+                    {isEditing ? (
                       <input
                         type="text"
                         value={formData.name || ""}
@@ -927,7 +932,7 @@ export const SchoolProfilePage: React.FC<{ embedded?: boolean }> = ({
                     <label className="block text-sm font-medium mb-2">
                       School Type
                     </label>
-                    {editMode ? (
+                    {isEditing ? (
                       <select
                         value={formData.schoolType || ""}
                         onChange={(e) => setFormData({ ...formData, schoolType: e.target.value })}
@@ -951,7 +956,7 @@ export const SchoolProfilePage: React.FC<{ embedded?: boolean }> = ({
                     <label className="block text-sm font-medium mb-2">
                       Curriculum/Focus
                     </label>
-                    {editMode ? (
+                    {isEditing ? (
                       <select
                         value={formData.curriculum || ""}
                         onChange={(e) => setFormData({ ...formData, curriculum: e.target.value })}
@@ -979,7 +984,7 @@ export const SchoolProfilePage: React.FC<{ embedded?: boolean }> = ({
                     </label>
                     <InfoIcon content="This description will be shown to teachers on job postings. You can set it here or add it when creating your first job posting." />
                   </div>
-                  {editMode ? (
+                  {isEditing ? (
                     <textarea
                       value={formData.description || ""}
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -1001,7 +1006,7 @@ export const SchoolProfilePage: React.FC<{ embedded?: boolean }> = ({
                     </label>
                     <InfoIcon content="Share your school's teaching philosophy, educational values, and approach to teaching. This helps teachers understand your school's culture and teaching methods." />
                   </div>
-                  {editMode ? (
+                  {isEditing ? (
                     <textarea
                       value={formData.teachingPhilosophy || ""}
                       onChange={(e) => setFormData({ ...formData, teachingPhilosophy: e.target.value })}
@@ -1021,7 +1026,7 @@ export const SchoolProfilePage: React.FC<{ embedded?: boolean }> = ({
                     <label className="block text-sm font-medium mb-2">
                       Website
                     </label>
-                    {editMode ? (
+                    {isEditing ? (
                       <input
                         type="url"
                         value={formData.website || ""}
@@ -1055,7 +1060,7 @@ export const SchoolProfilePage: React.FC<{ embedded?: boolean }> = ({
                       </label>
                       <InfoIcon content="Help us understand your hiring needs. This helps us match you with the right subscription plan and provide better service." />
                     </div>
-                    {editMode ? (
+                    {isEditing ? (
                       <select
                         value={formData.estimateJobs || ""}
                         onChange={(e) => setFormData({ ...formData, estimateJobs: e.target.value })}
@@ -1084,7 +1089,7 @@ export const SchoolProfilePage: React.FC<{ embedded?: boolean }> = ({
                       </label>
                       <InfoIcon content="The year your school was founded. This helps teachers understand your school's history and experience." />
                     </div>
-                    {editMode ? (
+                    {isEditing ? (
                       <input
                         type="number"
                         value={formData.established ? new Date(formData.established).getFullYear() : ""}
@@ -1114,7 +1119,7 @@ export const SchoolProfilePage: React.FC<{ embedded?: boolean }> = ({
                       </label>
                       <InfoIcon content="The approximate number of students enrolled at your school. This helps teachers understand the size of your institution." />
                     </div>
-                    {editMode ? (
+                    {isEditing ? (
                       <input
                         type="number"
                         value={formData.studentCount || ""}
@@ -1142,7 +1147,7 @@ export const SchoolProfilePage: React.FC<{ embedded?: boolean }> = ({
                       </label>
                       <InfoIcon content="Select the age range of students typically enrolled at your school (including adults). This helps teachers understand the student demographics." />
                     </div>
-                    {editMode ? (
+                    {isEditing ? (
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <label className="block text-xs text-neutral-500 mb-1">Min Age</label>
@@ -1190,7 +1195,7 @@ export const SchoolProfilePage: React.FC<{ embedded?: boolean }> = ({
                       </label>
                       <InfoIcon content="The typical number of students in a class at your school. This helps teachers understand class dynamics and teaching environment." />
                     </div>
-                    {editMode ? (
+                    {isEditing ? (
                       <input
                         type="number"
                         value={formData.averageClassSize || ""}
@@ -1229,7 +1234,7 @@ export const SchoolProfilePage: React.FC<{ embedded?: boolean }> = ({
                         type="checkbox" 
                         checked={formData.housingProvided || false}
                         onChange={(e) => setFormData({ ...formData, housingProvided: e.target.checked })}
-                        disabled={!editMode}
+                        disabled={!isEditing}
                         className="rounded" 
                       />
                       <span className="text-sm">Housing Assistance</span>
@@ -1239,7 +1244,7 @@ export const SchoolProfilePage: React.FC<{ embedded?: boolean }> = ({
                         type="checkbox" 
                         checked={formData.flightReimbursement || false}
                         onChange={(e) => setFormData({ ...formData, flightReimbursement: e.target.checked })}
-                        disabled={!editMode}
+                        disabled={!isEditing}
                         className="rounded" 
                       />
                       <span className="text-sm">Flight Reimbursement Allowance</span>
@@ -1249,7 +1254,7 @@ export const SchoolProfilePage: React.FC<{ embedded?: boolean }> = ({
                         type="checkbox" 
                         checked={formData.visaWorkPermitSupport || false}
                         onChange={(e) => setFormData({ ...formData, visaWorkPermitSupport: e.target.checked })}
-                        disabled={!editMode}
+                        disabled={!isEditing}
                         className="rounded" 
                       />
                       <span className="text-sm">Visa & Work Permit Support</span>
@@ -1259,7 +1264,7 @@ export const SchoolProfilePage: React.FC<{ embedded?: boolean }> = ({
                         type="checkbox" 
                         checked={formData.contractCompletionBonus || false}
                         onChange={(e) => setFormData({ ...formData, contractCompletionBonus: e.target.checked })}
-                        disabled={!editMode}
+                        disabled={!isEditing}
                         className="rounded" 
                       />
                       <span className="text-sm">Contract Completion Bonus</span>
@@ -1269,7 +1274,7 @@ export const SchoolProfilePage: React.FC<{ embedded?: boolean }> = ({
                         type="checkbox" 
                         checked={formData.paidHolidays || false}
                         onChange={(e) => setFormData({ ...formData, paidHolidays: e.target.checked })}
-                        disabled={!editMode}
+                        disabled={!isEditing}
                         className="rounded" 
                       />
                       <span className="text-sm">Paid Holidays</span>
@@ -1279,7 +1284,7 @@ export const SchoolProfilePage: React.FC<{ embedded?: boolean }> = ({
                         type="checkbox" 
                         checked={formData.overtimePay || false}
                         onChange={(e) => setFormData({ ...formData, overtimePay: e.target.checked })}
-                        disabled={!editMode}
+                        disabled={!isEditing}
                         className="rounded" 
                       />
                       <span className="text-sm">Overtime Pay</span>
@@ -1296,7 +1301,7 @@ export const SchoolProfilePage: React.FC<{ embedded?: boolean }> = ({
                         type="checkbox" 
                         checked={formData.paidAnnualLeave || false}
                         onChange={(e) => setFormData({ ...formData, paidAnnualLeave: e.target.checked })}
-                        disabled={!editMode}
+                        disabled={!isEditing}
                         className="rounded" 
                       />
                       <span className="text-sm">Paid Annual Leave</span>
@@ -1306,7 +1311,7 @@ export const SchoolProfilePage: React.FC<{ embedded?: boolean }> = ({
                         type="checkbox" 
                         checked={formData.nationalHolidays || false}
                         onChange={(e) => setFormData({ ...formData, nationalHolidays: e.target.checked })}
-                        disabled={!editMode}
+                        disabled={!isEditing}
                         className="rounded" 
                       />
                       <span className="text-sm">National Holidays</span>
@@ -1316,7 +1321,7 @@ export const SchoolProfilePage: React.FC<{ embedded?: boolean }> = ({
                         type="checkbox" 
                         checked={formData.sickLeave || false}
                         onChange={(e) => setFormData({ ...formData, sickLeave: e.target.checked })}
-                        disabled={!editMode}
+                        disabled={!isEditing}
                         className="rounded" 
                       />
                       <span className="text-sm">Sick Leave</span>
@@ -1326,7 +1331,7 @@ export const SchoolProfilePage: React.FC<{ embedded?: boolean }> = ({
                         type="checkbox" 
                         checked={formData.healthInsurance || false}
                         onChange={(e) => setFormData({ ...formData, healthInsurance: e.target.checked })}
-                        disabled={!editMode}
+                        disabled={!isEditing}
                         className="rounded" 
                       />
                       <span className="text-sm">Health Insurance</span>
@@ -1336,7 +1341,7 @@ export const SchoolProfilePage: React.FC<{ embedded?: boolean }> = ({
                         type="checkbox" 
                         checked={formData.relocationSupport || false}
                         onChange={(e) => setFormData({ ...formData, relocationSupport: e.target.checked })}
-                        disabled={!editMode}
+                        disabled={!isEditing}
                         className="rounded" 
                       />
                       <span className="text-sm">Relocation Support</span>
@@ -1353,7 +1358,7 @@ export const SchoolProfilePage: React.FC<{ embedded?: boolean }> = ({
                         type="checkbox" 
                         checked={formData.teachingMaterialsProvided || false}
                         onChange={(e) => setFormData({ ...formData, teachingMaterialsProvided: e.target.checked })}
-                        disabled={!editMode}
+                        disabled={!isEditing}
                         className="rounded" 
                       />
                       <span className="text-sm">Teaching Materials Provided</span>
@@ -1363,7 +1368,7 @@ export const SchoolProfilePage: React.FC<{ embedded?: boolean }> = ({
                         type="checkbox" 
                         checked={formData.curriculumGuidance || false}
                         onChange={(e) => setFormData({ ...formData, curriculumGuidance: e.target.checked })}
-                        disabled={!editMode}
+                        disabled={!isEditing}
                         className="rounded" 
                       />
                       <span className="text-sm">Curriculum Guidance</span>
@@ -1373,7 +1378,7 @@ export const SchoolProfilePage: React.FC<{ embedded?: boolean }> = ({
                         type="checkbox" 
                         checked={formData.teacherTraining || false}
                         onChange={(e) => setFormData({ ...formData, teacherTraining: e.target.checked })}
-                        disabled={!editMode}
+                        disabled={!isEditing}
                         className="rounded" 
                       />
                       <span className="text-sm">Teacher Training</span>
@@ -1383,7 +1388,7 @@ export const SchoolProfilePage: React.FC<{ embedded?: boolean }> = ({
                         type="checkbox" 
                         checked={formData.promotionOpportunities || false}
                         onChange={(e) => setFormData({ ...formData, promotionOpportunities: e.target.checked })}
-                        disabled={!editMode}
+                        disabled={!isEditing}
                         className="rounded" 
                       />
                       <span className="text-sm">Promotion Opportunities</span>
@@ -1393,7 +1398,7 @@ export const SchoolProfilePage: React.FC<{ embedded?: boolean }> = ({
                         type="checkbox" 
                         checked={formData.contractRenewalOptions || false}
                         onChange={(e) => setFormData({ ...formData, contractRenewalOptions: e.target.checked })}
-                        disabled={!editMode}
+                        disabled={!isEditing}
                         className="rounded" 
                       />
                       <span className="text-sm">Contract Renewal Options</span>
@@ -1416,7 +1421,7 @@ export const SchoolProfilePage: React.FC<{ embedded?: boolean }> = ({
                     <label className="block text-sm font-medium mb-2">
                       Contact Person Name *
                     </label>
-                    {editMode ? (
+                    {isEditing ? (
                       <input
                         type="text"
                         value={formData.contactName || ""}
@@ -1437,7 +1442,7 @@ export const SchoolProfilePage: React.FC<{ embedded?: boolean }> = ({
                       </label>
                       <InfoIcon content="A specific contact email for job inquiries. If not provided, your account email will be used." />
                     </div>
-                    {editMode ? (
+                    {isEditing ? (
                       <>
                         <input
                           type="email"
@@ -1462,7 +1467,7 @@ export const SchoolProfilePage: React.FC<{ embedded?: boolean }> = ({
                   <label className="block text-sm font-medium mb-2">
                     Phone Number
                   </label>
-                  {editMode ? (
+                  {isEditing ? (
                     <div className="grid md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium mb-2">
@@ -1512,7 +1517,7 @@ export const SchoolProfilePage: React.FC<{ embedded?: boolean }> = ({
                   <label className="block text-sm font-medium mb-2">
                     Street Address
                   </label>
-                  {editMode ? (
+                  {isEditing ? (
                     <input
                       type="text"
                       value={formData.streetAddress === "not specified" ? "" : (formData.streetAddress || "")}
@@ -1535,7 +1540,7 @@ export const SchoolProfilePage: React.FC<{ embedded?: boolean }> = ({
                     <label className="block text-sm font-medium mb-2">
                       City *
                     </label>
-                    {editMode ? (
+                    {isEditing ? (
                       <input
                         type="text"
                         value={formData.city || ""}
@@ -1556,7 +1561,7 @@ export const SchoolProfilePage: React.FC<{ embedded?: boolean }> = ({
                       </label>
                       <InfoIcon content="Optional. The state or province where your school is located." />
                     </div>
-                    {editMode ? (
+                    {isEditing ? (
                       <input
                         type="text"
                         value={formData.state || ""}
@@ -1580,7 +1585,7 @@ export const SchoolProfilePage: React.FC<{ embedded?: boolean }> = ({
                       </label>
                       <InfoIcon content="Optional. The postal or ZIP code for your school's address." />
                     </div>
-                    {editMode ? (
+                    {isEditing ? (
                       <input
                         type="text"
                         value={formData.postalCode || ""}
@@ -1599,7 +1604,7 @@ export const SchoolProfilePage: React.FC<{ embedded?: boolean }> = ({
                     <label className="block text-sm font-medium mb-2">
                       Country *
                     </label>
-                    {editMode ? (
+                    {isEditing ? (
                       <CountrySelector
                         selectedCountry={selectedCountry}
                         onSelect={(country) => {
@@ -1665,54 +1670,56 @@ export const SchoolProfilePage: React.FC<{ embedded?: boolean }> = ({
             </div>
 
             {/* Quick Actions */}
-            <div className="card p-6">
-              <h3 className="font-medium mb-4">Quick Actions</h3>
-              <div className="space-y-3">
-                <Button
-                  onClick={() => navigate("/schools/dashboard")}
-                  variant="secondary"
-                  className="w-full justify-start"
-                  leftIcon={<Briefcase className="w-4 h-4" />}
-                >
-                  View Dashboard
-                </Button>
-                <Button
-                  onClick={() => {
-                    // Check if user has subscription and job limit
-                    // For non-subscribed schools: limit is 1 job TOTAL (ever), not just active
-                    if (!canAccessPremiumFeatures(subscriptionStatus, subscriptionLoading)) {
-                      if (jobs.length >= 1) {
-                        // Show paywall/Choose Plan modal instead of opening job posting modal
-                        setShowChoosePlanModal(true);
-                        toast.error("Free accounts can post up to 1 job. Subscribe to post unlimited jobs and access premium features.", {
-                          duration: 6000,
-                          icon: "🔒",
-                        });
-                        return;
+            {!embedded && (
+              <div className="card p-6">
+                <h3 className="font-medium mb-4">Quick Actions</h3>
+                <div className="space-y-3">
+                  <Button
+                    onClick={() => navigate("/schools/dashboard")}
+                    variant="secondary"
+                    className="w-full justify-start"
+                    leftIcon={<Briefcase className="w-4 h-4" />}
+                  >
+                    View Dashboard
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      // Check if user has subscription and job limit
+                      // For non-subscribed schools: limit is 1 job TOTAL (ever), not just active
+                      if (!canAccessPremiumFeatures(subscriptionStatus, subscriptionLoading)) {
+                        if (jobs.length >= 1) {
+                          // Show paywall/Choose Plan modal instead of opening job posting modal
+                          setShowChoosePlanModal(true);
+                          toast.error("Free accounts can post up to 1 job. Subscribe to post unlimited jobs and access premium features.", {
+                            duration: 6000,
+                            icon: "🔒",
+                          });
+                          return;
+                        }
                       }
-                    }
-                    
-                    // If they can post, open the modal
-                    setShowPostJobModal(true);
-                    toast.success("Let's create a new job posting!", {
-                      icon: "📝",
-                      duration: 2000,
-                    });
-                  }}
-                  variant="primary"
-                  className="w-full justify-start"
-                  leftIcon={<Building className="w-4 h-4" />}
-                  disabled={!school.profileComplete}
-                >
-                  Post New Job
-                </Button>
-                {!school.profileComplete && (
-                  <p className="text-xs text-amber-600 dark:text-amber-400">
-                    Complete your profile to post jobs
-                  </p>
-                )}
+                      
+                      // If they can post, open the modal
+                      setShowPostJobModal(true);
+                      toast.success("Let's create a new job posting!", {
+                        icon: "📝",
+                        duration: 2000,
+                      });
+                    }}
+                    variant="primary"
+                    className="w-full justify-start"
+                    leftIcon={<Building className="w-4 h-4" />}
+                    disabled={!school.profileComplete}
+                  >
+                    Post New Job
+                  </Button>
+                  {!school.profileComplete && (
+                    <p className="text-xs text-amber-600 dark:text-amber-400">
+                      Complete your profile to post jobs
+                    </p>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Profile Tips */}
             <div className="card p-6">
