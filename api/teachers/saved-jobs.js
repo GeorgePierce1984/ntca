@@ -1,41 +1,11 @@
-import { PrismaClient } from "@prisma/client";
 import jwt from "jsonwebtoken";
+import { prisma } from "../_utils/prisma.js";
 
-const prisma = new PrismaClient({
-  log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
-  datasources: {
-    db: {
-      url: process.env.DATABASE_URL,
-    },
-  },
-});
-
-// Ensure Prisma connection is active
-async function ensureConnected() {
-  try {
-    // Always disconnect first to ensure a clean state
-    await prisma.$disconnect().catch(() => {});
-    
-    // Connect with a delay to allow engine initialization in serverless
-    await prisma.$connect();
-    
-    // Give the engine time to be ready in serverless environments
-    // This is especially important for cold starts
-    await new Promise(resolve => setTimeout(resolve, 800));
-  } catch (error) {
-    // If connection fails, disconnect and rethrow
-    await prisma.$disconnect().catch(() => {});
-    throw error;
-  }
-}
-
-// Helper function to retry database operations
-async function retryOperation(operation, maxRetries = 5, initialDelay = 1500) {
+// Helper function to retry database operations (keep lightweight; avoid forced sleeps on every request)
+async function retryOperation(operation, maxRetries = 3, initialDelay = 250) {
   let delay = initialDelay;
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      // Ensure connection is active before operation
-      await ensureConnected();
       return await operation();
     } catch (error) {
       const isConnectionError = 
@@ -51,15 +21,8 @@ async function retryOperation(operation, maxRetries = 5, initialDelay = 1500) {
 
       if (isConnectionError && attempt < maxRetries) {
         console.log(`Connection error on attempt ${attempt}, retrying in ${delay}ms...`);
-        await prisma.$disconnect().catch(() => {});
-        
-        // For "Engine is not yet connected", wait longer for engine initialization
-        if (error.message?.includes("Engine is not yet connected")) {
-          await new Promise(resolve => setTimeout(resolve, 1000 + (attempt * 500)));
-        } else {
-          await new Promise(resolve => setTimeout(resolve, delay));
-          delay = Math.min(delay * 2, 5000); // Cap at 5 seconds
-        }
+        await new Promise(resolve => setTimeout(resolve, delay));
+        delay = Math.min(delay * 2, 2000);
         continue;
       }
       throw error;
@@ -122,36 +85,38 @@ export default async function handler(req, res) {
         });
       });
 
-      // Check application status for each saved job
-      const savedJobsWithStatus = await Promise.all(
-        savedJobs.map(async (savedJob) => {
-          const application = await retryOperation(async () => {
-            return await prisma.application.findUnique({
-            where: {
-              jobId_teacherId: {
-                jobId: savedJob.jobId,
+      // Avoid N+1 queries: fetch all applications for these jobs in one query
+      const jobIds = savedJobs.map((s) => s.jobId);
+      const applications = jobIds.length
+        ? await retryOperation(async () => {
+            return await prisma.application.findMany({
+              where: {
                 teacherId: teacher.id,
+                jobId: { in: jobIds },
               },
-            },
-            select: {
-              id: true,
-              status: true,
-              createdAt: true,
-            },
+              select: {
+                jobId: true,
+                status: true,
+                createdAt: true,
+              },
             });
-          });
+          })
+        : [];
 
-          return {
-            ...savedJob,
-            job: {
-              ...savedJob.job,
-              hasApplied: !!application,
-              applicationStatus: application?.status || null,
-              applicationDate: application?.createdAt || null,
-            },
-          };
-        }),
-      );
+      const appByJobId = new Map(applications.map((a) => [a.jobId, a]));
+
+      const savedJobsWithStatus = savedJobs.map((savedJob) => {
+        const application = appByJobId.get(savedJob.jobId);
+        return {
+          ...savedJob,
+          job: {
+            ...savedJob.job,
+            hasApplied: !!application,
+            applicationStatus: application?.status || null,
+            applicationDate: application?.createdAt || null,
+          },
+        };
+      });
 
       return res.status(200).json({ savedJobs: savedJobsWithStatus });
     } else if (req.method === "POST") {
@@ -311,7 +276,5 @@ export default async function handler(req, res) {
       details:
         process.env.NODE_ENV === "development" ? error.message : undefined,
     });
-  } finally {
-    await prisma.$disconnect();
   }
 }
