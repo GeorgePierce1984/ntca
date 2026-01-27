@@ -58,6 +58,7 @@ import { CENTRAL_ASIA_COUNTRIES } from "@/constants/options";
 import toast from "react-hot-toast";
 import { format } from "date-fns";
 import { timedFetch } from "@/utils/timedFetch";
+import { TeacherProfilePage } from "@/pages/teachers/ProfilePage";
 
 const getLocalTimezone = () => {
   try {
@@ -1604,6 +1605,8 @@ const TeacherDashboard: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
             >
+              <TeacherProfilePage embedded />
+              {false && (
               <div className="max-w-4xl mx-auto">
                 <div className="card p-8">
                   <div className="flex items-center justify-between mb-8">
@@ -2131,6 +2134,7 @@ const TeacherDashboard: React.FC = () => {
                   </div>
                 </div>
               </div>
+              )}
             </motion.div>
           )}
 

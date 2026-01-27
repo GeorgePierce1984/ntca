@@ -151,7 +151,9 @@ const languageLevels = [
   "Basic",
 ];
 
-export const TeacherProfilePage: React.FC = () => {
+export const TeacherProfilePage: React.FC<{ embedded?: boolean }> = ({
+  embedded = false,
+}) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [teacher, setTeacher] = useState<Teacher | null>(null);
@@ -568,7 +570,7 @@ export const TeacherProfilePage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className={`${embedded ? "" : "min-h-screen "}flex items-center justify-center`}>
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-600"></div>
       </div>
     );
@@ -576,16 +578,18 @@ export const TeacherProfilePage: React.FC = () => {
 
   if (!teacher) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className={`${embedded ? "" : "min-h-screen "}flex items-center justify-center`}>
         <div className="text-center">
           <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
           <h2 className="text-2xl font-bold mb-2">Profile Not Found</h2>
           <p className="text-neutral-600 dark:text-neutral-400 mb-4">
             Unable to load your profile. Please try again.
           </p>
-          <Button onClick={() => navigate("/teachers/dashboard")}>
-            Back to Dashboard
-          </Button>
+          {!embedded && (
+            <Button onClick={() => navigate("/teachers/dashboard")}>
+              Back to Dashboard
+            </Button>
+          )}
         </div>
       </div>
     );
@@ -594,8 +598,8 @@ export const TeacherProfilePage: React.FC = () => {
   const profileCompletion = calculateProfileCompleteness();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50 dark:from-neutral-900 dark:via-neutral-900 dark:to-neutral-800">
-      <div className="container-custom py-24">
+    <div className={`${embedded ? "" : "min-h-screen "}bg-gradient-to-br from-primary-50 via-white to-secondary-50 dark:from-neutral-900 dark:via-neutral-900 dark:to-neutral-800`}>
+      <div className={`container-custom ${embedded ? "py-8" : "py-24"}`}>
         {/* Header */}
         <div className="glass rounded-2xl p-8 mb-8">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
