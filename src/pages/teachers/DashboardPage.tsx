@@ -975,10 +975,10 @@ const TeacherDashboard: React.FC = () => {
   const getInterviewLocationHref = (ir: any) => {
     const raw = ir?.location || "";
     if (!raw) return null;
-    if (ir?.locationType === "phone") return `tel:${String(raw).replace(/\\s+/g, "")}`;
+    if (ir?.locationType === "phone") return `tel:${String(raw).replace(/\s+/g, "")}`;
     if (ir?.locationType === "video") {
-      if (/^https?:\\/\\//i.test(raw)) return raw;
-      if (/^[\\w-]+(\\.[\\w-]+)+/i.test(raw)) return `https://${raw}`;
+      if (/^https?:\/\//i.test(raw)) return raw;
+      if (/^[\w-]+(\.[\w-]+)+/i.test(raw)) return `https://${raw}`;
     }
     return null;
   };
