@@ -165,10 +165,48 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
   const [processingAlternative, setProcessingAlternative] = useState(false);
   const fetchingRef = useRef(false);
 
-  // Early return with null check to prevent white screen
-  if (!applicant) {
-    return null;
-  }
+  // Safely parse interviewRequest.alternativeSlot if it exists and is a string
+  // Use applicant directly, but safely access interviewRequest when needed
+  // IMPORTANT: This hook must be called before any early returns to follow React rules
+  const safeInterviewRequest = useMemo(() => {
+    try {
+      // If no applicant or interviewRequest, return null
+      if (!applicant || !applicant.interviewRequest) {
+        return null;
+      }
+      
+      try {
+        const interviewRequest = { ...applicant.interviewRequest };
+        
+        // Parse alternativeSlot if it exists and is a JSON string
+        if (interviewRequest.alternativeSlot && typeof interviewRequest.alternativeSlot === 'string') {
+          try {
+            const parsed = JSON.parse(interviewRequest.alternativeSlot);
+            // Validate parsed object has required properties
+            if (parsed && typeof parsed === 'object' && parsed.date && parsed.time) {
+              interviewRequest.alternativeSlot = parsed;
+            } else {
+              // Invalid structure, remove it
+              delete interviewRequest.alternativeSlot;
+            }
+          } catch (e) {
+            console.error("Error parsing alternativeSlot:", e);
+            // If parsing fails, remove it to prevent errors
+            delete interviewRequest.alternativeSlot;
+          }
+        }
+        
+        return interviewRequest;
+      } catch (e) {
+        console.error("Error copying interviewRequest:", e);
+        return null;
+      }
+    } catch (error) {
+      console.error("Error processing interviewRequest:", error);
+      // Return null if there's any error
+      return null;
+    }
+  }, [applicant]);
 
   const fetchNotes = useCallback(async () => {
     if (!applicant?.id || fetchingRef.current) return;
