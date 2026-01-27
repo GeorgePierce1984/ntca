@@ -29,7 +29,6 @@ import {
   AlertCircle,
   MessageSquare,
   TrendingUp,
-  UserCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/contexts/AuthContext";
