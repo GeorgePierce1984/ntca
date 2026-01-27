@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -66,6 +66,49 @@ export const InterviewInviteResponse: React.FC<InterviewInviteResponseProps> = (
 
   if (!interviewRequest) return null;
 
+  const safeInterviewRequest = useMemo(() => {
+    try {
+      const ir: any = { ...interviewRequest };
+
+      // Normalize timeSlots (can arrive as JSON string depending on API/ORM)
+      if (typeof ir.timeSlots === "string") {
+        try {
+          ir.timeSlots = JSON.parse(ir.timeSlots);
+        } catch {
+          ir.timeSlots = [];
+        }
+      }
+      if (!Array.isArray(ir.timeSlots)) ir.timeSlots = [];
+      ir.timeSlots = ir.timeSlots.filter((s: any) => s && typeof s === "object" && s.date && s.time);
+
+      // Normalize alternativeSlot (can arrive as JSON string)
+      if (typeof ir.alternativeSlot === "string") {
+        try {
+          ir.alternativeSlot = JSON.parse(ir.alternativeSlot);
+        } catch {
+          delete ir.alternativeSlot;
+        }
+      }
+      if (ir.alternativeSlot && (!ir.alternativeSlot.date || !ir.alternativeSlot.time)) {
+        delete ir.alternativeSlot;
+      }
+
+      // Validate selectedSlot (null/out-of-range should be treated as unset)
+      if (ir.selectedSlot === null || ir.selectedSlot === undefined) {
+        delete ir.selectedSlot;
+      } else if (typeof ir.selectedSlot !== "number" || !Number.isFinite(ir.selectedSlot)) {
+        delete ir.selectedSlot;
+      } else if (ir.selectedSlot < 0 || ir.selectedSlot >= ir.timeSlots.length) {
+        delete ir.selectedSlot;
+      }
+
+      return ir as InterviewRequest;
+    } catch (e) {
+      console.error("Error normalizing interviewRequest:", e);
+      return interviewRequest;
+    }
+  }, [interviewRequest]);
+
   const formatTimeInTimezone = (date: string, time: string, timezone: string) => {
     if (!date || !time) return "";
     try {
@@ -117,7 +160,7 @@ export const InterviewInviteResponse: React.FC<InterviewInviteResponseProps> = (
   };
 
   const getLocationIcon = () => {
-    switch (interviewRequest.locationType) {
+    switch (safeInterviewRequest.locationType) {
       case "video":
         return <Video className="w-5 h-5" />;
       case "phone":
@@ -165,39 +208,39 @@ export const InterviewInviteResponse: React.FC<InterviewInviteResponseProps> = (
                     {getLocationIcon()}
                     <div>
                       <p className="font-medium">
-                        {interviewRequest.locationType === "video"
+                        {safeInterviewRequest.locationType === "video"
                           ? "Video Interview"
-                          : interviewRequest.locationType === "phone"
+                          : safeInterviewRequest.locationType === "phone"
                           ? "Phone Interview"
                           : "Onsite Interview"}
                       </p>
                       <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                        Duration: {interviewRequest.duration} minutes
+                        Duration: {safeInterviewRequest.duration} minutes
                       </p>
                     </div>
                   </div>
 
                   <div className="p-4 bg-neutral-50 dark:bg-neutral-900/50 rounded-lg">
                     <p className="text-sm font-medium mb-1">Location/Contact:</p>
-                    <p className="text-sm">{interviewRequest.location}</p>
+                    <p className="text-sm">{safeInterviewRequest.location}</p>
                   </div>
 
-                  {interviewRequest.message && (
+                  {safeInterviewRequest.message && (
                     <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                       <div className="flex items-start gap-2">
                         <MessageSquare className="w-4 h-4 mt-0.5" />
-                        <p className="text-sm">{interviewRequest.message}</p>
+                        <p className="text-sm">{safeInterviewRequest.message}</p>
                       </div>
                     </div>
                   )}
                 </div>
 
                 {/* Time Slots */}
-                {interviewRequest.status === "pending" && (
+                {safeInterviewRequest.status === "pending" && (
                   <div>
                     <h3 className="font-medium mb-4">Select a Time Slot</h3>
                     <div className="space-y-3">
-                      {interviewRequest.timeSlots.map((slot, index) => (
+                      {safeInterviewRequest.timeSlots.map((slot, index) => (
                         <button
                           key={index}
                           type="button"
@@ -232,7 +275,7 @@ export const InterviewInviteResponse: React.FC<InterviewInviteResponseProps> = (
                 )}
 
                 {/* Accepted Status */}
-                {interviewRequest.status === "accepted" && interviewRequest.selectedSlot !== undefined && (
+                {safeInterviewRequest.status === "accepted" && (
                   <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
                     <div className="flex items-start gap-2">
                       <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5" />
@@ -240,20 +283,40 @@ export const InterviewInviteResponse: React.FC<InterviewInviteResponseProps> = (
                         <p className="font-medium text-green-900 dark:text-green-300">
                           Interview Accepted
                         </p>
-                        <p className="text-sm text-green-700 dark:text-green-400 mt-1">
-                          {formatTimeInTimezone(
-                            interviewRequest.timeSlots[interviewRequest.selectedSlot].date,
-                            interviewRequest.timeSlots[interviewRequest.selectedSlot].time,
-                            interviewRequest.timeSlots[interviewRequest.selectedSlot].timezone
-                          )}
-                        </p>
+                        {(() => {
+                          // Preferred: accepted via original slot selection
+                          if (typeof safeInterviewRequest.selectedSlot === "number") {
+                            const slot = safeInterviewRequest.timeSlots[safeInterviewRequest.selectedSlot];
+                            if (slot?.date && slot?.time) {
+                              return (
+                                <p className="text-sm text-green-700 dark:text-green-400 mt-1">
+                                  {formatTimeInTimezone(slot.date, slot.time, slot.timezone)}
+                                </p>
+                              );
+                            }
+                          }
+                          // Accepted via alternative slot (school accepted teacher's proposal)
+                          if (safeInterviewRequest.alternativeSlot?.date && safeInterviewRequest.alternativeSlot?.time) {
+                            const alt = safeInterviewRequest.alternativeSlot;
+                            return (
+                              <p className="text-sm text-green-700 dark:text-green-400 mt-1">
+                                {formatTimeInTimezone(alt.date, alt.time, alt.timezone)}
+                              </p>
+                            );
+                          }
+                          return (
+                            <p className="text-sm text-green-700 dark:text-green-400 mt-1">
+                              Time confirmed (details unavailable)
+                            </p>
+                          );
+                        })()}
                       </div>
                     </div>
                   </div>
                 )}
 
                 {/* Alternative Suggested Status */}
-                {interviewRequest.status === "alternative_suggested" && interviewRequest.alternativeSlot && (
+                {safeInterviewRequest.status === "alternative_suggested" && safeInterviewRequest.alternativeSlot && (
                   <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
                     <div className="flex items-start gap-2">
                       <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5" />
@@ -263,9 +326,9 @@ export const InterviewInviteResponse: React.FC<InterviewInviteResponseProps> = (
                         </p>
                         <p className="text-sm text-amber-700 dark:text-amber-400 mt-1">
                           {formatTimeInTimezone(
-                            interviewRequest.alternativeSlot.date,
-                            interviewRequest.alternativeSlot.time,
-                            interviewRequest.alternativeSlot.timezone
+                            safeInterviewRequest.alternativeSlot.date,
+                            safeInterviewRequest.alternativeSlot.time,
+                            safeInterviewRequest.alternativeSlot.timezone
                           )}
                         </p>
                       </div>
@@ -337,7 +400,7 @@ export const InterviewInviteResponse: React.FC<InterviewInviteResponseProps> = (
             </div>
 
             {/* Footer */}
-            {interviewRequest.status === "pending" && (
+            {safeInterviewRequest.status === "pending" && (
               <div className="p-6 border-t border-neutral-200 dark:border-neutral-700">
                 <div className="flex items-center justify-between gap-3">
                   <Button
@@ -379,7 +442,7 @@ export const InterviewInviteResponse: React.FC<InterviewInviteResponseProps> = (
               </div>
             )}
 
-            {interviewRequest.status !== "pending" && (
+            {safeInterviewRequest.status !== "pending" && (
               <div className="p-6 border-t border-neutral-200 dark:border-neutral-700">
                 <div className="flex justify-end">
                   <Button type="button" variant="ghost" onClick={onClose}>
