@@ -734,36 +734,41 @@ async function handleInvoiceUpcoming(invoice) {
     // Stripe sometimes sends expanded objects or different formats
     let invoiceId = invoice.id;
     let customerId = invoice.customer;
+    const invoiceNumber = invoice.number; // Human-readable invoice number
     
-    // If id is missing, check if it's a string ID in the object field
+    // If id is missing, use number as fallback identifier
+    // This can happen with certain Stripe webhook formats or expanded objects
     if (!invoiceId && invoice.object === 'invoice') {
-      // Try to extract from other fields or log for debugging
-      console.warn("handleInvoiceUpcoming: invoice.id is missing, checking alternative fields", {
-        hasObject: !!invoice.object,
-        objectType: invoice.object,
-        invoiceKeys: Object.keys(invoice),
-      });
-      
-      // Some Stripe events might send invoice data differently
-      // Check if we can get the ID from a different field
-      if (invoice.number) {
-        console.log("Invoice has number but no id:", invoice.number);
-      }
-      
-      // If we can't find an ID, we can't process this invoice
-      if (!invoiceId) {
-        console.error("handleInvoiceUpcoming: Cannot process invoice without ID", {
-          invoiceKeys: Object.keys(invoice),
-          invoiceType: typeof invoice,
+      if (invoiceNumber) {
+        // Use invoice number as identifier (e.g., "INV-1234")
+        invoiceId = `number:${invoiceNumber}`;
+        console.warn("handleInvoiceUpcoming: Using invoice number as fallback identifier", {
+          invoiceNumber: invoiceNumber,
+          customerId: customerId,
         });
-        return;
+      } else {
+        // If we have customer, we can still process but log a warning
+        if (customerId) {
+          invoiceId = `customer:${customerId}`;
+          console.warn("handleInvoiceUpcoming: No invoice ID or number found, using customer ID as identifier", {
+            customerId: customerId,
+          });
+        } else {
+          console.error("handleInvoiceUpcoming: Cannot process invoice without ID, number, or customer", {
+            invoiceKeys: Object.keys(invoice),
+            invoiceType: typeof invoice,
+          });
+          return;
+        }
       }
     }
 
     if (!invoiceId) {
-      console.error("handleInvoiceUpcoming: invoice.id is missing", {
+      console.error("handleInvoiceUpcoming: invoice.id is missing and no fallback available", {
         invoiceKeys: invoice ? Object.keys(invoice) : "invoice is null/undefined",
         invoiceType: typeof invoice,
+        hasNumber: !!invoice.number,
+        hasCustomer: !!invoice.customer,
       });
       return;
     }
@@ -775,7 +780,7 @@ async function handleInvoiceUpcoming(invoice) {
       return;
     }
 
-    console.log("Processing invoice upcoming:", invoiceId);
+    console.log("Processing invoice upcoming:", invoiceId, invoiceNumber ? `(Invoice #${invoiceNumber})` : '');
 
     const user = await getUserByStripeCustomerId(customerId);
     if (!user) return;

@@ -424,14 +424,40 @@ async function handleInvoiceUpcoming(invoice) {
     }
 
     // Handle case where invoice might be nested or have different structure
-    const invoiceId = invoice.id;
+    let invoiceId = invoice.id;
     const customerId = invoice.customer;
+    const invoiceNumber = invoice.number; // Human-readable invoice number
+    
+    // If id is missing, use number as fallback identifier
+    if (!invoiceId && invoice.object === 'invoice') {
+      if (invoiceNumber) {
+        invoiceId = `number:${invoiceNumber}`;
+        console.warn("handleInvoiceUpcoming: Using invoice number as fallback identifier", {
+          invoiceNumber: invoiceNumber,
+          customerId: customerId,
+        });
+      } else if (customerId) {
+        invoiceId = `customer:${customerId}`;
+        console.warn("handleInvoiceUpcoming: No invoice ID or number found, using customer ID as identifier", {
+          customerId: customerId,
+        });
+      } else {
+        console.error("handleInvoiceUpcoming: Cannot process invoice without ID, number, or customer", {
+          invoiceKeys: invoice ? Object.keys(invoice) : "invoice is null/undefined",
+          invoiceType: typeof invoice,
+          objectType: invoice.object,
+        });
+        return;
+      }
+    }
 
     if (!invoiceId) {
-      console.error("handleInvoiceUpcoming: invoice.id is missing", {
+      console.error("handleInvoiceUpcoming: invoice.id is missing and no fallback available", {
         invoiceKeys: invoice ? Object.keys(invoice) : "invoice is null/undefined",
         invoiceType: typeof invoice,
         objectType: invoice.object,
+        hasNumber: !!invoice.number,
+        hasCustomer: !!invoice.customer,
       });
       return;
     }
@@ -443,7 +469,7 @@ async function handleInvoiceUpcoming(invoice) {
       return;
     }
 
-    console.log("Processing invoice.upcoming:", invoiceId);
+    console.log("Processing invoice.upcoming:", invoiceId, invoiceNumber ? `(Invoice #${invoiceNumber})` : '');
 
     const user = await getUserByStripeCustomerId(customerId);
     if (!user) return;
