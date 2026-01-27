@@ -49,6 +49,7 @@ import { MatchStrengthBar } from "@/components/schools/MatchStrengthBar";
 import toast from "react-hot-toast";
 import { timedFetch } from "@/utils/timedFetch";
 import { useNavigate } from "react-router-dom";
+import { SchoolProfilePage } from "@/pages/schools/ProfilePage";
 
 // Types
 interface JobPosting {
@@ -198,12 +199,12 @@ export const SchoolDashboardPage: React.FC = () => {
   const location = useLocation();
   
   // Initialize activeTab from URL parameter if present
-  const getInitialTab = (): "overview" | "jobs" | "applicants" => {
+  const getInitialTab = (): "overview" | "jobs" | "applicants" | "profile" => {
     return 'overview';
   };
   
   const [activeTab, setActiveTab] = useState<
-    "overview" | "jobs" | "applicants"
+    "overview" | "jobs" | "applicants" | "profile"
   >(getInitialTab());
   const [selectedJob, setSelectedJob] = useState<string | null>(null);
   const [showJobForm, setShowJobForm] = useState(false);
@@ -1480,11 +1481,11 @@ export const SchoolDashboardPage: React.FC = () => {
                           key={tab.key}
                           onClick={() => {
                             if (tab.key === "profile") {
-                              window.location.href = "/schools/profile";
+                              setActiveTab("profile");
                             } else if (tab.key === "messages") {
                               setShowMessagesModal(true);
                             } else {
-                              setActiveTab(tab.key as "overview" | "jobs" | "applicants");
+                              setActiveTab(tab.key as "overview" | "jobs" | "applicants" | "profile");
                             }
                           }}
                           className={`flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
@@ -1526,11 +1527,11 @@ export const SchoolDashboardPage: React.FC = () => {
                       key={tab.key}
                       onClick={() => {
                         if (tab.key === "profile") {
-                          window.location.href = "/schools/profile";
+                          setActiveTab("profile");
                         } else if (tab.key === "messages") {
                           setShowMessagesModal(true);
                         } else {
-                          setActiveTab(tab.key as "overview" | "jobs" | "applicants");
+                          setActiveTab(tab.key as "overview" | "jobs" | "applicants" | "profile");
                         }
                       }}
                       className={`relative p-4 rounded-xl border-2 transition-all duration-200 ${
@@ -2179,6 +2180,17 @@ export const SchoolDashboardPage: React.FC = () => {
                 </div>
               </motion.div>
               </Paywall>
+            )}
+
+            {activeTab === "profile" && (
+              <motion.div
+                key="profile"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+              >
+                <SchoolProfilePage embedded />
+              </motion.div>
             )}
           </AnimatePresence>
         </div>

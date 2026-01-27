@@ -85,7 +85,9 @@ const estimateJobsOptions = [
   "As needed",
 ];
 
-export const SchoolProfilePage: React.FC = () => {
+export const SchoolProfilePage: React.FC<{ embedded?: boolean }> = ({
+  embedded = false,
+}) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [school, setSchool] = useState<School | null>(null);
@@ -655,7 +657,7 @@ export const SchoolProfilePage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className={`${embedded ? "" : "min-h-screen "}flex items-center justify-center`}>
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-600"></div>
       </div>
     );
@@ -681,7 +683,7 @@ export const SchoolProfilePage: React.FC = () => {
   // If school is still null after loading, show error
   if (!school) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className={`${embedded ? "" : "min-h-screen "}flex items-center justify-center`}>
         <div className="text-center">
           <h2 className="text-2xl font-semibold mb-2">Profile Not Found</h2>
           <p className="text-neutral-600 dark:text-neutral-400 mb-4">
@@ -691,9 +693,11 @@ export const SchoolProfilePage: React.FC = () => {
             <Button onClick={() => window.location.reload()}>
               Refresh Page
             </Button>
-            <Button variant="secondary" onClick={() => navigate("/schools/dashboard")}>
-              Back to Dashboard
-            </Button>
+            {!embedded && (
+              <Button variant="secondary" onClick={() => navigate("/schools/dashboard")}>
+                Back to Dashboard
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -701,7 +705,7 @@ export const SchoolProfilePage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-50 dark:bg-neutral-900 pt-[90px]">
+    <div className={`${embedded ? "" : "min-h-screen "}bg-neutral-50 dark:bg-neutral-900 ${embedded ? "pt-0" : "pt-[90px]"}`}>
       <div className="pb-4">
         <div className="container-custom max-w-4xl mx-auto px-4 pb-8">
           {/* Header */}
