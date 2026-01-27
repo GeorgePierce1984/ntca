@@ -47,6 +47,7 @@ import { ChoosePlanModal } from "@/components/modals/ChoosePlanModal";
 import { canAccessPremiumFeatures } from "@/utils/subscription";
 import { MatchStrengthBar } from "@/components/schools/MatchStrengthBar";
 import toast from "react-hot-toast";
+import { timedFetch } from "@/utils/timedFetch";
 import { useNavigate } from "react-router-dom";
 
 // Types
@@ -366,7 +367,8 @@ export const SchoolDashboardPage: React.FC = () => {
   // Fetch real data
   const fetchJobs = async () => {
     try {
-      const response = await fetch("/api/jobs", {
+      const response = await timedFetch("/api/jobs", {
+        label: "school.jobs (GET)",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("authToken")}`,
         },
@@ -455,7 +457,8 @@ export const SchoolDashboardPage: React.FC = () => {
 
   const fetchApplications = async () => {
     try {
-      const response = await fetch("/api/applications", {
+      const response = await timedFetch("/api/applications", {
+        label: "school.applications (GET)",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("authToken")}`,
         },
@@ -476,7 +479,8 @@ export const SchoolDashboardPage: React.FC = () => {
   // Fetch subscription status
   const fetchSubscriptionStatus = async () => {
     try {
-      const response = await fetch("/api/subscription-details", {
+      const response = await timedFetch("/api/subscription-details", {
+        label: "subscription.details (GET)",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("authToken")}`,
         },
@@ -2348,7 +2352,8 @@ export const SchoolDashboardPage: React.FC = () => {
         onRefresh={async () => {
           try {
             // Refresh applications and update selected applicant
-            const response = await fetch("/api/applications", {
+            const response = await timedFetch("/api/applications", {
+              label: "school.applications (GET refresh)",
               headers: {
                 Authorization: `Bearer ${localStorage.getItem("authToken")}`,
               },

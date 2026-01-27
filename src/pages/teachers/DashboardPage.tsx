@@ -57,6 +57,7 @@ import { countries } from "@/data/countries";
 import { CENTRAL_ASIA_COUNTRIES } from "@/constants/options";
 import toast from "react-hot-toast";
 import { format } from "date-fns";
+import { timedFetch } from "@/utils/timedFetch";
 
 const getLocalTimezone = () => {
   try {
@@ -555,7 +556,7 @@ const TeacherDashboard: React.FC = () => {
       // Always call the API, even with empty params (to get all jobs)
       const url = `/api/jobs/public${queryString ? `?${queryString}` : ''}`;
       
-      const response = await fetch(url);
+      const response = await timedFetch(url, { label: "jobs.public (GET)" });
       if (response.ok) {
         const data = await response.json();
         setJobs(data.jobs || []);
@@ -696,7 +697,8 @@ const TeacherDashboard: React.FC = () => {
     setProfileFetchAttempted(true);
     
     try {
-      const response = await fetch("/api/teachers/profile", {
+      const response = await timedFetch("/api/teachers/profile", {
+        label: "teacher.profile (GET)",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("authToken")}`,
         },
@@ -720,7 +722,8 @@ const TeacherDashboard: React.FC = () => {
         // Retry once after a short delay for connection issues
         setTimeout(async () => {
           try {
-            const retryResponse = await fetch("/api/teachers/profile", {
+            const retryResponse = await timedFetch("/api/teachers/profile", {
+              label: "teacher.profile (GET retry)",
               headers: {
                 Authorization: `Bearer ${localStorage.getItem("authToken")}`,
               },
@@ -744,7 +747,8 @@ const TeacherDashboard: React.FC = () => {
       // Retry once for network errors
       setTimeout(async () => {
         try {
-          const retryResponse = await fetch("/api/teachers/profile", {
+          const retryResponse = await timedFetch("/api/teachers/profile", {
+            label: "teacher.profile (GET retry 2)",
             headers: {
               Authorization: `Bearer ${localStorage.getItem("authToken")}`,
             },
@@ -786,7 +790,8 @@ const TeacherDashboard: React.FC = () => {
   const updateProfile = async () => {
     setSubmitting(true);
     try {
-      const response = await fetch("/api/teachers/profile", {
+      const response = await timedFetch("/api/teachers/profile", {
+        label: "teacher.profile (PUT)",
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
