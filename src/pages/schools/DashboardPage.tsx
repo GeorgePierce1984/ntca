@@ -1666,11 +1666,18 @@ export const SchoolDashboardPage: React.FC = () => {
                                 <div className="flex items-center gap-2">
                                   <h4 className="font-medium">{firstName} {lastName}</h4>
                                   {/* Action Required Indicator */}
-                                  {applicant.interviewRequest?.status === "alternative_suggested" && (
-                                    <span className="px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-400 rounded-full text-xs font-medium flex items-center gap-1">
-                                      <AlertCircle className="w-3 h-3" /> Action Required
-                                    </span>
-                                  )}
+                                  {(() => {
+                                    try {
+                                      return applicant.interviewRequest?.status === "alternative_suggested" ? (
+                                        <span className="px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-400 rounded-full text-xs font-medium flex items-center gap-1">
+                                          <AlertCircle className="w-3 h-3" /> Action Required
+                                        </span>
+                                      ) : null;
+                                    } catch (e) {
+                                      console.error("Error rendering interview request status:", e);
+                                      return null;
+                                    }
+                                  })()}
                                 </div>
                                 <p className="text-sm text-neutral-500">
                                   {qualification}
@@ -2029,11 +2036,18 @@ export const SchoolDashboardPage: React.FC = () => {
                           </div>
                           <div className="flex items-center gap-2 ml-4">
                             {/* Action Required Indicator */}
-                            {applicant.interviewRequest?.status === "alternative_suggested" && (
-                              <span className="px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-400 rounded-full text-xs font-medium flex items-center gap-1">
-                                <AlertCircle className="w-3 h-3" /> Action Required
-                              </span>
-                            )}
+                            {(() => {
+                              try {
+                                return applicant.interviewRequest?.status === "alternative_suggested" ? (
+                                  <span className="px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-400 rounded-full text-xs font-medium flex items-center gap-1">
+                                    <AlertCircle className="w-3 h-3" /> Action Required
+                                  </span>
+                                ) : null;
+                              } catch (e) {
+                                console.error("Error rendering interview request status:", e);
+                                return null;
+                              }
+                            })()}
                             <span
                               className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(applicant.status)}`}
                             >
