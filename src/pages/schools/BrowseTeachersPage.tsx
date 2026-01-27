@@ -23,6 +23,7 @@ import SpeedometerOptionA from "@/components/schools/SpeedometerFilter";
 import { canAccessPremiumFeatures } from "@/utils/subscription";
 import { motion } from "framer-motion";
 import { getCountryByName } from "@/data/countries";
+import { ChatModal } from "@/components/messages/ChatModal";
 
 interface Teacher {
   id: string;
@@ -90,6 +91,10 @@ export const BrowseTeachersPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
   const [showTeacherModal, setShowTeacherModal] = useState(false);
+  const [showChatModal, setShowChatModal] = useState(false);
+  const [chatConversationId, setChatConversationId] = useState<string | null>(null);
+  const [chatTitle, setChatTitle] = useState<string | null>(null);
+  const [chatSubtitle, setChatSubtitle] = useState<string | null>(null);
   const [filters, setFilters] = useState({
     qualification: "",
     experience: "",
@@ -876,6 +881,23 @@ export const BrowseTeachersPage: React.FC = () => {
         teacher={selectedTeacher}
         jobId={jobId}
         jobTitle={jobDetails?.title || null}
+        onOpenChat={(conversationId) => {
+          const teacherName = selectedTeacher
+            ? `${selectedTeacher.firstName} ${selectedTeacher.lastName}`
+            : "Teacher";
+          setChatConversationId(conversationId);
+          setChatTitle(`Chat with ${teacherName}`);
+          setChatSubtitle(jobDetails?.title ? `Job: ${jobDetails.title}` : null);
+          setShowChatModal(true);
+        }}
+      />
+
+      <ChatModal
+        isOpen={showChatModal}
+        onClose={() => setShowChatModal(false)}
+        conversationId={chatConversationId}
+        title={chatTitle}
+        subtitle={chatSubtitle}
       />
     </>
   );

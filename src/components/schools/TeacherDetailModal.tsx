@@ -84,6 +84,7 @@ interface TeacherDetailModalProps {
   teacher: Teacher | null;
   jobId?: string | null;
   jobTitle?: string | null;
+  onOpenChat?: (conversationId: string) => void;
 }
 
 export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
@@ -92,6 +93,7 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
   teacher,
   jobId,
   jobTitle,
+  onOpenChat,
 }) => {
   if (!teacher) return null;
 
@@ -144,7 +146,12 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
 
       toast.success("Conversation started");
       onClose();
-      navigate(`/schools/messages?conversation=${conversationId}`);
+      if (onOpenChat) {
+        onOpenChat(conversationId);
+      } else {
+        // Fallback: open full messages page if no modal handler is provided
+        navigate(`/schools/messages?conversation=${conversationId}`);
+      }
     } catch (e) {
       console.error("Error contacting teacher:", e);
       toast.error(e instanceof Error ? e.message : "Failed to contact teacher");
