@@ -56,6 +56,25 @@ interface ProcessedMessage {
   isPlaceholder?: boolean;
 }
 
+function linkifyText(text: string): Array<string | { href: string; label: string }> {
+  const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+)/gi;
+  const parts: Array<string | { href: string; label: string }> = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = urlRegex.exec(text)) !== null) {
+    const start = match.index;
+    const raw = match[0];
+    if (start > lastIndex) parts.push(text.slice(lastIndex, start));
+    const href = raw.startsWith("http") ? raw : `https://${raw}`;
+    parts.push({ href, label: raw });
+    lastIndex = start + raw.length;
+  }
+
+  if (lastIndex < text.length) parts.push(text.slice(lastIndex));
+  return parts;
+}
+
 interface MessagesModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -600,6 +619,7 @@ export const MessagesModal: React.FC<MessagesModalProps> = ({ isOpen, onClose, o
                       const isOwnMessage =
                         message.senderType === user?.userType;
                       const isPlaceholder = message.isPlaceholder;
+                      const parts = !isPlaceholder ? linkifyText(message.content || "") : [];
                       
                       return (
                         <div
@@ -615,8 +635,32 @@ export const MessagesModal: React.FC<MessagesModalProps> = ({ isOpen, onClose, o
                                 : "bg-neutral-200 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100"
                             }`}
                           >
-                            <p className={`text-sm ${isPlaceholder ? "italic" : ""}`}>
-                              {message.content}
+                            <p
+                              className={`text-sm whitespace-pre-wrap break-words ${
+                                isPlaceholder ? "italic" : ""
+                              }`}
+                            >
+                              {isPlaceholder
+                                ? message.content
+                                : parts.map((p, idx) =>
+                                    typeof p === "string" ? (
+                                      <React.Fragment key={idx}>{p}</React.Fragment>
+                                    ) : (
+                                      <a
+                                        key={idx}
+                                        href={p.href}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className={
+                                          isOwnMessage
+                                            ? "underline text-white"
+                                            : "underline text-primary-600 dark:text-primary-400"
+                                        }
+                                      >
+                                        {p.label}
+                                      </a>
+                                    )
+                                  )}
                             </p>
                             {!isPlaceholder && (
                               <p

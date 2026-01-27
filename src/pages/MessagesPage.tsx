@@ -44,6 +44,25 @@ interface Message {
   createdAt: string;
 }
 
+function linkifyText(text: string): Array<string | { href: string; label: string }> {
+  const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+)/gi;
+  const parts: Array<string | { href: string; label: string }> = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = urlRegex.exec(text)) !== null) {
+    const start = match.index;
+    const raw = match[0];
+    if (start > lastIndex) parts.push(text.slice(lastIndex, start));
+    const href = raw.startsWith("http") ? raw : `https://${raw}`;
+    parts.push({ href, label: raw });
+    lastIndex = start + raw.length;
+  }
+
+  if (lastIndex < text.length) parts.push(text.slice(lastIndex));
+  return parts;
+}
+
 export const MessagesPage: React.FC = () => {
   const { user, token } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -458,6 +477,7 @@ export const MessagesPage: React.FC = () => {
                     {messages.map((message) => {
                       const isOwnMessage =
                         message.senderType === user?.userType;
+                      const parts = linkifyText(message.content || "");
                       return (
                         <div
                           key={message.id}
@@ -470,7 +490,27 @@ export const MessagesPage: React.FC = () => {
                                 : "bg-neutral-200 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100"
                             }`}
                           >
-                            <p className="text-sm">{message.content}</p>
+                            <p className="text-sm whitespace-pre-wrap break-words">
+                              {parts.map((p, idx) =>
+                                typeof p === "string" ? (
+                                  <React.Fragment key={idx}>{p}</React.Fragment>
+                                ) : (
+                                  <a
+                                    key={idx}
+                                    href={p.href}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className={
+                                      isOwnMessage
+                                        ? "underline text-white"
+                                        : "underline text-primary-600 dark:text-primary-400"
+                                    }
+                                  >
+                                    {p.label}
+                                  </a>
+                                )
+                              )}
+                            </p>
                             <p
                               className={`text-xs mt-1 ${
                                 isOwnMessage
@@ -565,6 +605,7 @@ export const MessagesPage: React.FC = () => {
                 <div className="flex-1 overflow-y-auto p-4 space-y-4">
                   {messages.map((message) => {
                     const isOwnMessage = message.senderType === user?.userType;
+                    const parts = linkifyText(message.content || "");
                     return (
                       <div
                         key={message.id}
@@ -577,7 +618,27 @@ export const MessagesPage: React.FC = () => {
                               : "bg-neutral-200 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100"
                           }`}
                         >
-                          <p className="text-sm">{message.content}</p>
+                          <p className="text-sm whitespace-pre-wrap break-words">
+                            {parts.map((p, idx) =>
+                              typeof p === "string" ? (
+                                <React.Fragment key={idx}>{p}</React.Fragment>
+                              ) : (
+                                <a
+                                  key={idx}
+                                  href={p.href}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className={
+                                    isOwnMessage
+                                      ? "underline text-white"
+                                      : "underline text-primary-600 dark:text-primary-400"
+                                  }
+                                >
+                                  {p.label}
+                                </a>
+                              )
+                            )}
+                          </p>
                           <p
                             className={`text-xs mt-1 ${
                               isOwnMessage
