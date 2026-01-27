@@ -258,6 +258,16 @@ const TeacherDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<
     "overview" | "profile" | "jobs" | "applications" | "saved"
   >(initialTab || "overview");
+
+  const setTabAndURL = useCallback(
+    (tab: "overview" | "profile" | "jobs" | "applications" | "saved") => {
+      setActiveTab(tab);
+      const newParams = new URLSearchParams(searchParams);
+      newParams.set("tab", tab);
+      setSearchParams(newParams, { replace: true });
+    },
+    [searchParams, setSearchParams]
+  );
   
   // Update active tab when URL param changes
   useEffect(() => {
@@ -1239,16 +1249,15 @@ const TeacherDashboard: React.FC = () => {
                   </span>
                 </div>
               )}
-              <Link to="/teachers/profile">
-                <Button
-                  variant="gradient"
-                  leftIcon={<User className="w-4 h-4" />}
-                  className="w-32"
-                  glow
-                >
-                  Profile
-                </Button>
-              </Link>
+              <Button
+                variant="gradient"
+                leftIcon={<User className="w-4 h-4" />}
+                className="w-32"
+                glow
+                onClick={() => setTabAndURL("profile")}
+              >
+                Profile
+              </Button>
             </div>
           </div>
         </div>
@@ -1313,35 +1322,19 @@ const TeacherDashboard: React.FC = () => {
           <nav className="-mb-px flex space-x-8">
             {[
               { key: "overview", label: "Overview", icon: Eye },
-              { key: "profile", label: "Profile", icon: User, isProfileLink: true },
+              { key: "profile", label: "Profile", icon: User },
               { key: "jobs", label: "Browse Jobs", icon: Search },
               { key: "applications", label: "My Applications", icon: Send },
               { key: "saved", label: "Saved Jobs", icon: Heart },
               { key: "messages", label: "Message Center", icon: MessageSquare, isLink: true },
-            ].map(({ key, label, icon: Icon, isLink, isProfileLink }) => (
-              isProfileLink ? (
-                <Link
-                  key={key}
-                  to="/teachers/profile"
-                  className="py-4 px-1 border-b-2 border-transparent font-medium text-sm text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors"
-                >
-                  <div className="flex items-center gap-2">
-                    <Icon className="w-4 h-4" />
-                    {label}
-                  </div>
-                </Link>
-              ) : (
+            ].map(({ key, label, icon: Icon, isLink }) => (
                 <button
                   key={key}
                   onClick={() => {
                     if (isLink) {
                       setShowMessagesModal(true);
                     } else {
-                      setActiveTab(key as any);
-                      // Update URL to reflect active tab
-                      const newParams = new URLSearchParams(searchParams);
-                      newParams.set("tab", key);
-                      setSearchParams(newParams, { replace: true });
+                      setTabAndURL(key as any);
                     }
                   }}
                   className={`py-4 px-1 border-b-2 font-medium text-sm ${
@@ -1362,7 +1355,6 @@ const TeacherDashboard: React.FC = () => {
                   {label}
                 </div>
               </button>
-              )
             ))}
           </nav>
         </div>
@@ -1381,15 +1373,14 @@ const TeacherDashboard: React.FC = () => {
               <div className="card p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="heading-3">Profile Snapshot</h3>
-                  <Link to="/teachers/profile">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                    >
-                      <Edit3 className="w-4 h-4 mr-2" />
-                      Edit
-                    </Button>
-                  </Link>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setTabAndURL("profile")}
+                  >
+                    <Edit3 className="w-4 h-4 mr-2" />
+                    Edit
+                  </Button>
                 </div>
                 <div className="space-y-4">
                   <div className="flex items-center gap-4">
