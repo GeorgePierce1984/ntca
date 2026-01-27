@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -18,9 +19,11 @@ import {
   User,
   Clock,
   Users,
+  MessageSquare,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { getCountryByName } from "@/data/countries";
+import toast from "react-hot-toast";
 
 interface Teacher {
   id: string;
@@ -79,14 +82,76 @@ interface TeacherDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   teacher: Teacher | null;
+  jobId?: string | null;
+  jobTitle?: string | null;
 }
 
 export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
   isOpen,
   onClose,
   teacher,
+  jobId,
+  jobTitle,
 }) => {
   if (!teacher) return null;
+
+  const navigate = useNavigate();
+  const [contacting, setContacting] = useState(false);
+
+  const handleContactTeacher = async () => {
+    if (contacting) return;
+
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      navigate("/login", {
+        state: { from: window.location.pathname + window.location.search },
+      });
+      return;
+    }
+
+    setContacting(true);
+    try {
+      const origin =
+        typeof window !== "undefined" && window.location?.origin
+          ? window.location.origin
+          : "";
+      const link = jobId ? `${origin}/jobs/${jobId}` : null;
+
+      const content = jobId
+        ? `Hi ${teacher.firstName},\n\nWe’d like to discuss our job opportunity: “${jobTitle || "a role"}”.\n\nJob link: ${link}\n`
+        : `Hi ${teacher.firstName},\n\nWe’d like to discuss a job opportunity with you.\n`;
+
+      const response = await fetch("/api/messages/conversations", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          teacherId: teacher.id,
+          content,
+        }),
+      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to start conversation");
+      }
+
+      const data = await response.json();
+      const conversationId = data.conversationId;
+      if (!conversationId) throw new Error("No conversationId returned");
+
+      toast.success("Conversation started");
+      onClose();
+      navigate(`/schools/messages?conversation=${conversationId}`);
+    } catch (e) {
+      console.error("Error contacting teacher:", e);
+      toast.error(e instanceof Error ? e.message : "Failed to contact teacher");
+    } finally {
+      setContacting(false);
+    }
+  };
 
   return (
     <AnimatePresence>
@@ -155,7 +220,7 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
               </div>
 
               {/* Content */}
-              <div className="p-6 space-y-6">
+              <div className="p-6 space-y-6 pb-24">
                 {/* Key Information */}
                 <div className="grid md:grid-cols-2 gap-4">
                   {teacher.rating && (
@@ -460,9 +525,17 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
               </div>
 
               {/* Footer */}
-              <div className="sticky bottom-0 bg-white dark:bg-neutral-800 border-t border-neutral-200 dark:border-neutral-700 px-6 py-4 flex justify-end">
+              <div className="sticky bottom-0 bg-white dark:bg-neutral-800 border-t border-neutral-200 dark:border-neutral-700 px-6 py-4 flex items-center justify-between">
                 <Button onClick={onClose} variant="secondary">
                   Close
+                </Button>
+                <Button
+                  variant="gradient"
+                  leftIcon={<MessageSquare className="w-4 h-4" />}
+                  onClick={handleContactTeacher}
+                  disabled={contacting}
+                >
+                  {contacting ? "Opening..." : "Contact Teacher"}
                 </Button>
               </div>
             </div>

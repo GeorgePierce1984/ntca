@@ -662,6 +662,17 @@ export const BrowseTeachersPage: React.FC = () => {
                         matchData={jobMatchData ? 'loaded' : 'null'}
                       </div>
                     )}
+
+                    {/* Return to Dashboard Button - Top */}
+                    <div className="mb-4">
+                      <Button
+                        variant="secondary"
+                        leftIcon={<ArrowLeft className="w-4 h-4" />}
+                        onClick={() => navigate("/schools/dashboard")}
+                      >
+                        Return to Dashboard
+                      </Button>
+                    </div>
                     
                     {/* Job Title - Top (moved up 5pts) */}
                     <div className="mb-4 -mt-[5px]">
@@ -733,16 +744,6 @@ export const BrowseTeachersPage: React.FC = () => {
                       </div>
                     ) : null}
                     
-                    {/* Return to Dashboard Button - Bottom Left */}
-                    <div className="mt-auto pt-4">
-                      <Button
-                        variant="secondary"
-                        leftIcon={<ArrowLeft className="w-4 h-4" />}
-                        onClick={() => navigate("/schools/dashboard")}
-                      >
-                        Return to Dashboard
-                      </Button>
-                    </div>
                   </div>
                   
                   {/* Match Threshold Box - Right (stays in current position) */}
@@ -873,6 +874,8 @@ export const BrowseTeachersPage: React.FC = () => {
           setSelectedTeacher(null);
         }}
         teacher={selectedTeacher}
+        jobId={jobId}
+        jobTitle={jobDetails?.title || null}
       />
     </>
   );
