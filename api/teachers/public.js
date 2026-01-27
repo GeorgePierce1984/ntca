@@ -1,4 +1,4 @@
-import { prisma } from "./_utils/prisma.js";
+import { prisma } from "../_utils/prisma.js";
 
 // Helper function to retry database operations
 // Prisma auto-connects on first query, so we don't need manual connection management
