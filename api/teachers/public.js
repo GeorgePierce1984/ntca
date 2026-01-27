@@ -1,13 +1,4 @@
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient({
-  log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
-  datasources: {
-    db: {
-      url: process.env.DATABASE_URL,
-    },
-  },
-});
+import { prisma } from "./_utils/prisma.js";
 
 // Helper function to retry database operations
 // Prisma auto-connects on first query, so we don't need manual connection management
@@ -15,11 +6,6 @@ async function retryOperation(operation, maxRetries = 3, initialDelay = 1000) {
   let delay = initialDelay;
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      // Prisma will auto-connect on first query
-      // For cold starts, add a small delay before first attempt
-      if (attempt === 1) {
-        await new Promise(resolve => setTimeout(resolve, 500));
-      }
       return await operation();
     } catch (error) {
       const isConnectionError = 
@@ -35,15 +21,8 @@ async function retryOperation(operation, maxRetries = 3, initialDelay = 1000) {
 
       if (isConnectionError && attempt < maxRetries) {
         console.log(`Connection error on attempt ${attempt}, retrying in ${delay}ms...`);
-        // Disconnect to reset connection state
-        await prisma.$disconnect().catch(() => {});
-        // Wait before retrying - longer for "Engine is not yet connected"
-        if (error.message?.includes("Engine is not yet connected")) {
-          await new Promise(resolve => setTimeout(resolve, 1500 + (attempt * 500)));
-        } else {
-          await new Promise(resolve => setTimeout(resolve, delay));
-          delay = Math.min(delay * 1.5, 2000); // Cap at 2 seconds to avoid timeout
-        }
+        await new Promise(resolve => setTimeout(resolve, delay));
+        delay = Math.min(delay * 2, 1500);
         continue;
       }
       throw error;
@@ -58,6 +37,8 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Public listing: safe to cache briefly at the edge
+    res.setHeader("Cache-Control", "public, s-maxage=30, stale-while-revalidate=120");
     const {
       page = 1,
       limit = 20,

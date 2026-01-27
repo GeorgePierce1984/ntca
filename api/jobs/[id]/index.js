@@ -1,23 +1,11 @@
-import { PrismaClient } from '@prisma/client';
 import jwt from 'jsonwebtoken';
-
-const prisma = new PrismaClient({
-  log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
-  datasources: {
-    db: {
-      url: process.env.DATABASE_URL,
-    },
-  },
-});
+import { prisma } from "../../_utils/prisma.js";
 
 // Helper function to retry database operations
-async function retryOperation(operation, maxRetries = 3, initialDelay = 500) {
+async function retryOperation(operation, maxRetries = 3, initialDelay = 150) {
   let delay = initialDelay;
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      if (attempt === 1) {
-        await new Promise(resolve => setTimeout(resolve, delay));
-      }
       return await operation();
     } catch (error) {
       const isConnectionError = 
@@ -33,13 +21,8 @@ async function retryOperation(operation, maxRetries = 3, initialDelay = 500) {
 
       if (isConnectionError && attempt < maxRetries) {
         console.log(`Connection error on attempt ${attempt}, retrying in ${delay}ms...`);
-        await prisma.$disconnect().catch(() => {});
-        if (error.message?.includes("Engine is not yet connected") || error.message?.includes("Response from the Engine was empty")) {
-          await new Promise(resolve => setTimeout(resolve, 1500 + (attempt * 500)));
-        } else {
-          await new Promise(resolve => setTimeout(resolve, delay));
-          delay = Math.min(delay * 1.5, 2000);
-        }
+        await new Promise(resolve => setTimeout(resolve, delay));
+        delay = Math.min(delay * 2, 1200);
         continue;
       }
       throw error;
