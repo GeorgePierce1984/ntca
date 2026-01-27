@@ -161,7 +161,9 @@ function AppContent() {
             path="/schools/dashboard"
             element={
               <ProtectedRoute allowedUserTypes={["SCHOOL"]}>
-                <SchoolDashboardPage />
+                <ErrorBoundary>
+                  <SchoolDashboardPage />
+                </ErrorBoundary>
               </ProtectedRoute>
             }
           />
