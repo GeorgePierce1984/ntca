@@ -650,12 +650,26 @@ export const BrowseTeachersPage: React.FC = () => {
         <div className="min-h-screen pt-[85px] bg-neutral-50 dark:bg-neutral-900">
           <div className="pb-4">
             <div className="container-custom">
+              {/* Return to Dashboard (softer back-link) - between header and title */}
+              {jobId && (
+                <div className="mt-4 mb-2">
+                  <button
+                    type="button"
+                    onClick={() => navigate("/schools/dashboard")}
+                    className="inline-flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    Return to Dashboard
+                  </button>
+                </div>
+              )}
+
               {/* Job Match Header - Show when jobId is present */}
               {jobId && (
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="mt-4 mb-4 flex items-stretch gap-4"
+                  className="mb-4 flex items-stretch gap-4"
                 >
                   {/* Title Box - Left */}
                   <div className="flex-1 card p-10 flex flex-col">
@@ -668,17 +682,6 @@ export const BrowseTeachersPage: React.FC = () => {
                       </div>
                     )}
 
-                    {/* Return to Dashboard Button - Top */}
-                    <div className="mb-4">
-                      <Button
-                        variant="secondary"
-                        leftIcon={<ArrowLeft className="w-4 h-4" />}
-                        onClick={() => navigate("/schools/dashboard")}
-                      >
-                        Return to Dashboard
-                      </Button>
-                    </div>
-                    
                     {/* Job Title - Top (moved up 5pts) */}
                     <div className="mb-4 -mt-[5px]">
                       {jobDetails ? (
