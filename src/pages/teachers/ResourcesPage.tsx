@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   Link as LinkIcon,
   Gamepad2,
@@ -30,6 +30,11 @@ function countLinksForTitles(titles: string[]) {
 
 export const ResourcesPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const basePath = location.pathname.startsWith("/teachers/")
+    ? "/teachers/resources"
+    : "/resources";
 
   const counts = useMemo(() => {
     return {
@@ -49,7 +54,7 @@ export const ResourcesPage: React.FC = () => {
         description: "Curated websites for lessons, worksheets, and tools.",
         countLabel: `${counts.resourceLinks} links`,
         icon: LinkIcon,
-        to: "/resources/links",
+        to: `${basePath}/links`,
       },
       {
         key: "games",
@@ -57,7 +62,7 @@ export const ResourcesPage: React.FC = () => {
         description: "Classroom games you can open + save as PDF.",
         countLabel: `${counts.games} games`,
         icon: Gamepad2,
-        to: "/resources/games",
+        to: `${basePath}/games`,
       },
       {
         key: "exam-prep",
@@ -65,7 +70,7 @@ export const ResourcesPage: React.FC = () => {
         description: "IELTS / SAT resources and lesson support.",
         countLabel: `${counts.examPrep} links`,
         icon: GraduationCap,
-        to: "/resources/exam-prep",
+        to: `${basePath}/exam-prep`,
       },
       {
         key: "kids-phonics",
@@ -73,7 +78,7 @@ export const ResourcesPage: React.FC = () => {
         description: "Young learner activities and phonics practice.",
         countLabel: `${counts.kidsPhonics} links`,
         icon: BookOpen,
-        to: "/resources/kids-phonics",
+        to: `${basePath}/kids-phonics`,
       },
       {
         key: "ai-tools",
@@ -81,10 +86,10 @@ export const ResourcesPage: React.FC = () => {
         description: "AI helpers for planning lessons and activities.",
         countLabel: `${counts.aiTools} links`,
         icon: Sparkles,
-        to: "/resources/ai-tools",
+        to: `${basePath}/ai-tools`,
       },
     ],
-    [counts]
+    [counts, basePath]
   );
 
   return (

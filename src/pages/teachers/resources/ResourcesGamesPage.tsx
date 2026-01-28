@@ -16,6 +16,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import html2canvas from "html2canvas";
 import { PageTemplate } from "@/components/PageTemplate";
 
@@ -32,6 +33,10 @@ type TeachingGame = {
 
 export const ResourcesGamesPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const hubPath = location.pathname.startsWith("/teachers/")
+    ? "/teachers/resources"
+    : "/resources";
   const pdfAreaRef = useRef<HTMLDivElement | null>(null);
 
   const gamesByCategory: Array<{
@@ -450,7 +455,7 @@ export const ResourcesGamesPage: React.FC = () => {
     >
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-12">
         <button
-          onClick={() => navigate("/resources")}
+          onClick={() => navigate(hubPath)}
           className="inline-flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />

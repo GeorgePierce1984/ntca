@@ -99,6 +99,19 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
   const { showLogoutModal, setShowLogoutModal } = useAuth();
 
+  // Resources uses lots of intra-section navigation; the global page fade can feel like a "flash".
+  const isResourcesRoute =
+    location.pathname.startsWith("/resources") ||
+    location.pathname.startsWith("/teachers/resources");
+
+  const layoutVariants = isResourcesRoute
+    ? { initial: { opacity: 1, y: 0 }, animate: { opacity: 1, y: 0 }, exit: { opacity: 1, y: 0 } }
+    : pageVariants;
+
+  const layoutTransition = isResourcesRoute
+    ? { type: "tween" as const, ease: "linear" as const, duration: 0 }
+    : pageTransition;
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -109,8 +122,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             initial="initial"
             animate="animate"
             exit="exit"
-            variants={pageVariants}
-            transition={pageTransition}
+            variants={layoutVariants}
+            transition={layoutTransition}
           >
             {children}
           </motion.div>

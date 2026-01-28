@@ -1,12 +1,16 @@
 import React, { useMemo } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, ExternalLink } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { PageTemplate } from "@/components/PageTemplate";
 import { hubSections, resourceCategories } from "./resourcesData";
 
 export const ResourcesKidsPhonicsPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const hubPath = location.pathname.startsWith("/teachers/")
+    ? "/teachers/resources"
+    : "/resources";
 
   const categories = useMemo(() => {
     const allowed = new Set(hubSections.kidsPhonics);
@@ -28,7 +32,7 @@ export const ResourcesKidsPhonicsPage: React.FC = () => {
     >
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-12">
         <button
-          onClick={() => navigate("/resources")}
+          onClick={() => navigate(hubPath)}
           className="inline-flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
