@@ -1,6 +1,7 @@
 import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { X, ExternalLink } from "lucide-react";
+import { TermsContent } from "@/components/legal/TermsContent";
 
 interface TermsModalProps {
   isOpen: boolean;
@@ -51,12 +52,10 @@ export const TermsModal: React.FC<TermsModalProps> = ({ isOpen, onClose }) => {
                 </div>
               </div>
 
-              <div className="h-[72vh] bg-white dark:bg-neutral-900">
-                <iframe
-                  title="Terms and Conditions"
-                  src="/terms"
-                  className="w-full h-full"
-                />
+              <div className="h-[72vh] bg-white dark:bg-neutral-900 overflow-auto">
+                <div className="p-6 md:p-8">
+                  <TermsContent />
+                </div>
               </div>
             </div>
           </motion.div>
