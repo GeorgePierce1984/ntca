@@ -5,7 +5,7 @@ export const TermsOfServicePage: React.FC = () => {
   return (
     <PageTemplate
       title="Terms of Service"
-      subtitle="NT‑CA Legal Framework Documents (Draft)"
+      subtitle="NT‑CA Legal Framework Documents"
       showComingSoon={false}
     >
       <div className="section">
@@ -14,7 +14,7 @@ export const TermsOfServicePage: React.FC = () => {
             <div className="card p-6 md:p-8">
               <div className="prose prose-neutral dark:prose-invert max-w-none">
                 <p>
-                  <strong>NT‑CA LEGAL FRAMEWORK DOCUMENTS (DRAFT)</strong>
+                  <strong>NT‑CA LEGAL FRAMEWORK DOCUMENTS</strong>
                 </p>
                 <p>
                   <strong>Jurisdictions Covered:</strong> United Kingdom, European
