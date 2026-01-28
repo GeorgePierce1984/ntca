@@ -394,44 +394,7 @@ export const ResourcesPage: React.FC = () => {
     const node = pdfAreaRef.current;
     if (!node) return;
 
-    // IMPORTANT: popup blockers will block window.open if it happens after an async await.
-    // Open the window synchronously (still user-initiated), then populate it after rendering.
-    const w = window.open("", "_blank", "noopener,noreferrer");
-    if (!w) {
-      alert("Your browser blocked the download popup. Please allow popups for this site to download PDFs.");
-      return;
-    }
-
-    w.document.open();
-    w.document.write(`
-      <html>
-        <head>
-          <title>${selectedGame.title} - Teaching Aid</title>
-          <meta charset="utf-8" />
-          <style>
-            body { margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial; }
-            .wrap { padding: 24px; }
-            .card { max-width: 900px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 16px; padding: 18px; }
-            .title { font-size: 18px; font-weight: 700; margin: 0 0 8px; }
-            .muted { color: #6b7280; font-size: 13px; margin: 0 0 16px; }
-            .spinner { width: 26px; height: 26px; border: 3px solid #e5e7eb; border-top-color: #3b82f6; border-radius: 9999px; animation: spin 1s linear infinite; margin: 16px auto; }
-            @keyframes spin { to { transform: rotate(360deg); } }
-            img { width: 100%; height: auto; display: block; }
-            @media print { .wrap { padding: 0; } .card { border: none; padding: 0; } }
-          </style>
-        </head>
-        <body>
-          <div class="wrap">
-            <div class="card">
-              <p class="title">Preparing your PDF…</p>
-              <p class="muted">The print dialog will open automatically. Choose “Save as PDF”.</p>
-              <div class="spinner"></div>
-            </div>
-          </div>
-        </body>
-      </html>
-    `);
-    w.document.close();
+    const safeTitle = `${selectedGame.title} - Teaching Aid`;
 
     // Turn the printable card into an image, then print (Save as PDF).
     const canvas = await html2canvas(node, {
@@ -441,35 +404,72 @@ export const ResourcesPage: React.FC = () => {
     });
     const dataUrl = canvas.toDataURL("image/png");
 
-    w.document.open();
-    w.document.write(`
+    const printableHtml = `
       <html>
         <head>
-          <title>${selectedGame.title} - Teaching Aid</title>
+          <title>${safeTitle}</title>
           <meta charset="utf-8" />
           <style>
             body { margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial; }
             .page { padding: 24px; }
             img { width: 100%; height: auto; display: block; }
-            @media print {
-              .page { padding: 0; }
-            }
+            @media print { .page { padding: 0; } }
           </style>
         </head>
         <body>
           <div class="page">
             <img src="${dataUrl}" alt="Printable" />
           </div>
-          <script>
-            window.onload = () => {
-              window.focus();
-              window.print();
-            };
-          </script>
         </body>
       </html>
-    `);
-    w.document.close();
+    `;
+
+    // Preferred: avoid popups entirely by printing via a hidden iframe.
+    const iframe = document.createElement("iframe");
+    iframe.style.position = "fixed";
+    iframe.style.right = "0";
+    iframe.style.bottom = "0";
+    iframe.style.width = "0";
+    iframe.style.height = "0";
+    iframe.style.border = "0";
+    iframe.style.visibility = "hidden";
+    iframe.srcdoc = printableHtml;
+    document.body.appendChild(iframe);
+
+    iframe.onload = () => {
+      try {
+        const win = iframe.contentWindow;
+        if (!win) throw new Error("No iframe window");
+        win.focus();
+        win.print();
+      } finally {
+        // Cleanup after a short delay so print dialog has time to open.
+        setTimeout(() => {
+          try {
+            document.body.removeChild(iframe);
+          } catch {
+            // ignore
+          }
+        }, 1500);
+      }
+    };
+
+    // Optional fallback: open a new tab if available (some users prefer it).
+    // Use about:blank (empty string can be blocked in some browsers).
+    // NOTE: even with popups allowed, some browsers may still block window.open in certain contexts.
+    const w = window.open("about:blank", "_blank");
+    if (w) {
+      try {
+        w.document.open();
+        w.document.write(
+          printableHtml +
+            `<script>window.onload=()=>{window.focus();window.print();};</script>`
+        );
+        w.document.close();
+      } catch {
+        // ignore – iframe path will still work
+      }
+    }
   };
   const resourceCategories: Array<{
     title: string;
