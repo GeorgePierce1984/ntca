@@ -271,11 +271,13 @@ const JobDetail: React.FC = () => {
     try {
       const token = localStorage.getItem("authToken");
       const method = isSaved ? "DELETE" : "POST";
-      const response = await fetch(`/api/teachers/saved-jobs/${id}`, {
+      const response = await fetch(`/api/teachers/saved-jobs`, {
         method,
         headers: {
+          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
+        body: JSON.stringify({ jobId: id }),
       });
 
       if (response.ok) {

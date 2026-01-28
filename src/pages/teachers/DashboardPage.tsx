@@ -861,11 +861,13 @@ const TeacherDashboard: React.FC = () => {
 
       if (isSaved) {
         // Remove from saved jobs
-        const response = await fetch(`/api/teachers/saved-jobs/${job.id}`, {
+        const response = await fetch(`/api/teachers/saved-jobs`, {
           method: "DELETE",
           headers: {
+            "Content-Type": "application/json",
             Authorization: `Bearer ${localStorage.getItem("authToken")}`,
           },
+          body: JSON.stringify({ jobId: job.id }),
         });
 
         if (response.ok) {
@@ -879,11 +881,13 @@ const TeacherDashboard: React.FC = () => {
         }
       } else {
         // Add to saved jobs
-        const response = await fetch(`/api/teachers/saved-jobs/${job.id}`, {
+        const response = await fetch(`/api/teachers/saved-jobs`, {
           method: "POST",
           headers: {
+            "Content-Type": "application/json",
             Authorization: `Bearer ${localStorage.getItem("authToken")}`,
           },
+          body: JSON.stringify({ jobId: job.id }),
         });
 
         if (response.ok) {
