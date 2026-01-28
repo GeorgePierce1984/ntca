@@ -8,6 +8,7 @@ interface PageTemplateProps {
   topPaddingClassName?: string;
   headerSectionClassName?: string;
   minHeightClassName?: string;
+  children?: React.ReactNode;
 }
 
 export const PageTemplate: React.FC<PageTemplateProps> = ({
@@ -17,6 +18,7 @@ export const PageTemplate: React.FC<PageTemplateProps> = ({
   topPaddingClassName = "pt-20",
   headerSectionClassName,
   minHeightClassName = "min-h-screen",
+  children,
 }) => {
   return (
     <div className={`${minHeightClassName} ${topPaddingClassName}`}>
@@ -42,6 +44,8 @@ export const PageTemplate: React.FC<PageTemplateProps> = ({
           </motion.div>
         </div>
       </div>
+
+      {children}
 
       {showComingSoon && (
         <div className="section">
