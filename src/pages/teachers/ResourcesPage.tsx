@@ -394,16 +394,52 @@ export const ResourcesPage: React.FC = () => {
     const node = pdfAreaRef.current;
     if (!node) return;
 
-    // Turn the printable card into an image, then open a print dialog (Save as PDF).
+    // IMPORTANT: popup blockers will block window.open if it happens after an async await.
+    // Open the window synchronously (still user-initiated), then populate it after rendering.
+    const w = window.open("", "_blank", "noopener,noreferrer");
+    if (!w) {
+      alert("Your browser blocked the download popup. Please allow popups for this site to download PDFs.");
+      return;
+    }
+
+    w.document.open();
+    w.document.write(`
+      <html>
+        <head>
+          <title>${selectedGame.title} - Teaching Aid</title>
+          <meta charset="utf-8" />
+          <style>
+            body { margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial; }
+            .wrap { padding: 24px; }
+            .card { max-width: 900px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 16px; padding: 18px; }
+            .title { font-size: 18px; font-weight: 700; margin: 0 0 8px; }
+            .muted { color: #6b7280; font-size: 13px; margin: 0 0 16px; }
+            .spinner { width: 26px; height: 26px; border: 3px solid #e5e7eb; border-top-color: #3b82f6; border-radius: 9999px; animation: spin 1s linear infinite; margin: 16px auto; }
+            @keyframes spin { to { transform: rotate(360deg); } }
+            img { width: 100%; height: auto; display: block; }
+            @media print { .wrap { padding: 0; } .card { border: none; padding: 0; } }
+          </style>
+        </head>
+        <body>
+          <div class="wrap">
+            <div class="card">
+              <p class="title">Preparing your PDF…</p>
+              <p class="muted">The print dialog will open automatically. Choose “Save as PDF”.</p>
+              <div class="spinner"></div>
+            </div>
+          </div>
+        </body>
+      </html>
+    `);
+    w.document.close();
+
+    // Turn the printable card into an image, then print (Save as PDF).
     const canvas = await html2canvas(node, {
       backgroundColor: "#ffffff",
       scale: 2,
       useCORS: true,
     });
     const dataUrl = canvas.toDataURL("image/png");
-
-    const w = window.open("", "_blank", "noopener,noreferrer");
-    if (!w) return;
 
     w.document.open();
     w.document.write(`
@@ -870,7 +906,7 @@ export const ResourcesPage: React.FC = () => {
           <div className="bg-white dark:bg-neutral-800 rounded-xl p-6 text-center shadow-sm">
             <Globe className="w-8 h-8 text-primary-500 mx-auto mb-2" />
             <div className="text-2xl font-bold text-neutral-900 dark:text-white">{totalExternalLinks}</div>
-            <div className="text-sm text-neutral-600 dark:text-neutral-400">External Links</div>
+            <div className="text-sm text-neutral-600 dark:text-neutral-400">Resource Links</div>
           </div>
           <div className="bg-white dark:bg-neutral-800 rounded-xl p-6 text-center shadow-sm">
             <Gamepad2 className="w-8 h-8 text-primary-500 mx-auto mb-2" />
