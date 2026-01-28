@@ -3,6 +3,8 @@ import { motion } from 'framer-motion';
 import {
   BookOpen,
   Gamepad2,
+  Download,
+  Video,
   Users,
   Globe,
   FileText,
@@ -15,6 +17,7 @@ import {
   ShoppingCart,
   MessageCircle,
   Music,
+  Volume2,
 } from 'lucide-react';
 import { PageTemplate } from '@/components/PageTemplate';
 
