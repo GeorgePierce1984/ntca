@@ -7,6 +7,7 @@ interface PageTemplateProps {
   showComingSoon?: boolean;
   topPaddingClassName?: string;
   headerSectionClassName?: string;
+  minHeightClassName?: string;
 }
 
 export const PageTemplate: React.FC<PageTemplateProps> = ({
@@ -15,9 +16,10 @@ export const PageTemplate: React.FC<PageTemplateProps> = ({
   showComingSoon = true,
   topPaddingClassName = "pt-20",
   headerSectionClassName,
+  minHeightClassName = "min-h-screen",
 }) => {
   return (
-    <div className={`min-h-screen ${topPaddingClassName}`}>
+    <div className={`${minHeightClassName} ${topPaddingClassName}`}>
       <div
         className={
           headerSectionClassName ||
