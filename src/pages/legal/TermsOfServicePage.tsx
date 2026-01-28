@@ -174,6 +174,193 @@ export const TermsOfServicePage: React.FC = () => {
                   NT‑CA is not liable for failures due to events beyond
                   reasonable control.
                 </p>
+
+                <hr />
+
+                <h2>2. PRIVACY POLICY (GLOBAL GDPR-BASED)</h2>
+
+                <h3>2.1 Introduction</h3>
+                <p>
+                  NT-CA processes personal data in accordance with UK GDPR, EU
+                  GDPR, CCPA/CPRA, PIPEDA, Australian Privacy Act, and New
+                  Zealand Privacy Act.
+                </p>
+
+                <h3>2.2 Data Controller</h3>
+                <p>
+                  NT-CA Ltd is the Data Controller. Contact:{" "}
+                  <a href="mailto:privacy@nt-ca.com">privacy@nt-ca.com</a>
+                </p>
+
+                <h3>2.3 Data Collected</h3>
+                <ul>
+                  <li>Identity data (name, contact details)</li>
+                  <li>Professional data (CVs, qualifications, references)</li>
+                  <li>Technical data (IP, device, logs)</li>
+                  <li>Usage data</li>
+                  <li>Sensitive data only where voluntarily provided</li>
+                </ul>
+
+                <h3>2.4 Legal Bases for Processing (GDPR)</h3>
+                <ul>
+                  <li>Consent</li>
+                  <li>Contract performance</li>
+                  <li>Legitimate interests</li>
+                  <li>Legal obligations</li>
+                </ul>
+
+                <h3>2.5 Purposes of Processing</h3>
+                <ul>
+                  <li>Matching Teachers and Schools</li>
+                  <li>Platform communications</li>
+                  <li>Service improvement and analytics</li>
+                  <li>Legal compliance</li>
+                </ul>
+
+                <h3>2.6 Data Sharing</h3>
+                <p>Data may be shared with:</p>
+                <ul>
+                  <li>Schools when Teachers apply or opt-in</li>
+                  <li>Hosting and analytics providers</li>
+                  <li>Legal authorities where required</li>
+                </ul>
+
+                <h3>2.7 International Transfers</h3>
+                <p>
+                  Data stored in the UK. Transfers rely on adequacy decisions
+                  or Standard Contractual Clauses.
+                </p>
+
+                <h3>2.8 User Rights</h3>
+                <p>
+                  Users may request access, rectification, erasure, restriction,
+                  portability, or objection. Requests handled within one month.
+                </p>
+
+                <h3>2.9 Retention</h3>
+                <p>Data retained until account deletion or legal requirement.</p>
+
+                <h3>2.10 Security</h3>
+                <p>
+                  Encryption, access controls, and organisational safeguards are
+                  implemented.
+                </p>
+
+                <h3>2.11 Complaints</h3>
+                <p>
+                  Users may complain to the UK ICO or relevant supervisory
+                  authority.
+                </p>
+
+                <hr />
+
+                <h2>3. CONTROLLER-TO-CONTROLLER DATA SHARING AGREEMENT</h2>
+
+                <h3>3.1 Parties</h3>
+                <p>
+                  NT-CA Ltd and Schools receiving Teacher data are independent
+                  Data Controllers.
+                </p>
+
+                <h3>3.2 Purpose</h3>
+                <p>Data shared for recruitment and hiring purposes.</p>
+
+                <h3>3.3 Obligations</h3>
+                <p>Schools must:</p>
+                <ul>
+                  <li>Comply with GDPR and local privacy laws</li>
+                  <li>Provide privacy notices to Teachers</li>
+                  <li>Secure data and restrict access</li>
+                  <li>Delete data when no longer necessary</li>
+                </ul>
+
+                <h3>3.4 Liability</h3>
+                <p>
+                  Each party is responsible for its own compliance. Schools
+                  indemnify NT-CA for misuse of shared data.
+                </p>
+
+                <hr />
+
+                <h2>4. COOKIE POLICY &amp; CONSENT BANNER TEXT</h2>
+
+                <h3>4.1 Cookies Used</h3>
+                <ul>
+                  <li>Strictly necessary cookies</li>
+                  <li>Analytics cookies</li>
+                  <li>Marketing cookies</li>
+                </ul>
+
+                <h3>4.2 Consent Banner Wording</h3>
+                <blockquote>
+                  “We use cookies to improve your experience. You can accept all
+                  cookies, reject non-essential cookies, or customise your
+                  preferences. For more information, see our Cookie Policy.”
+                </blockquote>
+                <p>
+                  Buttons: <strong>[Accept All]</strong>{" "}
+                  <strong>[Reject Non-Essential]</strong>{" "}
+                  <strong>[Manage Preferences]</strong>
+                </p>
+
+                <hr />
+
+                <h2>5. ACCEPTABLE USE POLICY</h2>
+
+                <h3>5.1 Prohibited Conduct</h3>
+                <p>Users must not:</p>
+                <ul>
+                  <li>Post false or misleading information</li>
+                  <li>Discriminate based on protected characteristics</li>
+                  <li>Harass, abuse, or threaten others</li>
+                  <li>Upload unlawful or infringing content</li>
+                  <li>Attempt to hack, scrape, or misuse the Platform</li>
+                </ul>
+
+                <h3>5.2 Enforcement</h3>
+                <p>NT-CA may remove content or terminate accounts for violations.</p>
+
+                <hr />
+
+                <h2>6. MULTI-JURISDICTION CLAUSES</h2>
+
+                <h3>6.1 European Union</h3>
+                <p>
+                  Processing subject to EU GDPR and local supervisory
+                  authorities.
+                </p>
+
+                <h3>6.2 United States</h3>
+                <p>
+                  Compliance with CCPA/CPRA. California residents have rights to
+                  access, delete, and opt-out of sale/sharing of personal data.
+                </p>
+
+                <h3>6.3 Canada</h3>
+                <p>
+                  Processing subject to PIPEDA. Individuals have rights to
+                  access and correction.
+                </p>
+
+                <h3>6.4 Australia</h3>
+                <p>Compliance with Australian Privacy Act 1988 and APPs.</p>
+
+                <h3>6.5 New Zealand</h3>
+                <p>Compliance with Privacy Act 2020.</p>
+
+                <hr />
+
+                <h2>7. CONTACT DETAILS</h2>
+                <p>
+                  <strong>NT-CA Ltd</strong>
+                  <br />
+                  <strong>[Registered Address]</strong>
+                  <br />
+                  Email: <a href="mailto:legal@nt-ca.com">legal@nt-ca.com</a>
+                  <br />
+                  Privacy:{" "}
+                  <a href="mailto:privacy@nt-ca.com">privacy@nt-ca.com</a>
+                </p>
               </div>
             </div>
           </div>
