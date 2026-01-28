@@ -5,6 +5,7 @@ import { ArrowLeft, ArrowRight, CreditCard, Building2 } from "lucide-react";
 import { CENTRAL_ASIA_COUNTRIES, SCHOOL_TYPES } from "@/constants/options";
 import { CountrySelector } from "@/components/forms/CountrySelector";
 import { type Country, getCountryByName } from "@/data/countries";
+import { TermsModal } from "@/components/modals/TermsModal";
 
 interface SchoolForm {
   name: string;
@@ -64,6 +65,8 @@ const SignupPage: React.FC = () => {
   const [billing, setBilling] = useState<"monthly" | "annual">("monthly");
   const [passwordConfirm, setPasswordConfirm] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState<Country | undefined>(undefined);
   const planKey = (params.get("plan") || "basic").toLowerCase();
   const plan = planEnvMap[planKey] || planEnvMap.basic;
@@ -117,6 +120,8 @@ const SignupPage: React.FC = () => {
     if (!form.contactName) newErrors.contactName = "Contact name is required";
     if (!form.country) newErrors.country = "Country is required";
     if (!form.city) newErrors.city = "City is required";
+    if (!termsAccepted)
+      newErrors.termsAccepted = "You must accept the Terms & Conditions";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -134,7 +139,13 @@ const SignupPage: React.FC = () => {
       const res = await fetch("/api/create-checkout-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ priceId, metadata: form }),
+        body: JSON.stringify({
+          priceId,
+          userType: "school",
+          formData: { ...form, termsAccepted: true },
+          billingType: billing,
+          planName: planKey,
+        }),
       });
       const data = await res.json();
       if (data.url) {
@@ -439,6 +450,37 @@ const SignupPage: React.FC = () => {
             </div>
           </div>
 
+          {/* Terms acceptance (mandatory) */}
+          <div className="p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/40">
+            <label className="flex items-start gap-3 text-sm text-neutral-700 dark:text-neutral-200">
+              <input
+                type="checkbox"
+                className="mt-1 h-4 w-4 rounded border-neutral-300 dark:border-neutral-700"
+                checked={termsAccepted}
+                onChange={(e) => {
+                  setTermsAccepted(e.target.checked);
+                  if (errors.termsAccepted) {
+                    setErrors({ ...errors, termsAccepted: "" });
+                  }
+                }}
+              />
+              <span>
+                I agree to the{" "}
+                <button
+                  type="button"
+                  onClick={() => setShowTermsModal(true)}
+                  className="text-primary-600 dark:text-primary-400 hover:underline font-medium"
+                >
+                  Terms &amp; Conditions
+                </button>
+                .
+              </span>
+            </label>
+            {errors.termsAccepted && (
+              <p className="text-red-500 text-sm mt-2">{errors.termsAccepted}</p>
+            )}
+          </div>
+
           <div className="pt-6 border-t border-neutral-200 dark:border-neutral-700">
             <Button
               type="submit"
@@ -453,6 +495,11 @@ const SignupPage: React.FC = () => {
             </p>
           </div>
         </form>
+
+        <TermsModal
+          isOpen={showTermsModal}
+          onClose={() => setShowTermsModal(false)}
+        />
       </div>
     </section>
   );

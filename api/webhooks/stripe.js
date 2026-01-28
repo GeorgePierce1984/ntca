@@ -133,6 +133,11 @@ async function handleSuccessfulPayment(session) {
       formData = {};
     }
 
+    if (formData?.termsAccepted !== true) {
+      console.error("❌ Terms not accepted - refusing account creation for session:", session.id);
+      return;
+    }
+
     // Normalize field names: map 'address' to 'streetAddress' if needed
     if (formData.address && !formData.streetAddress) {
       formData.streetAddress = formData.address;

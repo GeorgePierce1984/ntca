@@ -34,6 +34,7 @@ import {
   getPasswordStrengthBarColor,
 } from "@/utils/validation";
 import { CENTRAL_ASIA_COUNTRIES } from "@/constants/options";
+import { TermsModal } from "@/components/modals/TermsModal";
 
 type UserType = "school" | "teacher";
 
@@ -134,6 +135,8 @@ export const SignUpPage: React.FC = () => {
   const [sendingCode, setSendingCode] = useState(false);
   const [verifyingCode, setVerifyingCode] = useState(false);
   const emailInputRef = useRef<HTMLInputElement>(null);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
 
   const [schoolForm, setSchoolForm] = useState<SchoolForm>({
     name: "",
@@ -459,6 +462,12 @@ export const SignUpPage: React.FC = () => {
           newErrors.qualification = "Qualification is required";
         if (!tf.experience) newErrors.experience = "Experience is required";
       }
+
+      // Terms acceptance (mandatory)
+      if (!termsAccepted) {
+        newErrors.termsAccepted =
+          "You must accept the Terms & Conditions to continue";
+      }
     }
 
     setErrors(newErrors);
@@ -702,6 +711,17 @@ export const SignUpPage: React.FC = () => {
       return;
     }
 
+    if (!termsAccepted) {
+      toast.error("Please accept the Terms & Conditions to continue", {
+        duration: 3000,
+      });
+      setErrors({
+        ...errors,
+        termsAccepted: "You must accept the Terms & Conditions to continue",
+      });
+      return;
+    }
+
     setLoading(true);
     setErrors({});
     
@@ -718,6 +738,7 @@ export const SignUpPage: React.FC = () => {
           body: JSON.stringify({
             ...teacherForm,
             userType: "teacher", // API expects lowercase
+            termsAccepted: true,
           }),
         });
 
@@ -807,6 +828,7 @@ export const SignUpPage: React.FC = () => {
             ...schoolForm,
             confirmPassword: undefined, // Don't send confirmPassword to backend
             userType: "school", // API expects lowercase
+            termsAccepted: true,
           }),
         });
 
@@ -1800,6 +1822,39 @@ export const SignUpPage: React.FC = () => {
                       </div>
                     </div>
                   )}
+
+                  {/* Terms acceptance (mandatory) */}
+                  <div className="p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/40">
+                    <label className="flex items-start gap-3 text-sm text-neutral-700 dark:text-neutral-200">
+                      <input
+                        type="checkbox"
+                        className="mt-1 h-4 w-4 rounded border-neutral-300 dark:border-neutral-700"
+                        checked={termsAccepted}
+                        onChange={(e) => {
+                          setTermsAccepted(e.target.checked);
+                          if (errors.termsAccepted) {
+                            setErrors({ ...errors, termsAccepted: "" });
+                          }
+                        }}
+                      />
+                      <span>
+                        I agree to the{" "}
+                        <button
+                          type="button"
+                          onClick={() => setShowTermsModal(true)}
+                          className="text-primary-600 dark:text-primary-400 hover:underline font-medium"
+                        >
+                          Terms &amp; Conditions
+                        </button>
+                        .
+                      </span>
+                    </label>
+                    {errors.termsAccepted && (
+                      <p className="text-red-500 text-sm mt-2">
+                        {errors.termsAccepted}
+                      </p>
+                    )}
+                  </div>
                 </form>
 
                 <div className="flex justify-between items-center gap-4 mt-8">
@@ -2122,6 +2177,11 @@ export const SignUpPage: React.FC = () => {
           </div>
         </div>
       </section>
+
+      <TermsModal
+        isOpen={showTermsModal}
+        onClose={() => setShowTermsModal(false)}
+      />
     </div>
   );
 };

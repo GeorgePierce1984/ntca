@@ -12,13 +12,20 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { userType, email, password, ...profileData } = req.body;
+    const { userType, email, password, termsAccepted, ...profileData } = req.body;
 
     // Validate required fields
     if (!userType || !email) {
       return res
         .status(400)
         .json({ error: "User type and email are required" });
+    }
+
+    // Terms acceptance (mandatory)
+    if (termsAccepted !== true) {
+      return res
+        .status(400)
+        .json({ error: "You must accept the Terms & Conditions to register" });
     }
 
     // Validate email format

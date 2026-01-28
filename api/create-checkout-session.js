@@ -38,12 +38,23 @@ export default async function handler(req, res) {
       req.headers.origin ||
       "https://ntca-bvqxecsr4-rogit85s-projects.vercel.app";
 
+    // Support older callers that passed data via `metadata` instead of `formData`
+    const effectiveFormData =
+      formData && Object.keys(formData).length ? formData : (metadata || {});
+
+    // Terms acceptance (mandatory)
+    if (effectiveFormData?.termsAccepted !== true) {
+      return res
+        .status(400)
+        .json({ error: "You must accept the Terms & Conditions" });
+    }
+
     // Prepare metadata for webhook
     const sessionMetadata = {
       userType: userType || "school",
       planName: planName || "",
       billingType: billingType || "annual",
-      formData: JSON.stringify(formData || {}), // Stringify the form data
+      formData: JSON.stringify(effectiveFormData || {}), // Stringify the form data
       ...metadata, // Allow additional metadata
     };
 
@@ -63,7 +74,7 @@ export default async function handler(req, res) {
         successUrl ||
         `${baseUrl}/schools/dashboard?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: cancelUrl || `${baseUrl}/signup?from=payment`,
-      customer_email: formData?.email, // Pre-fill customer email
+      customer_email: effectiveFormData?.email, // Pre-fill customer email
     });
 
     console.log("Created checkout session:", session.id);

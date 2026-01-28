@@ -140,6 +140,10 @@ async function handleCheckoutSessionCompleted(session) {
     }
 
     const formData = JSON.parse(metadata.formData || "{}");
+  if (formData?.termsAccepted !== true) {
+    console.error("❌ Terms not accepted - refusing account creation for session:", session.id);
+    return;
+  }
     const email = formData.email || session.customer_email;
     const userType = metadata.userType || "school";
 
