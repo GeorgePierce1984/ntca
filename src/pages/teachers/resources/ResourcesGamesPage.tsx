@@ -495,8 +495,14 @@ export const ResourcesGamesPage: React.FC = () => {
                         className="text-left rounded-xl border border-neutral-200 dark:border-neutral-800 p-4 hover:border-primary-300 dark:hover:border-primary-700 hover:bg-primary-50/40 dark:hover:bg-primary-900/10 transition-colors"
                       >
                         <div className="flex items-start gap-3">
-                          <div className="w-9 h-9 rounded-lg bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center">
-                            <GameIcon className="w-4 h-4 text-neutral-700 dark:text-neutral-200" />
+                          <div className="w-10 h-10 rounded-xl bg-primary-50 dark:bg-primary-900/20 flex items-center justify-center shrink-0">
+                            {game.illustrationEmoji ? (
+                              <span className="text-xl leading-none" aria-hidden="true">
+                                {game.illustrationEmoji}
+                              </span>
+                            ) : (
+                              <GameIcon className="w-4 h-4 text-primary-700 dark:text-primary-300" />
+                            )}
                           </div>
                           <div className="flex-1">
                             <div className="font-semibold text-neutral-900 dark:text-white">
