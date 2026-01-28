@@ -4,11 +4,18 @@ import { motion } from 'framer-motion';
 interface PageTemplateProps {
   title: string;
   subtitle?: string;
+  showComingSoon?: boolean;
+  topPaddingClassName?: string;
 }
 
-export const PageTemplate: React.FC<PageTemplateProps> = ({ title, subtitle }) => {
+export const PageTemplate: React.FC<PageTemplateProps> = ({
+  title,
+  subtitle,
+  showComingSoon = true,
+  topPaddingClassName = "pt-20",
+}) => {
   return (
-    <div className="min-h-screen pt-20">
+    <div className={`min-h-screen ${topPaddingClassName}`}>
       <div className="section bg-gradient-to-br from-primary-50 via-white to-secondary-50 dark:from-neutral-900 dark:via-neutral-900 dark:to-neutral-800">
         <div className="container-custom">
           <motion.div
@@ -27,17 +34,19 @@ export const PageTemplate: React.FC<PageTemplateProps> = ({ title, subtitle }) =
         </div>
       </div>
 
-      <div className="section">
-        <div className="container-custom">
-          <div className="max-w-4xl mx-auto">
-            <div className="card p-8">
-              <p className="text-neutral-600 dark:text-neutral-400 text-center">
-                This page is coming soon. We're working hard to bring you amazing content!
-              </p>
+      {showComingSoon && (
+        <div className="section">
+          <div className="container-custom">
+            <div className="max-w-4xl mx-auto">
+              <div className="card p-8">
+                <p className="text-neutral-600 dark:text-neutral-400 text-center">
+                  This page is coming soon. We're working hard to bring you amazing content!
+                </p>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

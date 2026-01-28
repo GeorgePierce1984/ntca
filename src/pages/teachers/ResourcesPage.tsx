@@ -257,7 +257,7 @@ export const ResourcesPage: React.FC = () => {
         },
         {
           id: "stickman-description",
-          title: "Stickman Description (all levels) – New class",
+          title: "Stickman Description (all levels)",
           audience: "Adults & teens",
           icon: ClipboardList,
           shortDescription: "A fun “get to know you” guessing game using a stickman profile.",
@@ -274,7 +274,7 @@ export const ResourcesPage: React.FC = () => {
         },
         {
           id: "two-truths-one-lie",
-          title: "2 Truths 1 Lie (all levels) – New class",
+          title: "2 Truths 1 Lie (all levels)",
           audience: "Adults & teens",
           icon: Shuffle,
           shortDescription: "Students ask questions to uncover the lie—great for speaking.",
@@ -289,7 +289,7 @@ export const ResourcesPage: React.FC = () => {
         },
         {
           id: "m-and-ms-facts",
-          title: "M and Ms Facts (all levels) – New class",
+          title: "M and Ms Facts (all levels)",
           audience: "Adults & teens",
           icon: Trophy,
           shortDescription: "A sweet icebreaker—one sweet equals one fact to share.",
@@ -361,7 +361,7 @@ export const ResourcesPage: React.FC = () => {
         },
         {
           id: "never-have-i-ever",
-          title: "Never Have I Ever (present perfect practice)",
+          title: "Never Have I Ever",
           audience: "Teens & adults",
           icon: Users,
           shortDescription: "Present perfect speaking practice with fingers down.",
@@ -827,6 +827,18 @@ export const ResourcesPage: React.FC = () => {
     },
   ];
 
+  const totalExternalLinks = resourceCategories.reduce(
+    (sum, cat) => sum + (cat.resources?.length || 0),
+    0
+  );
+  const totalCategories = resourceCategories.length;
+  const totalItems = totalExternalLinks + allGamesCount;
+
+  // Sort by size so boxes with the most content sit higher and next to similar-volume boxes.
+  const sortedResourceCategories = [...resourceCategories].sort(
+    (a, b) => (b.resources?.length || 0) - (a.resources?.length || 0)
+  );
+
   const getTypeIcon = (type: string) => {
     switch (type.toLowerCase()) {
       case 'pdf': return <FileText className="w-4 h-4" />;
@@ -842,6 +854,8 @@ export const ResourcesPage: React.FC = () => {
       <PageTemplate 
         title="Teaching Resources" 
         subtitle="Comprehensive resources to enhance your teaching journey"
+        showComingSoon={false}
+        topPaddingClassName="pt-[50px]"
       />
       
       <div className="container-custom max-w-7xl mx-auto px-4 py-12">
@@ -852,30 +866,30 @@ export const ResourcesPage: React.FC = () => {
           className="grid md:grid-cols-4 gap-6 mb-12"
         >
           <div className="bg-white dark:bg-neutral-800 rounded-xl p-6 text-center shadow-sm">
-            <BookOpen className="w-8 h-8 text-primary-500 mx-auto mb-2" />
-            <div className="text-2xl font-bold text-neutral-900 dark:text-white">50+</div>
-            <div className="text-sm text-neutral-600 dark:text-neutral-400">Lesson Plans</div>
+            <Globe className="w-8 h-8 text-primary-500 mx-auto mb-2" />
+            <div className="text-2xl font-bold text-neutral-900 dark:text-white">{totalExternalLinks}</div>
+            <div className="text-sm text-neutral-600 dark:text-neutral-400">External Links</div>
           </div>
           <div className="bg-white dark:bg-neutral-800 rounded-xl p-6 text-center shadow-sm">
-            <Video className="w-8 h-8 text-primary-500 mx-auto mb-2" />
-            <div className="text-2xl font-bold text-neutral-900 dark:text-white">25+</div>
-            <div className="text-sm text-neutral-600 dark:text-neutral-400">Video Tutorials</div>
+            <Gamepad2 className="w-8 h-8 text-primary-500 mx-auto mb-2" />
+            <div className="text-2xl font-bold text-neutral-900 dark:text-white">{allGamesCount}</div>
+            <div className="text-sm text-neutral-600 dark:text-neutral-400">Teaching Aid Games</div>
           </div>
           <div className="bg-white dark:bg-neutral-800 rounded-xl p-6 text-center shadow-sm">
-            <Download className="w-8 h-8 text-primary-500 mx-auto mb-2" />
-            <div className="text-2xl font-bold text-neutral-900 dark:text-white">100+</div>
-            <div className="text-sm text-neutral-600 dark:text-neutral-400">Downloadable Resources</div>
+            <FileText className="w-8 h-8 text-primary-500 mx-auto mb-2" />
+            <div className="text-2xl font-bold text-neutral-900 dark:text-white">{totalCategories}</div>
+            <div className="text-sm text-neutral-600 dark:text-neutral-400">Resource Categories</div>
           </div>
           <div className="bg-white dark:bg-neutral-800 rounded-xl p-6 text-center shadow-sm">
             <Users className="w-8 h-8 text-primary-500 mx-auto mb-2" />
-            <div className="text-2xl font-bold text-neutral-900 dark:text-white">1000+</div>
-            <div className="text-sm text-neutral-600 dark:text-neutral-400">Teachers Helped</div>
+            <div className="text-2xl font-bold text-neutral-900 dark:text-white">{totalItems}</div>
+            <div className="text-sm text-neutral-600 dark:text-neutral-400">Total Items</div>
           </div>
         </motion.div>
 
         {/* Resource Categories */}
         <div className="grid lg:grid-cols-2 gap-8">
-          {resourceCategories.map((category, index) => {
+          {sortedResourceCategories.map((category, index) => {
             const IconComponent = category.icon;
             return (
               <motion.div
