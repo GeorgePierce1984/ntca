@@ -861,38 +861,43 @@ const TeacherDashboard: React.FC = () => {
 
       if (isSaved) {
         // Remove from saved jobs
-        const response = await fetch("/api/teachers/saved-jobs", {
+        const response = await fetch(`/api/teachers/saved-jobs/${job.id}`, {
           method: "DELETE",
           headers: {
-            "Content-Type": "application/json",
             Authorization: `Bearer ${localStorage.getItem("authToken")}`,
           },
-          body: JSON.stringify({ jobId: job.id }),
         });
 
         if (response.ok) {
           setSavedJobs(
             savedJobs.filter((savedJob) => savedJob.job.id !== job.id),
           );
+          toast.success("Removed from saved jobs");
+        } else {
+          const err = await response.json().catch(() => ({}));
+          toast.error(err.error || "Failed to remove saved job");
         }
       } else {
         // Add to saved jobs
-        const response = await fetch("/api/teachers/saved-jobs", {
+        const response = await fetch(`/api/teachers/saved-jobs/${job.id}`, {
           method: "POST",
           headers: {
-            "Content-Type": "application/json",
             Authorization: `Bearer ${localStorage.getItem("authToken")}`,
           },
-          body: JSON.stringify({ jobId: job.id }),
         });
 
         if (response.ok) {
           const data = await response.json();
           setSavedJobs([data.savedJob, ...savedJobs]);
+          toast.success("Job saved");
+        } else {
+          const err = await response.json().catch(() => ({}));
+          toast.error(err.error || "Failed to save job");
         }
       }
     } catch (error) {
       console.error("Error toggling saved job:", error);
+      toast.error("Failed to update saved job");
     }
   };
 

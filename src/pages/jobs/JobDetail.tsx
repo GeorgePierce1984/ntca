@@ -246,7 +246,11 @@ const JobDetail: React.FC = () => {
       });
       if (response.ok) {
         const data = await response.json();
-        setIsSaved(data.savedJobs.some((j: any) => j.id === id));
+        setIsSaved(
+          (data.savedJobs || []).some(
+            (s: any) => s?.jobId === id || s?.job?.id === id,
+          ),
+        );
       }
     } catch (error) {
       console.error("Error checking saved status:", error);
@@ -279,6 +283,9 @@ const JobDetail: React.FC = () => {
         toast.success(
           isSaved ? "Job removed from saved" : "Job saved successfully",
         );
+      } else {
+        const err = await response.json().catch(() => ({}));
+        toast.error(err.error || "Failed to update saved status");
       }
     } catch (error) {
       toast.error("Failed to update saved status");

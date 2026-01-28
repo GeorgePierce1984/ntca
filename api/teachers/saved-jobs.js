@@ -121,7 +121,18 @@ export default async function handler(req, res) {
       return res.status(200).json({ savedJobs: savedJobsWithStatus });
     } else if (req.method === "POST") {
       // Save a job
-      const jobId = req.url.split("/").pop();
+      let body = req.body;
+      if (typeof body === "string") {
+        try {
+          body = JSON.parse(body);
+        } catch {
+          body = null;
+        }
+      }
+
+      const jobIdFromBody = body?.jobId ? String(body.jobId) : null;
+      const jobIdFromPath = req.url.split("/").pop();
+      const jobId = jobIdFromBody || jobIdFromPath;
 
       if (!jobId || jobId === "saved-jobs") {
         return res.status(400).json({ error: "Job ID is required" });
@@ -204,7 +215,18 @@ export default async function handler(req, res) {
       });
     } else if (req.method === "DELETE") {
       // Unsave a job
-      const jobId = req.url.split("/").pop();
+      let body = req.body;
+      if (typeof body === "string") {
+        try {
+          body = JSON.parse(body);
+        } catch {
+          body = null;
+        }
+      }
+
+      const jobIdFromBody = body?.jobId ? String(body.jobId) : null;
+      const jobIdFromPath = req.url.split("/").pop();
+      const jobId = jobIdFromBody || jobIdFromPath;
 
       if (!jobId || jobId === "saved-jobs") {
         return res.status(400).json({ error: "Job ID is required" });
