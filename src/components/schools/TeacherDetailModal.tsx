@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -95,10 +95,31 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
   jobTitle,
   onOpenChat,
 }) => {
-  if (!teacher) return null;
-
   const navigate = useNavigate();
   const [contacting, setContacting] = useState(false);
+  const lastViewedTeacherIdRef = useRef<string | null>(null);
+
+  // Increment teacher profile views when a school opens the teacher profile modal.
+  // (Skips self-view in the API; this is best-effort and errors are ignored.)
+  useEffect(() => {
+    if (!isOpen) {
+      lastViewedTeacherIdRef.current = null;
+      return;
+    }
+    if (!teacher?.id) return;
+    if (lastViewedTeacherIdRef.current === teacher.id) return;
+    lastViewedTeacherIdRef.current = teacher.id;
+
+    const token = localStorage.getItem("authToken");
+    fetch(`/api/teachers/${teacher.id}/profile-view`, {
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    }).catch(() => {
+      // ignore
+    });
+  }, [isOpen, teacher?.id]);
+
+  if (!teacher) return null;
 
   const handleContactTeacher = async () => {
     if (contacting) return;
