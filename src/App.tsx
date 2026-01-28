@@ -33,6 +33,11 @@ import { TeacherProfilePage } from "@/pages/teachers/ProfilePage";
 import { TeacherPrivacyPage } from "@/pages/teachers/PrivacyPage";
 import TeacherDashboard from "@/pages/teachers/DashboardPage";
 import { ResourcesPage } from "@/pages/teachers/ResourcesPage";
+import { ResourcesLinksPage } from "@/pages/teachers/resources/ResourcesLinksPage";
+import { ResourcesGamesPage } from "@/pages/teachers/resources/ResourcesGamesPage";
+import { ResourcesExamPrepPage } from "@/pages/teachers/resources/ResourcesExamPrepPage";
+import { ResourcesKidsPhonicsPage } from "@/pages/teachers/resources/ResourcesKidsPhonicsPage";
+import { ResourcesAIToolsPage } from "@/pages/teachers/resources/ResourcesAIToolsPage";
 import { CareerGuidancePage } from "@/pages/teachers/CareerGuidancePage";
 
 // School pages
@@ -136,7 +141,12 @@ function AppContent() {
           <Route path="/ai-services" element={<AiServicesPage />} />
           <Route path="/jobs" element={<Jobs />} />
           <Route path="/jobs/:id" element={<JobDetail />} />
-                      <Route path="/resources" element={<ResourcesPage />} />
+          <Route path="/resources" element={<ResourcesPage />} />
+          <Route path="/resources/links" element={<ResourcesLinksPage />} />
+          <Route path="/resources/games" element={<ResourcesGamesPage />} />
+          <Route path="/resources/exam-prep" element={<ResourcesExamPrepPage />} />
+          <Route path="/resources/kids-phonics" element={<ResourcesKidsPhonicsPage />} />
+          <Route path="/resources/ai-tools" element={<ResourcesAIToolsPage />} />
           <Route
             path="/resources/career-guidance"
             element={<CareerGuidancePage />}
@@ -271,6 +281,46 @@ function AppContent() {
             element={
               <ProtectedRoute allowedUserTypes={["TEACHER"]}>
                 <ResourcesPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/teachers/resources/links"
+            element={
+              <ProtectedRoute allowedUserTypes={["TEACHER"]}>
+                <ResourcesLinksPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/teachers/resources/games"
+            element={
+              <ProtectedRoute allowedUserTypes={["TEACHER"]}>
+                <ResourcesGamesPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/teachers/resources/exam-prep"
+            element={
+              <ProtectedRoute allowedUserTypes={["TEACHER"]}>
+                <ResourcesExamPrepPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/teachers/resources/kids-phonics"
+            element={
+              <ProtectedRoute allowedUserTypes={["TEACHER"]}>
+                <ResourcesKidsPhonicsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/teachers/resources/ai-tools"
+            element={
+              <ProtectedRoute allowedUserTypes={["TEACHER"]}>
+                <ResourcesAIToolsPage />
               </ProtectedRoute>
             }
           />
