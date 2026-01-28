@@ -856,9 +856,10 @@ export const ResourcesPage: React.FC = () => {
         subtitle="Comprehensive resources to enhance your teaching journey"
         showComingSoon={false}
         topPaddingClassName="pt-[50px]"
+        headerSectionClassName="pt-10 pb-6 md:pt-12 md:pb-8 bg-gradient-to-br from-primary-50 via-white to-secondary-50 dark:from-neutral-900 dark:via-neutral-900 dark:to-neutral-800"
       />
       
-      <div className="container-custom max-w-7xl mx-auto px-4 py-12">
+      <div className="container-custom max-w-7xl mx-auto px-4 pt-4 pb-12">
         {/* Quick Stats */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}

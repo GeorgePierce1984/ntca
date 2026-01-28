@@ -6,6 +6,7 @@ interface PageTemplateProps {
   subtitle?: string;
   showComingSoon?: boolean;
   topPaddingClassName?: string;
+  headerSectionClassName?: string;
 }
 
 export const PageTemplate: React.FC<PageTemplateProps> = ({
@@ -13,10 +14,16 @@ export const PageTemplate: React.FC<PageTemplateProps> = ({
   subtitle,
   showComingSoon = true,
   topPaddingClassName = "pt-20",
+  headerSectionClassName,
 }) => {
   return (
     <div className={`min-h-screen ${topPaddingClassName}`}>
-      <div className="section bg-gradient-to-br from-primary-50 via-white to-secondary-50 dark:from-neutral-900 dark:via-neutral-900 dark:to-neutral-800">
+      <div
+        className={
+          headerSectionClassName ||
+          "section bg-gradient-to-br from-primary-50 via-white to-secondary-50 dark:from-neutral-900 dark:via-neutral-900 dark:to-neutral-800"
+        }
+      >
         <div className="container-custom">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
