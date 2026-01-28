@@ -21,6 +21,7 @@ import { BlogPage } from "@/pages/BlogPage";
 import { SuccessStoriesPage } from "@/pages/SuccessStoriesPage";
 import BrandingPage from "@/pages/BrandingPage";
 import Pricing from "@/pages/Pricing";
+import { FAQsPage } from "@/pages/FAQsPage";
 import Jobs from "@/pages/Jobs";
 import JobDetail from "@/pages/jobs/JobDetail";
 import SchoolSignupPage from "@/pages/schools/SignupPage";
@@ -151,6 +152,7 @@ function AppContent() {
           <Route path="/success-stories" element={<SuccessStoriesPage />} />
           <Route path="/branding" element={<BrandingPage />} />
           <Route path="/pricing" element={<Pricing />} />
+          <Route path="/faqs" element={<FAQsPage />} />
           <Route path="/ai-services" element={<AiServicesPage />} />
           <Route path="/jobs" element={<Jobs />} />
           <Route path="/jobs/:id" element={<JobDetail />} />

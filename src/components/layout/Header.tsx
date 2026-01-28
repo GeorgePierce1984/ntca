@@ -71,6 +71,7 @@ const navigation: NavItem[] = [
       { label: "Blog", href: "/blog" },
       { label: "Brand Guidelines", href: "/branding" },
       { label: "Pricing", href: "/pricing" },
+      { label: "FAQs", href: "/faqs" },
       { label: "Contact", href: "/contact" },
     ],
   },
