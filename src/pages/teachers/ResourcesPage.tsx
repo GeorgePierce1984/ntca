@@ -1,76 +1,112 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { BookOpen, Download, Video, Users, Award, Globe, FileText, ExternalLink, Volume2 } from 'lucide-react';
+import { BookOpen, Gamepad2, Download, Video, Users, Award, Globe, FileText, ExternalLink, Volume2, LibraryBig } from 'lucide-react';
 import { PageTemplate } from '@/components/PageTemplate';
 
 export const ResourcesPage: React.FC = () => {
-  const resourceCategories = [
+  const resourceCategories: Array<{
+    title: string;
+    icon: any;
+    description: string;
+    resources: Array<{
+      name: string;
+      type: string;
+      url: string;
+      description?: string;
+      icon?: any;
+    }>;
+  }> = [
     {
-      title: "CELTA & TESOL Resources",
-      icon: Award,
-      description: "Certification guides and preparation materials",
-      resources: [
-        { name: "CELTA Preparation Guide", type: "PDF", url: "#" },
-        { name: "TESOL Certification Overview", type: "Article", url: "#" },
-        { name: "Teaching Practice Tips", type: "Video", url: "#" },
-        { name: "Grammar Teaching Techniques", type: "PDF", url: "#" }
-      ]
-    },
-    {
-      title: "Lesson Planning",
-      icon: BookOpen,
-      description: "Templates and guides for effective lesson planning",
-      resources: [
-        { name: "Lesson Plan Templates", type: "PDF", url: "#" },
-        { name: "Activity Ideas Bank", type: "Document", url: "#" },
-        { name: "Assessment Rubrics", type: "PDF", url: "#" },
-        { name: "Curriculum Mapping Guide", type: "Article", url: "#" }
-      ]
-    },
-    {
-      title: "Teaching Materials",
+      title: "Worksheets & Lesson Materials",
       icon: FileText,
-      description: "Ready-to-use materials for your classroom",
+      description: "Ready-made lessons, worksheets, and classroom activities",
       resources: [
-        { name: "ESL Worksheets Collection", type: "ZIP", url: "#" },
-        { name: "Interactive Games Pack", type: "PDF", url: "#" },
-        { name: "Pronunciation Guides", type: "Audio", url: "#" },
-        { name: "Grammar Exercises", type: "Document", url: "#" }
-      ]
+        {
+          name: "LinguaHouse",
+          type: "Lessons",
+          url: "https://www.linguahouse.com/en-GB",
+          description: "High-quality ESL lesson plans, worksheets, and topic-based materials.",
+          icon: BookOpen,
+        },
+        {
+          name: "Games4ESL",
+          type: "Activities",
+          url: "https://games4esl.com/",
+          description: "Printable worksheets and classroom games for ESL learners.",
+          icon: BookOpen,
+        },
+        {
+          name: "ESL Brains",
+          type: "Lessons",
+          url: "https://eslbrains.com/",
+          description: "Modern ESL lesson plans and worksheets (great for teens/adults).",
+          icon: FileText,
+        },
+        {
+          name: "ISL Collective",
+          type: "Worksheets",
+          url: "https://en.islcollective.com/",
+          description: "Huge library of teacher-made worksheets and printable activities.",
+          icon: FileText,
+        },
+      ],
     },
     {
-      title: "Professional Development",
-      icon: Users,
-      description: "Continue growing as an educator",
+      title: "Interactive Games & Classroom Tools",
+      icon: Gamepad2,
+      description: "Engaging game-based tools for live lessons and practice",
       resources: [
-        { name: "Teaching Conferences 2024", type: "Article", url: "#" },
-        { name: "Online Workshops", type: "Link", url: "#" },
-        { name: "Peer Observation Forms", type: "PDF", url: "#" },
-        { name: "Reflective Teaching Journal", type: "Template", url: "#" }
-      ]
+        {
+          name: "Kahoot!",
+          type: "Quizzes",
+          url: "https://kahoot.com/",
+          description: "Live quizzes for whole-class engagement (great for review).",
+          icon: Gamepad2,
+        },
+        {
+          name: "Blooket",
+          type: "Games",
+          url: "https://www.blooket.com/",
+          description: "Game modes powered by question sets—fun and fast to run.",
+          icon: Gamepad2,
+        },
+        {
+          name: "Baamboozle",
+          type: "Games",
+          url: "https://www.baamboozle.com/",
+          description: "Simple classroom games—perfect for warmers and revision.",
+          icon: Gamepad2,
+        },
+        {
+          name: "Games to Learn English",
+          type: "Practice",
+          url: "https://www.gamestolearnenglish.com/",
+          description: "Interactive online games for vocabulary and grammar practice.",
+          icon: Gamepad2,
+        },
+      ],
     },
     {
-      title: "Technology in Teaching",
-      icon: Globe,
-      description: "Digital tools and online teaching resources",
+      title: "Reference & Teacher Support",
+      icon: LibraryBig,
+      description: "Reference tools and quick support for lessons",
       resources: [
-        { name: "Online Teaching Best Practices", type: "Guide", url: "#" },
-        { name: "Educational Apps Review", type: "Article", url: "#" },
-        { name: "Virtual Classroom Setup", type: "Video", url: "#" },
-        { name: "Digital Assessment Tools", type: "List", url: "#" }
-      ]
+        {
+          name: "Oxford Learner’s Dictionaries",
+          type: "Dictionary",
+          url: "https://www.oxfordlearnersdictionaries.com/",
+          description: "Learner-friendly definitions, pronunciation, and examples.",
+          icon: LibraryBig,
+        },
+        {
+          name: "English Current",
+          type: "Articles",
+          url: "https://www.englishcurrent.com/",
+          description: "Grammar explanations, worksheets, and lesson support content.",
+          icon: Globe,
+        },
+      ],
     },
-    {
-      title: "Video Tutorials",
-      icon: Video,
-      description: "Watch and learn from experienced teachers",
-      resources: [
-        { name: "Classroom Management Tips", type: "Video", url: "#" },
-        { name: "Teaching Young Learners", type: "Video", url: "#" },
-        { name: "Business English Techniques", type: "Video", url: "#" },
-        { name: "IELTS Preparation Methods", type: "Video", url: "#" }
-      ]
-    }
   ];
 
   const getTypeIcon = (type: string) => {
@@ -147,12 +183,21 @@ export const ResourcesPage: React.FC = () => {
 
                 <div className="space-y-3">
                   {category.resources.map((resource, resourceIndex) => (
-                    <div
+                    <a
                       key={resourceIndex}
+                      href={resource.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="flex items-center justify-between p-3 bg-neutral-50 dark:bg-neutral-700 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-600 transition-colors cursor-pointer"
                     >
                       <div className="flex items-center gap-3">
-                        {getTypeIcon(resource.type)}
+                        {resource.icon ? (
+                          <div className="w-9 h-9 rounded-lg bg-white/80 dark:bg-neutral-800/70 border border-neutral-200 dark:border-neutral-600 flex items-center justify-center">
+                            {React.createElement(resource.icon, { className: "w-4 h-4 text-primary-600 dark:text-primary-400" })}
+                          </div>
+                        ) : (
+                          getTypeIcon(resource.type)
+                        )}
                         <div>
                           <div className="font-medium text-sm text-neutral-900 dark:text-white">
                             {resource.name}
@@ -160,10 +205,15 @@ export const ResourcesPage: React.FC = () => {
                           <div className="text-xs text-neutral-500 dark:text-neutral-400">
                             {resource.type}
                           </div>
+                          {resource.description && (
+                            <div className="text-xs text-neutral-600 dark:text-neutral-300 mt-0.5">
+                              {resource.description}
+                            </div>
+                          )}
                         </div>
                       </div>
                       <ExternalLink className="w-4 h-4 text-neutral-400" />
-                    </div>
+                    </a>
                   ))}
                 </div>
               </motion.div>
