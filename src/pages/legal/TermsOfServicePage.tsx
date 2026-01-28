@@ -5,7 +5,6 @@ export const TermsOfServicePage: React.FC = () => {
   return (
     <PageTemplate
       title="Terms of Service"
-      subtitle="NT‑CA Legal Framework Documents"
       showComingSoon={false}
     >
       <div className="section">
