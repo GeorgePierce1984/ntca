@@ -7,8 +7,22 @@ set -e
 
 EMAIL="${1:-georgepierce@hotmail.co.uk}"
 
-# Hardcoded token for testing (TODO: Move to secure storage)
-TOKEN="Sophia2013"
+# Read admin token from a local gitignored file.
+# Create `./.admin-token` containing ONLY the token value (no quotes, no whitespace).
+# This avoids hardcoding secrets in the repository.
+TOKEN_FILE=".admin-token"
+if [ ! -f "$TOKEN_FILE" ]; then
+  echo "❌ Error: $TOKEN_FILE not found."
+  echo "Create $TOKEN_FILE and paste your ADMIN_DELETE_TOKEN (from Vercel) into it."
+  exit 1
+fi
+
+# Strip whitespace/newlines
+TOKEN="$(cat "$TOKEN_FILE" | tr -d '[:space:]')"
+if [ -z "$TOKEN" ]; then
+  echo "❌ Error: ADMIN_DELETE_TOKEN is empty in $TOKEN_FILE."
+  exit 1
+fi
 
 echo "🔍 Attempting to delete account: $EMAIL"
 echo ""
