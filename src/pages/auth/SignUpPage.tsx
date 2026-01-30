@@ -270,12 +270,20 @@ export const SignUpPage: React.FC = () => {
       sessionStorage.removeItem("signupStep");
       sessionStorage.removeItem("signupSelectedPlan");
       sessionStorage.removeItem("signupBillingType");
+      // Clear verification state to prevent stale data from bypassing verification
+      sessionStorage.removeItem("verificationCode");
+      sessionStorage.removeItem("verificationCodeExpiry");
+      sessionStorage.removeItem("emailVerified");
       
       // Reset to initial state
       setCurrentStep(1);
       setUserType(null);
       setSelectedPlan(null);
       setBillingType("monthly");
+      setEmailVerified(false);
+      setVerificationCodeSent(false);
+      setStoredVerificationCode(null);
+      setVerificationCodeExpiry(null);
     }
   }, [isReturningFromPayment]);
 
