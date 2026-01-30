@@ -1693,25 +1693,14 @@ export const SignUpPage: React.FC = () => {
                   >
                     Back
                   </Button>
-                  {userType === "teacher" ? (
-                    <Button
-                      onClick={handleRegistration}
-                      variant="gradient"
-                      disabled={loading}
-                      rightIcon={<Check className="w-5 h-5" />}
-                    >
-                      {loading ? "Creating Account..." : "Create Free Account"}
-                    </Button>
-                  ) : (
-                    <Button
-                      onClick={handleNext}
-                      variant="gradient"
-                      rightIcon={<ArrowRight className="w-5 h-5" />}
-                      disabled={loading}
-                    >
-                      {loading ? "Checking..." : "Continue"}
-                    </Button>
-                  )}
+                  <Button
+                    onClick={handleNext}
+                    variant="gradient"
+                    rightIcon={<ArrowRight className="w-5 h-5" />}
+                    disabled={loading}
+                  >
+                    {loading ? "Checking..." : "Continue"}
+                  </Button>
                 </div>
               </motion.div>
             )}
