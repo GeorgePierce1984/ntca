@@ -1,6 +1,4 @@
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { prisma } from "../_utils/prisma.js";
 
 export default async function handler(req, res) {
   // Security: Only allow POST requests
@@ -9,17 +7,29 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method Not Allowed" });
   }
 
-  const { email, confirm } = req.body || {};
+  // Security: require an admin token header (set as Vercel env var ADMIN_DELETE_TOKEN)
+  const adminToken = req.headers["x-admin-token"];
+  if (!process.env.ADMIN_DELETE_TOKEN) {
+    return res.status(500).json({
+      error: "Server misconfigured: ADMIN_DELETE_TOKEN is not set",
+    });
+  }
+  if (!adminToken || adminToken !== process.env.ADMIN_DELETE_TOKEN) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  const { email, confirm, dryRun } = req.body || {};
 
   if (!email || typeof email !== "string") {
     return res.status(400).json({ error: "Email is required" });
   }
 
-  // Security: Require confirmation
-  if (confirm !== "DELETE_ALL_ACCOUNTS") {
+  // Security: Require email-scoped confirmation
+  const requiredConfirm = `DELETE:${email}`;
+  if (confirm !== requiredConfirm) {
     return res.status(400).json({
       error:
-        "Confirmation required. Send { email: \"user@example.com\", confirm: 'DELETE_ALL_ACCOUNTS' } to proceed.",
+        `Confirmation required. Send { email: "user@example.com", confirm: "${requiredConfirm}" } to proceed.`,
     });
   }
 
@@ -120,6 +130,23 @@ export default async function handler(req, res) {
     console.log(`    - Conversations: ${totalConversations}`);
     console.log(`    - Messages: ${totalMessages}`);
     console.log(`    - Activity Logs: ${activityLogs.length}`);
+
+    if (dryRun === true) {
+      return res.status(200).json({
+        success: true,
+        dryRun: true,
+        message: `Dry run: would delete ${users.length} account(s) and related data`,
+        deleted: {
+          users: users.length,
+          jobs: totalJobs,
+          applications: totalApplications,
+          savedJobs: totalSavedJobs,
+          conversations: totalConversations,
+          messages: totalMessages,
+          activityLogs: activityLogs.length,
+        },
+      });
+    }
 
     // Delete in transaction to ensure data integrity
     await prisma.$transaction(async (tx) => {
