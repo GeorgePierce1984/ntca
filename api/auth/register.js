@@ -70,11 +70,7 @@ export default async function handler(req, res) {
       const requiredFields = [
         "firstName",
         "lastName",
-        "phone",
-        "city",
         "country",
-        "qualification",
-        "experience",
       ];
       const missingFields = requiredFields.filter(
         (field) => !profileData[field],
@@ -161,15 +157,17 @@ export default async function handler(req, res) {
           userId: user.id,
           firstName: profileData.firstName,
           lastName: profileData.lastName,
-          phone: profileData.phone,
+          // Keep registration lightweight; remaining fields can be completed later in Profile.
+          // NOTE: Some DB columns are non-null; we store empty strings as placeholders.
+          phone: profileData.phone || "",
           phoneCountryCode: profileData.phoneCountryCode || "+1",
           streetAddress: profileData.streetAddress || null,
-          city: profileData.city,
+          city: profileData.city || "",
           state: profileData.state || null,
           postalCode: profileData.postalCode || null,
           country: profileData.country,
-          qualification: profileData.qualification,
-          experience: profileData.experience,
+          qualification: profileData.qualification || "",
+          experience: profileData.experience || "",
           bio: profileData.bio || null,
           dateOfBirth: profileData.dateOfBirth
             ? new Date(profileData.dateOfBirth)

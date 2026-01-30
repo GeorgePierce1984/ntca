@@ -456,11 +456,8 @@ export const SignUpPage: React.FC = () => {
         const tf = form as TeacherForm;
         if (!tf.firstName) newErrors.firstName = "First name is required";
         if (!tf.lastName) newErrors.lastName = "Last name is required";
-        if (!tf.city) newErrors.city = "City is required";
+        // Keep teacher signup streamlined: collect core info now, complete the rest in Profile
         if (!tf.country) newErrors.country = "Country is required";
-        if (!tf.qualification)
-          newErrors.qualification = "Qualification is required";
-        if (!tf.experience) newErrors.experience = "Experience is required";
       }
 
       // Terms acceptance (mandatory)
@@ -1585,34 +1582,49 @@ export const SignUpPage: React.FC = () => {
                       <div className="grid md:grid-cols-2 gap-6">
                         <div>
                           <label className="block text-sm font-medium mb-2">
-                            Phone Country
+                            Country *
                           </label>
                           <CountrySelector
-                            selectedCountry={selectedPhoneCountry}
-                            onSelect={handlePhoneCountrySelect}
-                            showPhoneCode={true}
+                            selectedCountry={selectedCountry}
+                            onSelect={handleCountrySelect}
                             placeholder="Search countries..."
+                            className={errors.country ? "border-red-500" : ""}
                           />
+                          {errors.country && (
+                            <p className="text-red-500 text-sm mt-1">
+                              {errors.country}
+                            </p>
+                          )}
                         </div>
 
                         <div>
                           <label className="block text-sm font-medium mb-2">
-                            Phone Number
+                            Phone (optional)
                           </label>
-                          <div className="relative">
-                            <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 w-5 h-5" />
-                            <input
-                              type="tel"
-                              value={teacherForm.phone}
-                              onChange={(e) =>
-                                setTeacherForm({
-                                  ...teacherForm,
-                                  phone: e.target.value,
-                                })
-                              }
-                              className={`input pl-10 ${errors.phone ? "border-red-500" : ""}`}
-                              placeholder="Phone number"
-                            />
+                          <div className="flex gap-3">
+                            <div className="min-w-[210px]">
+                              <CountrySelector
+                                selectedCountry={selectedPhoneCountry}
+                                onSelect={handlePhoneCountrySelect}
+                                showPhoneCode={true}
+                                placeholder="Country code..."
+                              />
+                            </div>
+                            <div className="flex-1 relative">
+                              <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 w-5 h-5" />
+                              <input
+                                type="tel"
+                                value={teacherForm.phone}
+                                onChange={(e) =>
+                                  setTeacherForm({
+                                    ...teacherForm,
+                                    phone: e.target.value,
+                                  })
+                                }
+                                className={`input pl-10 ${errors.phone ? "border-red-500" : ""}`}
+                                placeholder="Phone number"
+                              />
+                            </div>
                           </div>
                           {errors.phone && (
                             <p className="text-red-500 text-sm mt-1">
@@ -1622,195 +1634,8 @@ export const SignUpPage: React.FC = () => {
                         </div>
                       </div>
 
-                      <div>
-                        <label className="block text-sm font-medium mb-2">
-                          Street Address
-                        </label>
-                        <div className="relative">
-                          <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 w-5 h-5" />
-                          <input
-                            type="text"
-                            value={teacherForm.streetAddress}
-                            onChange={(e) =>
-                              setTeacherForm({
-                                ...teacherForm,
-                                streetAddress: e.target.value,
-                              })
-                            }
-                            className="input pl-10"
-                            placeholder="Street address"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="grid md:grid-cols-3 gap-6">
-                        <div>
-                          <label className="block text-sm font-medium mb-2">
-                            City *
-                          </label>
-                          <input
-                            type="text"
-                            value={teacherForm.city}
-                            onChange={(e) =>
-                              setTeacherForm({
-                                ...teacherForm,
-                                city: e.target.value,
-                              })
-                            }
-                            className={`input ${errors.city ? "border-red-500" : ""}`}
-                            placeholder="City"
-                          />
-                          {errors.city && (
-                            <p className="text-red-500 text-sm mt-1">
-                              {errors.city}
-                            </p>
-                          )}
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium mb-2">
-                            State/Province
-                          </label>
-                          <input
-                            type="text"
-                            value={teacherForm.state}
-                            onChange={(e) =>
-                              setTeacherForm({
-                                ...teacherForm,
-                                state: e.target.value,
-                              })
-                            }
-                            className="input"
-                            placeholder="State or province"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium mb-2">
-                            Postal / ZIP Code{" "}
-                            <span className="text-sm font-normal text-neutral-500">
-                              (Optional)
-                            </span>
-                          </label>
-                          <input
-                            type="text"
-                            value={teacherForm.postalCode}
-                            onChange={(e) =>
-                              setTeacherForm({
-                                ...teacherForm,
-                                postalCode: e.target.value,
-                              })
-                            }
-                            className="input"
-                            placeholder="e.g., 12345, SW1A 1AA"
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium mb-2">
-                          Country *
-                        </label>
-                        <CountrySelector
-                          selectedCountry={selectedCountry}
-                          onSelect={handleCountrySelect}
-                          placeholder="Search countries..."
-                          className={errors.country ? "border-red-500" : ""}
-                        />
-                        {errors.country && (
-                          <p className="text-red-500 text-sm mt-1">
-                            {errors.country}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="grid md:grid-cols-2 gap-6">
-                        <div>
-                          <label className="block text-sm font-medium mb-2">
-                            Qualification *
-                          </label>
-                          <select
-                            value={teacherForm.qualification}
-                            onChange={(e) =>
-                              setTeacherForm({
-                                ...teacherForm,
-                                qualification: e.target.value,
-                              })
-                            }
-                            className={`input ${errors.qualification ? "border-red-500" : ""}`}
-                          >
-                            <option value="">Select qualification</option>
-                            <option value="Bachelor's Degree">
-                              Bachelor's Degree
-                            </option>
-                            <option value="Master's Degree">
-                              Master's Degree
-                            </option>
-                            <option value="PhD">PhD</option>
-                            <option value="Teaching Certificate">
-                              Teaching Certificate
-                            </option>
-                            <option value="TESOL/TEFL">TESOL/TEFL</option>
-                            <option value="Other">Other</option>
-                          </select>
-                          {errors.qualification && (
-                            <p className="text-red-500 text-sm mt-1">
-                              {errors.qualification}
-                            </p>
-                          )}
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium mb-2">
-                            Experience *
-                          </label>
-                          <select
-                            value={teacherForm.experience}
-                            onChange={(e) =>
-                              setTeacherForm({
-                                ...teacherForm,
-                                experience: e.target.value,
-                              })
-                            }
-                            className={`input ${errors.experience ? "border-red-500" : ""}`}
-                          >
-                            <option value="">Select experience</option>
-                            <option value="Entry Level">
-                              Entry Level (0-1 years)
-                            </option>
-                            <option value="Junior Level">
-                              Junior Level (2-5 years)
-                            </option>
-                            <option value="Mid Level">
-                              Mid Level (6-10 years)
-                            </option>
-                            <option value="Senior Level">
-                              Senior Level (11+ years)
-                            </option>
-                          </select>
-                          {errors.experience && (
-                            <p className="text-red-500 text-sm mt-1">
-                              {errors.experience}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium mb-2">
-                          Bio
-                        </label>
-                        <textarea
-                          value={teacherForm.bio}
-                          onChange={(e) =>
-                            setTeacherForm({
-                              ...teacherForm,
-                              bio: e.target.value,
-                            })
-                          }
-                          className="input min-h-[100px]"
-                          placeholder="Tell us about yourself and your teaching experience..."
-                        />
+                      <div className="p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/40 text-sm text-neutral-600 dark:text-neutral-300">
+                        After creating your account, you can complete your profile (qualifications, experience, CV, etc.) from your dashboard.
                       </div>
                     </>
                   )}
