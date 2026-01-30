@@ -24,21 +24,33 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "Email is required" });
   }
 
-  // Security: Require email-scoped confirmation
+  const normalizedEmail = email.trim();
+
+  // Security: Require email-scoped confirmation (accept legacy exact + normalized)
   const requiredConfirm = `DELETE:${email}`;
-  if (confirm !== requiredConfirm) {
+  const requiredConfirmNormalized = `DELETE:${normalizedEmail}`;
+  if (confirm !== requiredConfirm && confirm !== requiredConfirmNormalized) {
     return res.status(400).json({
       error:
-        `Confirmation required. Send { email: "user@example.com", confirm: "${requiredConfirm}" } to proceed.`,
+        `Confirmation required. Send { email: "user@example.com", confirm: "${requiredConfirmNormalized}" } to proceed.`,
     });
   }
 
   try {
-    console.log(`🔍 Searching for accounts with email: ${email}`);
+    console.log(`🔍 Searching for accounts with email: ${normalizedEmail}`);
 
-    // Find all users with this email
+    // Find users with case-insensitive + trim matching (handles accidental whitespace in DB)
+    const matchedIds = await prisma.$queryRaw`
+      SELECT "id"
+      FROM "users"
+      WHERE TRIM(LOWER("email")) = TRIM(LOWER(${normalizedEmail}))
+    `;
+    const ids = Array.isArray(matchedIds)
+      ? matchedIds.map((r) => r.id).filter(Boolean)
+      : [];
+
     const users = await prisma.user.findMany({
-      where: { email },
+      where: { id: { in: ids } },
       include: {
         school: {
           include: {
