@@ -10,10 +10,10 @@ export default async function handler(req, res) {
 
   const config = {
     resendApiKeyConfigured: !!process.env.RESEND_API_KEY && process.env.RESEND_API_KEY !== 'your-resend-api-key',
-    resendApiKeyLength: process.env.RESEND_API_KEY ? process.env.RESEND_API_KEY.length : 0,
-    resendApiKeyPrefix: process.env.RESEND_API_KEY ? process.env.RESEND_API_KEY.substring(0, 5) : 'none',
-    fromEmail: process.env.EMAIL_FROM_ADDRESS || 'onboarding@resend.dev',
-    fromName: process.env.EMAIL_FROM_NAME || 'NTCA Platform',
+    resendApiKeyLength: process.env.RESEND_API_KEY ? process.env.RESEND_API_KEY.trim().length : 0,
+    resendApiKeyPrefix: process.env.RESEND_API_KEY ? process.env.RESEND_API_KEY.trim().substring(0, 5) : 'none',
+    fromEmail: (process.env.EMAIL_FROM_ADDRESS || 'onboarding@resend.dev').trim(),
+    fromName: (process.env.EMAIL_FROM_NAME || 'NTCA Platform').trim(),
     nodeEnv: process.env.NODE_ENV || 'production',
   };
 

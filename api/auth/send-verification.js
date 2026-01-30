@@ -74,6 +74,15 @@ export default async function handler(req, res) {
       });
     }
 
+    // Log configuration before sending
+    console.log("Email configuration check:", {
+      hasResendKey: !!process.env.RESEND_API_KEY,
+      resendKeyPrefix: process.env.RESEND_API_KEY ? `${process.env.RESEND_API_KEY.substring(0, 5)}...` : 'undefined',
+      fromAddress: process.env.EMAIL_FROM_ADDRESS || 'onboarding@resend.dev (fallback)',
+      fromName: process.env.EMAIL_FROM_NAME || 'NTCA Platform (fallback)',
+      replyTo: process.env.EMAIL_REPLY_TO || 'onboarding@resend.dev (fallback)',
+    });
+
     // Send verification email
     const emailResult = await emailHelpers.sendVerificationEmail(email, verificationCode);
     
