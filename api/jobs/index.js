@@ -1,5 +1,10 @@
 import jwt from "jsonwebtoken";
 import { prisma } from "../_utils/prisma.js";
+import Stripe from "stripe";
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
+  apiVersion: "2023-10-16",
+});
 
 // Helper function to retry database operations with exponential backoff
 async function retryOperation(operation, maxRetries = 3, delay = 1000) {
@@ -138,28 +143,163 @@ export default async function handler(req, res) {
         return res.status(404).json({ error: "School profile not found" });
       }
 
-      // Check subscription status before allowing job posting
-      const subscriptionStatus = school.subscriptionStatus?.toLowerCase();
-      if (subscriptionStatus === "cancelled" || subscriptionStatus === "past_due") {
+      // --- Subscription gating & job posting limits ---
+      // Intended rules:
+      // - No subscription: max 1 job EVER (lifetime). They can upgrade later to post more.
+      // - Basic: max 5 job postings per billing period (month/year based on Stripe subscription)
+      // - Standard: max 25 job postings per billing period
+      // - Premium: unlimited
+      //
+      // We enforce this server-side using ActivityLog entries so deletion cannot bypass limits.
+      const subscriptionStatus = (school.subscriptionStatus || "").toLowerCase();
+
+      // If they have a subscription record but it's not in good standing, block (must renew)
+      if (
+        school.subscriptionId &&
+        (subscriptionStatus === "cancelled" || subscriptionStatus === "past_due")
+      ) {
         return res.status(403).json({
           error: "Subscription expired",
-          message: subscriptionStatus === "cancelled"
-            ? "Your subscription has expired. Please renew your subscription to post new jobs."
-            : "Your payment is past due. Please update your payment method to continue posting jobs.",
+          code: "SUBSCRIPTION_EXPIRED",
+          message:
+            subscriptionStatus === "cancelled"
+              ? "Your subscription has expired. Please renew your subscription to post new jobs."
+              : "Your payment is past due. Please update your payment method to continue posting jobs.",
           subscriptionStatus: school.subscriptionStatus,
           subscriptionEndDate: school.subscriptionEndDate,
           redirectUrl: "/schools/subscription",
         });
       }
 
-      // Check if subscription is active
-      if (subscriptionStatus !== "active" && !req.body.status === 'DRAFT') {
+      // Helper to return a consistent upgrade response
+      const denyForLimit = ({
+        message,
+        planName,
+        limit,
+        used,
+        periodStart,
+        periodEnd,
+      }) => {
         return res.status(403).json({
-          error: "Active subscription required",
-          message: "An active subscription is required to post jobs. Please subscribe or renew your subscription.",
-          subscriptionStatus: school.subscriptionStatus,
-          redirectUrl: "/pricing",
+          error: "Job posting limit reached",
+          code: "JOB_LIMIT_REACHED",
+          message,
+          planName: planName || null,
+          limit: typeof limit === "number" ? limit : null,
+          used: typeof used === "number" ? used : null,
+          periodStart: periodStart ? periodStart.toISOString() : null,
+          periodEnd: periodEnd ? periodEnd.toISOString() : null,
+          redirectUrl: "/schools/subscription",
         });
+      };
+
+      // FREE / no active subscription
+      if (!school.subscriptionId || subscriptionStatus !== "active") {
+        const lifetimeUsed = await retryOperation(async () => {
+          return await prisma.activityLog.count({
+            where: {
+              userId: decoded.userId,
+              action: "JOB_CREATED",
+            },
+          });
+        });
+
+        if (lifetimeUsed >= 1) {
+          return denyForLimit({
+            message:
+              "Free accounts can post 1 job total. Upgrade your subscription to post more jobs and unlock premium features.",
+            planName: "Free",
+            limit: 1,
+            used: lifetimeUsed,
+          });
+        }
+      } else {
+        // Active subscription: enforce per-billing-period limits using Stripe's rolling window
+        if (!process.env.STRIPE_SECRET_KEY) {
+          return res.status(500).json({
+            error: "Server misconfigured: STRIPE_SECRET_KEY is not set",
+          });
+        }
+
+        let stripeSubscription;
+        try {
+          stripeSubscription = await stripe.subscriptions.retrieve(
+            school.subscriptionId,
+            { expand: ["items.data.price.product"] },
+          );
+        } catch (e) {
+          console.error("Failed to retrieve Stripe subscription:", e);
+          return res.status(503).json({
+            error: "Unable to verify subscription details. Please try again.",
+            code: "SUBSCRIPTION_LOOKUP_FAILED",
+            redirectUrl: "/schools/subscription",
+          });
+        }
+
+        const price = stripeSubscription?.items?.data?.[0]?.price;
+        const nickname = (price?.nickname || price?.product?.name || "").toString();
+        const jobLimitMeta = price?.metadata?.jobLimit;
+
+        const nicknameLower = nickname.toLowerCase();
+        let planName = nickname || "Subscription";
+        let periodLimit = null; // null means unlimited
+
+        // Prefer Stripe price metadata.jobLimit if present
+        if (typeof jobLimitMeta === "string" && jobLimitMeta.trim()) {
+          if (jobLimitMeta.toLowerCase() === "unlimited") {
+            periodLimit = null;
+          } else {
+            const parsed = parseInt(jobLimitMeta, 10);
+            if (!isNaN(parsed) && parsed >= 0) {
+              periodLimit = parsed;
+            }
+          }
+        } else if (nicknameLower.includes("basic")) {
+          periodLimit = 5;
+          planName = "Basic";
+        } else if (nicknameLower.includes("standard")) {
+          periodLimit = 25;
+          planName = "Standard";
+        } else if (nicknameLower.includes("premium")) {
+          periodLimit = null;
+          planName = "Premium";
+        }
+
+        // If we still can't determine a limit, fail closed (ask user to contact support/upgrade)
+        if (periodLimit === null && !nicknameLower.includes("premium") && jobLimitMeta !== "Unlimited") {
+          // null may also mean "unknown" in this branch; guard above didn’t classify
+          // If jobLimitMeta is absent and nickname doesn't match known tiers, treat as standard safe default (25)
+          periodLimit = 25;
+        }
+
+        const periodStart = new Date(stripeSubscription.current_period_start * 1000);
+        const periodEnd = new Date(stripeSubscription.current_period_end * 1000);
+
+        if (typeof periodLimit === "number") {
+          const usedInPeriod = await retryOperation(async () => {
+            return await prisma.activityLog.count({
+              where: {
+                userId: decoded.userId,
+                action: "JOB_CREATED",
+                createdAt: {
+                  gte: periodStart,
+                  lt: periodEnd,
+                },
+              },
+            });
+          });
+
+          if (usedInPeriod >= periodLimit) {
+            return denyForLimit({
+              message: `You've reached your ${planName} plan job posting limit (${periodLimit} per billing period). Please upgrade your subscription to post more jobs.`,
+              planName,
+              limit: periodLimit,
+              used: usedInPeriod,
+              periodStart,
+              periodEnd,
+            });
+          }
+        }
       }
 
       // Check if school profile is complete before allowing job posting

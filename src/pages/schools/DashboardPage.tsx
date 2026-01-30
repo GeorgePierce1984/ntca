@@ -861,21 +861,6 @@ export const SchoolDashboardPage: React.FC = () => {
   const handleJobSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Check job limit for non-subscribed schools (max 1 job TOTAL, not just active)
-    // Note: Editing is already blocked in openEditModal, so selectedJobForEdit should never be set for non-subscribed schools
-    if (!canAccessPremiumFeatures(subscriptionStatus, subscriptionLoading)) {
-      if (jobs.length >= 1 && !selectedJobForEdit) {
-        toast.error("Free accounts can post up to 1 job. Subscribe to post unlimited jobs and access premium features.", {
-          duration: 6000,
-          icon: "🔒",
-        });
-        // Open the choose plan modal
-        setShowPostJobModal(false);
-        setShowChoosePlanModal(true);
-        return;
-      }
-    }
-    
     // Prevent duplicate submissions
     if (isSubmitting) {
       return;
@@ -1044,8 +1029,33 @@ export const SchoolDashboardPage: React.FC = () => {
       } else {
         const error = await response.json();
         
+        // Handle job posting limit reached (Free/Basic/Standard)
+        if (response.status === 403 && error?.code === "JOB_LIMIT_REACHED") {
+          toast.error(
+            <div>
+              <p className="font-medium">Job limit reached</p>
+              <p className="text-sm mt-1">{error.message}</p>
+              <button
+                onClick={() => {
+                  setShowPostJobModal(false);
+                  setShowChoosePlanModal(true);
+                }}
+                className="text-primary-600 hover:text-primary-700 underline text-sm mt-2 block"
+              >
+                Upgrade Subscription →
+              </button>
+            </div>,
+            { duration: 8000 },
+          );
+          return;
+        }
+        
         // Handle subscription expired error
-        if (error.error === "Subscription expired" || error.error === "Active subscription required") {
+        if (
+          error.error === "Subscription expired" ||
+          error.error === "Active subscription required" ||
+          error?.code === "SUBSCRIPTION_EXPIRED"
+        ) {
           toast.error(
             <div>
               <p className="font-medium">{error.error}</p>

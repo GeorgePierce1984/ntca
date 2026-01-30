@@ -379,7 +379,44 @@ export const SchoolProfilePage: React.FC<{ embedded?: boolean }> = ({
         setShowPostJobModal(false);
         setSelectedJobForEdit(null);
       } else {
-        const error = await response.json();
+        const error = await response.json().catch(() => ({}));
+
+        if (response.status === 403 && error?.code === "JOB_LIMIT_REACHED") {
+          toast.error(
+            <div>
+              <p className="font-medium">Job limit reached</p>
+              <p className="text-sm mt-1">{error.message}</p>
+              <button
+                onClick={() => (window.location.href = error.redirectUrl || "/schools/subscription")}
+                className="text-primary-600 hover:text-primary-700 underline text-sm mt-2 block"
+              >
+                Upgrade Subscription →
+              </button>
+            </div>,
+            { duration: 8000 },
+          );
+          setShowPostJobModal(false);
+          return;
+        }
+
+        if (response.status === 403 && error?.code === "SUBSCRIPTION_EXPIRED") {
+          toast.error(
+            <div>
+              <p className="font-medium">Subscription expired</p>
+              <p className="text-sm mt-1">{error.message}</p>
+              <button
+                onClick={() => (window.location.href = error.redirectUrl || "/schools/subscription")}
+                className="text-primary-600 hover:text-primary-700 underline text-sm mt-2 block"
+              >
+                Renew / Upgrade →
+              </button>
+            </div>,
+            { duration: 8000 },
+          );
+          setShowPostJobModal(false);
+          return;
+        }
+
         // Suppress "Missing required fields" toast
         if (error.error && typeof error.error === 'string' && error.error.toLowerCase().includes('missing required fields')) {
           // Do nothing, suppress the toast
