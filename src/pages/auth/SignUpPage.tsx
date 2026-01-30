@@ -594,10 +594,13 @@ export const SignUpPage: React.FC = () => {
           );
           // Still allow them to use the code for testing
         } else {
-          toast.success("Verification code sent to your email!", {
-            icon: "📧",
-            duration: 3000,
-          });
+          toast.success(
+            "Verification code sent to your email! Please check your inbox and spam folder.",
+            {
+              icon: "📧",
+              duration: 5000,
+            }
+          );
         }
       } else {
         setErrors({ verification: data.error || "Failed to send verification code" });

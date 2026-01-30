@@ -48,6 +48,7 @@ coverage/
 tmp/
 temp/
 .vercel
+.admin-token
 
 /generated/prisma
 

@@ -51,11 +51,43 @@ export default async function handler(req, res) {
       // For now, return the code (in production, only send via email)
     }
 
+    // Check if RESEND_API_KEY is configured before attempting to send
+    if (!process.env.RESEND_API_KEY || process.env.RESEND_API_KEY === 'your-resend-api-key') {
+      console.error("RESEND_API_KEY not configured - email cannot be sent");
+      console.error("Configuration check:", {
+        hasKey: !!process.env.RESEND_API_KEY,
+        keyValue: process.env.RESEND_API_KEY ? `${process.env.RESEND_API_KEY.substring(0, 5)}...` : 'undefined',
+      });
+      
+      return res.status(200).json({
+        success: true,
+        message: "Verification code generated (email sending failed - RESEND_API_KEY not configured)",
+        code: verificationCode,
+        expiresAt: codeExpiry.toISOString(),
+        emailSent: false,
+        emailError: "RESEND_API_KEY not configured in Vercel environment variables",
+        diagnostic: {
+          issue: "Email service not configured",
+          action: "Add RESEND_API_KEY to Vercel environment variables and redeploy",
+          checkEndpoint: "/api/email/check-config",
+        },
+      });
+    }
+
     // Send verification email
     const emailResult = await emailHelpers.sendVerificationEmail(email, verificationCode);
     
     if (!emailResult.success) {
       console.error("Error sending verification email:", emailResult.error);
+      console.error("Email details:", {
+        email,
+        fromDomain: process.env.EMAIL_FROM_ADDRESS || 'onboarding@resend.dev',
+        resendError: emailResult.error,
+        errorCode: emailResult.errorCode,
+        errorStatus: emailResult.errorStatus,
+        timestamp: new Date().toISOString(),
+      });
+      
       // Still return the code for development/testing, but warn the user
       // In production, you might want to fail here if email is critical
       return res.status(200).json({
@@ -65,8 +97,34 @@ export default async function handler(req, res) {
         expiresAt: codeExpiry.toISOString(),
         emailSent: false,
         emailError: emailResult.error,
+        diagnostic: {
+          fromDomain: process.env.EMAIL_FROM_ADDRESS || 'onboarding@resend.dev',
+          issue: process.env.EMAIL_FROM_ADDRESS === 'onboarding@resend.dev' || !process.env.EMAIL_FROM_ADDRESS
+            ? 'CRITICAL: Using Resend test domain - can ONLY send to account owner! Verify a custom domain in Resend and set EMAIL_FROM_ADDRESS environment variable.'
+            : 'Email sending failed. Check Resend dashboard for delivery status and error details.',
+          recommendations: process.env.EMAIL_FROM_ADDRESS === 'onboarding@resend.dev' || !process.env.EMAIL_FROM_ADDRESS
+            ? [
+                '⚠️ Verify your domain in Resend (see VERIFY_RESEND_DOMAIN.md)',
+                'Set EMAIL_FROM_ADDRESS environment variable to use verified domain (e.g., noreply@nt-ca.com)',
+                'Redeploy after updating environment variables',
+              ]
+            : [
+                'Check Resend dashboard for delivery status',
+                'Check spam/junk folder',
+                'Verify domain is still verified in Resend',
+                'Contact support if issue persists',
+              ],
+        },
       });
     }
+
+    // Log successful send for debugging
+    console.log("Verification email sent successfully:", {
+      email,
+      messageId: emailResult.messageId,
+      fromDomain: process.env.EMAIL_FROM_ADDRESS || 'onboarding@resend.dev',
+      timestamp: new Date().toISOString(),
+    });
 
     // Store verification code in session (for new users who don't exist in DB yet)
     // We'll return it to be stored in sessionStorage on frontend
