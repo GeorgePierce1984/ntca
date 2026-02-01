@@ -9,6 +9,7 @@ import {
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { getSchoolPlansWithPriceIds } from "@/data/schoolPricingPlans";
 
 interface SchoolPlan {
   name: string;
@@ -38,55 +39,16 @@ interface ChoosePlanModalProps {
   isReturningFromPayment?: boolean;
 }
 
-const defaultPlans: SchoolPlan[] = [
-  {
-    name: "Starter",
-    priceMonthly: 49,
-    priceAnnual: 470,
-    jobLimit: "5 job postings",
-    features: [
-      "Up to 5 active job postings",
-      "Basic applicant management",
-      "Email notifications",
-      "Standard support",
-    ],
-    priceIdMonthly: import.meta.env.VITE_STRIPE_BASIC_MONTHLY_USD?.trim(),
-    priceIdAnnual: import.meta.env.VITE_STRIPE_BASIC_ANNUAL_USD?.trim(),
-  },
-  {
-    name: "Professional",
-    priceMonthly: 99,
-    priceAnnual: 950,
-    jobLimit: "15 job postings",
-    features: [
-      "Up to 15 active job postings",
-      "Advanced applicant filtering",
-      "Interview scheduling",
-      "Analytics dashboard",
-      "Priority support",
-      "Custom branding",
-    ],
-    priceIdMonthly: import.meta.env.VITE_STRIPE_STANDARD_MONTHLY_USD?.trim(),
-    priceIdAnnual: import.meta.env.VITE_STRIPE_STANDARD_ANNUAL_USD?.trim(),
-    popular: true,
-  },
-  {
-    name: "Enterprise",
-    priceMonthly: 199,
-    priceAnnual: 1910,
-    jobLimit: "Unlimited postings",
-    features: [
-      "Unlimited job postings",
-      "Advanced analytics",
-      "API access",
-      "Dedicated account manager",
-      "Custom integrations",
-      "White-label solution",
-    ],
-    priceIdMonthly: import.meta.env.VITE_STRIPE_PREMIUM_MONTHLY_USD?.trim(),
-    priceIdAnnual: import.meta.env.VITE_STRIPE_PREMIUM_ANNUAL_USD?.trim(),
-  },
-];
+const defaultPlans: SchoolPlan[] = getSchoolPlansWithPriceIds().map((p) => ({
+  name: p.name,
+  priceMonthly: p.priceMonthly,
+  priceAnnual: p.priceAnnual,
+  jobLimit: p.jobLimit,
+  features: p.features,
+  popular: p.popular,
+  priceIdMonthly: (p as any).priceIdMonthly,
+  priceIdAnnual: (p as any).priceIdAnnual,
+}));
 
 export const ChoosePlanModal: React.FC<ChoosePlanModalProps> = ({
   isOpen,

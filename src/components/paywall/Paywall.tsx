@@ -117,6 +117,9 @@ export const Paywall: React.FC<PaywallProps> = ({
                 billingType,
                 formData: {
                   email: userEmail,
+                  // User already accepted terms when creating their account.
+                  // create-checkout-session requires this flag, so we pass it through for upgrades.
+                  termsAccepted: true,
                 },
                 successUrl: `${window.location.origin}/schools/dashboard?session_id={CHECKOUT_SESSION_ID}`,
                 cancelUrl: window.location.href, // Return to current page

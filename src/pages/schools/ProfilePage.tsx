@@ -1810,6 +1810,7 @@ export const SchoolProfilePage: React.FC<{ embedded?: boolean }> = ({
                 billingType,
                 formData: {
                   email: userEmail,
+                  termsAccepted: true,
                 },
                 successUrl: `${window.location.origin}/schools/dashboard?session_id={CHECKOUT_SESSION_ID}`,
                 cancelUrl: `${window.location.origin}/schools/profile`,

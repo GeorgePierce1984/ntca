@@ -531,31 +531,26 @@ export const SchoolDashboardPage: React.FC = () => {
         // Show modal if:
         // 1. User just activated (always show for new accounts, regardless of completion % or dismissed flag), OR
         // 2. Modal hasn't been dismissed AND completion < 100%
-        // For newly activated accounts, clear the dismissed flag to ensure modal shows
-        if (justActivated && completionDismissed) {
-          console.log("Newly activated account - clearing dismissed flag");
-          sessionStorage.removeItem("profileCompletionModalDismissed");
-        }
-        
         const shouldShowModal = data.school && (
           justActivated || // Always show for newly activated accounts (regardless of dismissed flag)
           (!completionDismissed && completionPercentage < 100) // Or show if not dismissed and incomplete
         );
         
-        if (shouldShowModal) {
+        if (shouldShowModal && !showProfileCompletionModal) {
           console.log("Setting up modal display...");
           // Ensure fullSchoolData is set first
           setFullSchoolData(data.school);
+
+          // Clear justActivated immediately to avoid re-opening loops after saves/refreshes
+          if (justActivated) {
+            sessionStorage.removeItem("justActivated");
+          }
           
           // Use requestAnimationFrame to ensure DOM is ready, then setTimeout for state updates
           requestAnimationFrame(() => {
             setTimeout(() => {
               setShowProfileCompletionModal(true);
               console.log("Profile completion modal should now be visible");
-              // Clear the justActivated flag after showing (but don't set dismissed yet)
-              if (justActivated) {
-                sessionStorage.removeItem("justActivated");
-              }
             }, 500); // Increased timeout to ensure all state is set
           });
         } else {
@@ -2258,6 +2253,7 @@ export const SchoolDashboardPage: React.FC = () => {
                 billingType,
                 formData: {
                   email: userEmail,
+                  termsAccepted: true,
                 },
                 successUrl: `${window.location.origin}/schools/dashboard?session_id={CHECKOUT_SESSION_ID}`,
                 cancelUrl: `${window.location.origin}/schools/dashboard`,
@@ -2428,6 +2424,7 @@ export const SchoolDashboardPage: React.FC = () => {
         onClose={() => {
           setShowProfileCompletionModal(false);
           sessionStorage.setItem("profileCompletionModalDismissed", "true");
+          sessionStorage.removeItem("justActivated");
         }}
         school={fullSchoolData}
         onUpdate={() => {
