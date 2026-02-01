@@ -101,11 +101,6 @@ export const SubscriptionPage: React.FC = () => {
   };
 
   const handleManageSubscription = async () => {
-    if (!user?.stripeCustomerId) {
-      toast.error("No subscription found");
-      return;
-    }
-
     setPortalLoading(true);
     try {
       const response = await fetch("/api/create-portal-session", {
@@ -115,12 +110,20 @@ export const SubscriptionPage: React.FC = () => {
           Authorization: `Bearer ${localStorage.getItem("authToken")}`,
         },
         body: JSON.stringify({
-          customerId: user.stripeCustomerId,
           returnUrl: `${window.location.origin}/schools/subscription`,
         }),
       });
 
       const data = await response.json();
+
+      if (!response.ok) {
+        if (data?.code === "NO_STRIPE_CUSTOMER") {
+          toast.error("No active subscription found yet. Please choose a plan to subscribe.");
+          navigate("/pricing");
+          return;
+        }
+        throw new Error(data?.error || "Failed to open subscription management");
+      }
 
       if (data.url) {
         window.location.href = data.url;
