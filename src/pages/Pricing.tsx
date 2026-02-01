@@ -14,9 +14,10 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { SCHOOL_PRICING_PLANS } from "@/data/schoolPricingPlans";
+import { getSchoolPlansWithPriceIds } from "@/data/schoolPricingPlans";
+import toast from "react-hot-toast";
 
-const plans = SCHOOL_PRICING_PLANS;
+const plans = getSchoolPlansWithPriceIds();
 
 const teacherFeatures = [
   {
@@ -42,6 +43,7 @@ const Pricing: React.FC = () => {
     "monthly",
   );
   const [showPlanInfo, setShowPlanInfo] = useState<string | null>(null);
+  const [checkoutLoadingPlan, setCheckoutLoadingPlan] = useState<string | null>(null);
   const navigate = useNavigate();
   const { user } = useAuth();
   
@@ -180,8 +182,92 @@ const Pricing: React.FC = () => {
                   ? plan.priceMonthly
                   : plan.priceAnnual;
 
-              const handleCheckout = () => {
-                navigate(`/schools/signup?plan=${plan.name.toLowerCase()}`);
+              const handleCheckout = async () => {
+                // If not logged in, take them to account setup (with plan preselected).
+                if (!user) {
+                  navigate(`/schools/signup?plan=${plan.name.toLowerCase()}`);
+                  return;
+                }
+
+                // Logged in but not a school (shouldn't usually see school pricing)
+                if (user.userType !== "SCHOOL") {
+                  toast.error("School subscription plans are only available to school accounts.");
+                  return;
+                }
+
+                const token = localStorage.getItem("authToken");
+                if (!token) {
+                  navigate("/login");
+                  return;
+                }
+
+                // If subscription already exists, take them to subscription management page
+                try {
+                  const subRes = await fetch("/api/subscription-details", {
+                    headers: {
+                      Authorization: `Bearer ${token}`,
+                    },
+                  });
+                  if (subRes.ok) {
+                    const subData = await subRes.json();
+                    if (subData?.subscriptionId) {
+                      navigate("/schools/subscription");
+                      return;
+                    }
+                  }
+                } catch {
+                  // If this fails, we still attempt checkout below.
+                }
+
+                // No subscription: start Stripe checkout for the selected plan
+                const billingType = billingCycle;
+                const priceId =
+                  billingType === "monthly" ? (plan as any).priceIdMonthly : (plan as any).priceIdAnnual;
+
+                if (!priceId) {
+                  toast.error("Pricing is not configured for this plan. Please contact support.");
+                  return;
+                }
+
+                setCheckoutLoadingPlan(plan.name);
+                try {
+                  const response = await fetch("/api/create-checkout-session", {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({
+                      priceId,
+                      userType: "school",
+                      planName: plan.name,
+                      billingType,
+                      formData: {
+                        email: user.email,
+                        termsAccepted: true,
+                      },
+                      successUrl: `${window.location.origin}/schools/subscription?session_id={CHECKOUT_SESSION_ID}`,
+                      cancelUrl: `${window.location.origin}/pricing`,
+                    }),
+                  });
+
+                  const data = await response.json();
+                  if (!response.ok) {
+                    throw new Error(data?.error || "Failed to create checkout session");
+                  }
+
+                  if (data?.url) {
+                    window.location.href = data.url;
+                    return;
+                  }
+
+                  throw new Error("Checkout URL not returned");
+                } catch (e) {
+                  console.error("Checkout error:", e);
+                  toast.error(e instanceof Error ? e.message : "Failed to start checkout");
+                } finally {
+                  setCheckoutLoadingPlan(null);
+                }
               };
 
               return (
@@ -230,9 +316,10 @@ const Pricing: React.FC = () => {
                   </ul>
                   <button
                     onClick={handleCheckout}
-                    className={`w-full ${plan.popular ? "btn-primary" : "btn-secondary"}`}
+                    disabled={checkoutLoadingPlan === plan.name}
+                    className={`w-full ${plan.popular ? "btn-primary" : "btn-secondary"} ${checkoutLoadingPlan === plan.name ? "opacity-60 cursor-not-allowed" : ""}`}
                   >
-                    Get Started
+                    {checkoutLoadingPlan === plan.name ? "Opening..." : "Get Started"}
                   </button>
                 </div>
               );
