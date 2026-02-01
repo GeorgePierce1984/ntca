@@ -26,8 +26,8 @@ export const SCHOOL_PRICING_PLANS: SchoolPlan[] = [
   },
   {
     name: "Standard",
-    priceMonthly: 109,
-    priceAnnual: Math.round(109 * 12 * 0.83), // 17% discount
+    priceMonthly: 119,
+    priceAnnual: 1259,
     jobLimit: "25 jobs / mo",
     features: [
       "25 job postings per month",
@@ -43,8 +43,8 @@ export const SCHOOL_PRICING_PLANS: SchoolPlan[] = [
   },
   {
     name: "Premium",
-    priceMonthly: 199,
-    priceAnnual: Math.round(199 * 12 * 0.83), // 17% discount
+    priceMonthly: 299,
+    priceAnnual: 3159,
     jobLimit: "Unlimited",
     features: [
       "Unlimited job postings",

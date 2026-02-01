@@ -355,8 +355,8 @@ export const SignUpPage: React.FC = () => {
     },
     {
       name: "Standard",
-      priceMonthly: 109,
-      priceAnnual: Math.round(109 * 12 * 0.83),
+      priceMonthly: 119,
+      priceAnnual: 1259,
       jobLimit: "25 jobs / mo",
       features: [
         "25 job postings per month",
@@ -372,8 +372,8 @@ export const SignUpPage: React.FC = () => {
     },
     {
       name: "Premium",
-      priceMonthly: 199,
-      priceAnnual: Math.round(199 * 12 * 0.83),
+      priceMonthly: 299,
+      priceAnnual: 3159,
       jobLimit: "Unlimited",
       features: [
         "Unlimited job postings",
