@@ -185,7 +185,7 @@ const Pricing: React.FC = () => {
               const handleCheckout = async () => {
                 // If not logged in, take them to account setup (with plan preselected).
                 if (!user) {
-                  navigate(`/schools/signup?plan=${plan.name.toLowerCase()}`);
+                  navigate(`/signup?type=school&plan=${plan.name.toLowerCase()}`);
                   return;
                 }
 

@@ -24,7 +24,7 @@ import Pricing from "@/pages/Pricing";
 import { FAQsPage } from "@/pages/FAQsPage";
 import Jobs from "@/pages/Jobs";
 import JobDetail from "@/pages/jobs/JobDetail";
-import SchoolSignupPage from "@/pages/schools/SignupPage";
+import SignupRedirectPage from "@/pages/schools/SignupRedirectPage";
 import { SchoolDashboardPage } from "@/pages/schools/DashboardPage";
 import SchoolDashboard from "@/pages/schools/SchoolDashboard";
 
@@ -170,7 +170,7 @@ function AppContent() {
           {/* Auth routes */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignUpPage />} />
-          <Route path="/schools/signup" element={<SchoolSignupPage />} />
+          <Route path="/schools/signup" element={<SignupRedirectPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
 

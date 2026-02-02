@@ -284,6 +284,14 @@ export const SignUpPage: React.FC = () => {
       setVerificationCodeSent(false);
       setStoredVerificationCode(null);
       setVerificationCodeExpiry(null);
+
+      // Support direct-entry URLs (e.g. from pricing) to match the modal flow:
+      // `/signup?type=school` should skip the type picker and open the school form.
+      const directType = (urlParams.get("type") || urlParams.get("userType") || "").toLowerCase();
+      if (directType === "school" || directType === "teacher") {
+        setUserType(directType as UserType);
+        setCurrentStep(2);
+      }
     }
   }, [isReturningFromPayment]);
 
