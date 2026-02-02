@@ -6,6 +6,7 @@ import { CENTRAL_ASIA_COUNTRIES, SCHOOL_TYPES } from "@/constants/options";
 import { CountrySelector } from "@/components/forms/CountrySelector";
 import { type Country, getCountryByName } from "@/data/countries";
 import { TermsModal } from "@/components/modals/TermsModal";
+import { getSchoolPlansWithPriceIds } from "@/data/schoolPricingPlans";
 
 interface SchoolForm {
   name: string;
@@ -33,27 +34,6 @@ const initialForm: SchoolForm = {
   postalCode: "",
 };
 
-const planEnvMap: Record<
-  string,
-  { monthly: string; annual: string; price: number }
-> = {
-  basic: {
-    monthly: import.meta.env.VITE_STRIPE_BASIC_MONTHLY_USD as string,
-    annual: import.meta.env.VITE_STRIPE_BASIC_ANNUAL_USD as string,
-    price: 49,
-  },
-  standard: {
-    monthly: import.meta.env.VITE_STRIPE_STANDARD_MONTHLY_USD as string,
-    annual: import.meta.env.VITE_STRIPE_STANDARD_ANNUAL_USD as string,
-    price: 109,
-  },
-  premium: {
-    monthly: import.meta.env.VITE_STRIPE_PREMIUM_MONTHLY_USD as string,
-    annual: import.meta.env.VITE_STRIPE_PREMIUM_ANNUAL_USD as string,
-    price: 199,
-  },
-};
-
 const SignupPage: React.FC = () => {
   const [params] = useSearchParams();
   const navigate = useNavigate();
@@ -69,7 +49,14 @@ const SignupPage: React.FC = () => {
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState<Country | undefined>(undefined);
   const planKey = (params.get("plan") || "basic").toLowerCase();
-  const plan = planEnvMap[planKey] || planEnvMap.basic;
+  const schoolPlans = getSchoolPlansWithPriceIds();
+  const planNameByKey: Record<string, "Basic" | "Standard" | "Premium"> = {
+    basic: "Basic",
+    standard: "Standard",
+    premium: "Premium",
+  };
+  const selectedPlanName = planNameByKey[planKey] || "Basic";
+  const plan = schoolPlans.find((p: any) => p.name === selectedPlanName) || schoolPlans[0];
 
   // Save form data to sessionStorage whenever it changes
   useEffect(() => {
@@ -134,7 +121,7 @@ const SignupPage: React.FC = () => {
       return;
     }
 
-    const priceId = billing === "monthly" ? plan.monthly : plan.annual;
+    const priceId = billing === "monthly" ? (plan as any).priceIdMonthly : (plan as any).priceIdAnnual;
     try {
       const res = await fetch("/api/create-checkout-session", {
         method: "POST",
@@ -144,7 +131,7 @@ const SignupPage: React.FC = () => {
           userType: "school",
           formData: { ...form, termsAccepted: true },
           billingType: billing,
-          planName: planKey,
+          planName: plan?.name || selectedPlanName,
         }),
       });
       const data = await res.json();
@@ -158,14 +145,11 @@ const SignupPage: React.FC = () => {
     }
   };
 
-  const getAnnualPrice = () => {
-    return Math.round(plan.price * 12 * 0.83); // 17% discount
-  };
-
   const getSavings = () => {
-    const monthlyTotal = plan.price * 12;
-    const annualTotal = getAnnualPrice();
-    return monthlyTotal - annualTotal;
+    const monthlyTotal = (plan?.priceMonthly || 0) * 12;
+    const annualTotal = plan?.priceAnnual || 0;
+    const savings = monthlyTotal - annualTotal;
+    return savings > 0 ? savings : 0;
   };
 
   return (
@@ -185,7 +169,7 @@ const SignupPage: React.FC = () => {
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 mb-4">
             <Building2 className="w-5 h-5" />
             <span className="font-medium">
-              {planKey.charAt(0).toUpperCase() + planKey.slice(1)} Plan
+              {(plan?.name || selectedPlanName)} Plan
             </span>
           </div>
           <h1 className="heading-1 mb-6">Complete Your School Registration</h1>
@@ -217,7 +201,7 @@ const SignupPage: React.FC = () => {
           </div>
 
           <p className="text-2xl font-bold text-neutral-900 dark:text-white">
-            ${billing === "monthly" ? plan.price : getAnnualPrice()}
+            ${billing === "monthly" ? plan?.priceMonthly : plan?.priceAnnual}
             <span className="text-neutral-500 text-lg font-normal">
               /{billing === "monthly" ? "month" : "year"}
             </span>
