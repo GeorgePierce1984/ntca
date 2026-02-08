@@ -47,7 +47,7 @@ const socialLinks = [
 ];
 
 const badges = [
-  { icon: Award, label: "Top Rated Platform 2024" },
+  { icon: Award, label: "Top Rated Platform 2026" },
   { icon: Shield, label: "SSL Secured" },
   { icon: Globe, label: "Available in 25+ Countries" },
 ];
