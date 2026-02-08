@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
@@ -14,6 +14,8 @@ import { Button } from "@/components/ui/Button";
 import { useInView } from "react-intersection-observer";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
+import { countries } from "@/data/countries";
+import { CENTRAL_ASIA_COUNTRIES } from "@/constants/options";
 
 const stats = [
   { label: "Teachers Placed", value: "2,500+", icon: GraduationCap },
@@ -31,10 +33,31 @@ const floatingElements = [
   { id: 6, emoji: "🚀", delay: 10, duration: 26 },
 ];
 
+// Filter to only the countries shown on the jobs board (Central Asia list)
+const centralAsiaCountries = countries.filter((c) =>
+  CENTRAL_ASIA_COUNTRIES.some(
+    (ca) => ca.label.toLowerCase() === c.name.toLowerCase(),
+  ),
+);
+
+type JobPreview = {
+  id: string;
+  title: string;
+  city: string;
+  country: string;
+  salary?: string;
+  type?: string;
+  school?: { name: string; verified?: boolean };
+};
+
 export const Hero: React.FC = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
-  const [location, setLocation] = useState("");
+  const [country, setCountry] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
+  const [jobResults, setJobResults] = useState<JobPreview[]>([]);
+  const [totalResults, setTotalResults] = useState<number>(0);
   const { ref, inView } = useInView({
     threshold: 0.1,
     triggerOnce: true,
@@ -63,11 +86,39 @@ export const Hero: React.FC = () => {
     },
   };
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
+    setHasSearched(true);
+    setIsSearching(true);
+    try {
+      const params = new URLSearchParams();
+      if (searchQuery) params.append("search", searchQuery);
+      if (country) params.append("country", country);
+      params.append("page", "1");
+      params.append("limit", "6");
+
+      const url = `/api/jobs/public${params.toString() ? `?${params.toString()}` : ""}`;
+      const response = await fetch(url);
+      if (!response.ok) {
+        setJobResults([]);
+        setTotalResults(0);
+        return;
+      }
+      const data = await response.json();
+      setJobResults(data.jobs || []);
+      setTotalResults(data.pagination?.totalJobs || (data.jobs || []).length);
+    } catch {
+      setJobResults([]);
+      setTotalResults(0);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleViewAll = () => {
     const params = new URLSearchParams();
     if (searchQuery) params.append("search", searchQuery);
-    if (location) params.append("location", location);
-    navigate(`/teachers/jobs?${params.toString()}`);
+    if (country) params.append("country", country);
+    navigate(`/jobs${params.toString() ? `?${params.toString()}` : ""}`);
   };
 
   return (
@@ -129,7 +180,7 @@ export const Hero: React.FC = () => {
               <Button
                 variant="gradient"
                 size="lg"
-                onClick={() => navigate("/teachers/jobs")}
+                onClick={() => navigate("/jobs")}
                 rightIcon={<Search className="w-5 h-5" />}
                 glow
                 className="text-lg px-8 py-3"
@@ -146,7 +197,13 @@ export const Hero: React.FC = () => {
                 </h3>
 
                 {/* Search Form */}
-                <div className="flex flex-col md:flex-row gap-4">
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleSearch();
+                  }}
+                  className="flex flex-col md:flex-row gap-4"
+                >
                   <div className="flex-1 relative">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
                     <input
@@ -158,26 +215,69 @@ export const Hero: React.FC = () => {
                     />
                   </div>
                   <div className="flex-1 md:max-w-xs relative">
-                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
-                    <input
-                      type="text"
-                      placeholder="Location"
-                      value={location}
-                      onChange={(e) => setLocation(e.target.value)}
-                      className="input pl-12 w-full"
-                    />
+                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400 pointer-events-none" />
+                    <select
+                      value={country}
+                      onChange={(e) => setCountry(e.target.value)}
+                      className="input pl-12 w-full appearance-none"
+                    >
+                      <option value="">Location (All)</option>
+                      {centralAsiaCountries.map((c) => (
+                        <option key={c.code} value={c.name}>
+                          {c.name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                   <Button
+                    type="submit"
                     variant="gradient"
                     size="lg"
-                    onClick={handleSearch}
-                    rightIcon={<ArrowRight className="w-5 h-5" />}
+                    disabled={isSearching}
+                    rightIcon={<ArrowRight className={`w-5 h-5 ${isSearching ? "opacity-70" : ""}`} />}
                     glow
                     className="md:px-8"
                   >
-                    Search
+                    {isSearching ? "Searching..." : "Search"}
                   </Button>
-                </div>
+                </form>
+
+                {/* Results Preview */}
+                {hasSearched && (
+                  <div className="mt-6">
+                    <div className="flex items-center justify-between mb-3">
+                      <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                        {totalResults > 0 ? `${totalResults} jobs found` : "No jobs found"}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={handleViewAll}
+                        className="text-sm font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
+                      >
+                        View all
+                      </button>
+                    </div>
+                    {jobResults.length > 0 && (
+                      <div className="grid md:grid-cols-2 gap-3">
+                        {jobResults.map((job) => (
+                          <button
+                            key={job.id}
+                            type="button"
+                            onClick={() => navigate(`/jobs/${job.id}`)}
+                            className="text-left rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white/60 dark:bg-neutral-900/40 hover:bg-white dark:hover:bg-neutral-900 transition-colors p-4"
+                          >
+                            <div className="font-semibold text-neutral-900 dark:text-white line-clamp-1">
+                              {job.title}
+                            </div>
+                            <div className="text-sm text-neutral-600 dark:text-neutral-400 mt-1 line-clamp-1">
+                              {job.city}, {job.country} • {job.school?.name || "School"}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Popular searches */}
                 <div className="mt-4 flex flex-wrap gap-2 items-center">
@@ -187,7 +287,7 @@ export const Hero: React.FC = () => {
                   <button
                     onClick={() =>
                       navigate(
-                        "/teachers/jobs?search=English Teacher&location=Almaty",
+                        "/jobs?search=English%20Teacher&city=Almaty",
                       )
                     }
                     className="badge badge-secondary hover:scale-105 transition-transform"
@@ -195,14 +295,14 @@ export const Hero: React.FC = () => {
                     English Teacher Almaty
                   </button>
                   <button
-                    onClick={() => navigate("/teachers/jobs?search=CELTA")}
+                    onClick={() => navigate("/jobs?search=CELTA")}
                     className="badge badge-secondary hover:scale-105 transition-transform"
                   >
                     CELTA Positions
                   </button>
                   <button
                     onClick={() =>
-                      navigate("/teachers/jobs?search=International School")
+                      navigate("/jobs?search=International%20School")
                     }
                     className="badge badge-secondary hover:scale-105 transition-transform"
                   >
