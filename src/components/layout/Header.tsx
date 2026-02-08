@@ -39,8 +39,7 @@ const navigation: NavItem[] = [
     children: [
       { label: "Browse Jobs", href: "/jobs" },
       { label: "Create Profile", href: "/signup?type=teacher" },
-              { label: "Resources", href: "/resources" },
-      { label: "Career Guidance", href: "/resources/career-guidance" },
+      { label: "Resources", href: "/resources" },
     ],
   },
   {
@@ -49,12 +48,6 @@ const navigation: NavItem[] = [
     children: [
       { label: "Post a Job", href: "/schools/post-job" },
       { label: "Browse Teachers", href: "/schools/browse-teachers" },
-      { label: "Premium Listings", href: "/schools/premium" },
-      {
-        label: "AI Matching",
-        href: "/schools/ai-matching",
-        icon: <Sparkles className="w-4 h-4" />,
-      },
     ],
   },
   {
@@ -76,6 +69,17 @@ export const Header: React.FC = () => {
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const location = useLocation();
   const { user, isAuthenticated, logout } = useAuth();
+
+  const getVisibleChildren = (parent: NavItem): NavItem[] => {
+    const children = parent.children || [];
+
+    // On a school account, hide "Create Profile" under "For Teachers"
+    if (user?.userType === "SCHOOL" && parent.label === "For Teachers") {
+      return children.filter((c) => c.label !== "Create Profile");
+    }
+
+    return children;
+  };
   const navDropdownRef = useRef<HTMLDivElement>(null);
   const userDropdownRef = useRef<HTMLDivElement>(null);
 
@@ -207,7 +211,7 @@ export const Header: React.FC = () => {
                               className="absolute top-full left-0 mt-2 w-64 glass rounded-xl shadow-xl overflow-hidden z-50"
                             >
                               <ul className="py-2">
-                                {item.children.map((child) => (
+                                {getVisibleChildren(item).map((child) => (
                                   <li key={child.label}>
                                     <Link
                                       to={child.href!}
@@ -471,7 +475,7 @@ export const Header: React.FC = () => {
                                   transition={{ duration: 0.2 }}
                                   className="overflow-hidden"
                                 >
-                                  {item.children.map((child) => (
+                                  {getVisibleChildren(item).map((child) => (
                                     <li key={child.label}>
                                       <Link
                                         to={child.href!}
