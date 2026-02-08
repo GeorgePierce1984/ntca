@@ -85,13 +85,68 @@ export default async function handler(req, res) {
       });
     }
 
-    // Create a Stripe Customer Portal session
-    const session = await stripe.billingPortal.sessions.create({
-      customer: customerId,
-      return_url: returnUrl || `${baseUrl}/schools/dashboard`,
-    });
+    const createPortalSession = async (stripeCustomerId) => {
+      return await stripe.billingPortal.sessions.create({
+        customer: stripeCustomerId,
+        return_url: returnUrl || `${baseUrl}/schools/dashboard`,
+      });
+    };
 
-    return res.status(200).json({ url: session.url });
+    // Create a Stripe Customer Portal session (with recovery if DB has a stale customer id)
+    try {
+      const session = await createPortalSession(customerId);
+      return res.status(200).json({ url: session.url });
+    } catch (portalError) {
+      // Typical when switching Test -> Live: DB may contain a test-mode customer id.
+      const isMissingCustomer =
+        portalError?.code === "resource_missing" &&
+        (portalError?.param === "customer" ||
+          portalError?.message?.toLowerCase?.().includes("no such customer"));
+
+      if (!isMissingCustomer || !user.email) {
+        throw portalError;
+      }
+
+      console.error("Stale Stripe customer id detected, attempting recovery by email...", {
+        userId: user.id,
+        email: user.email,
+        stripeCustomerId: customerId,
+      });
+
+      // Attempt to find a valid customer in the CURRENT Stripe environment
+      let recoveredCustomerId = null;
+      try {
+        const existing = await stripe.customers.list({
+          email: user.email,
+          limit: 10,
+        });
+        recoveredCustomerId = existing?.data?.[0]?.id || null;
+      } catch (e) {
+        console.error("Stripe customer lookup (recovery) failed:", e);
+      }
+
+      if (!recoveredCustomerId) {
+        // Clear stale customer id so subsequent calls don't repeatedly fail
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { stripeCustomerId: null },
+        });
+
+        return res.status(404).json({
+          error: "No subscription found",
+          code: "NO_STRIPE_CUSTOMER",
+        });
+      }
+
+      // Persist recovered id and retry portal creation
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { stripeCustomerId: recoveredCustomerId },
+      });
+
+      const session = await createPortalSession(recoveredCustomerId);
+      return res.status(200).json({ url: session.url, recovered: true });
+    }
   } catch (error) {
     console.error("Stripe portal error:", error);
     if (error?.name === "JsonWebTokenError" || error?.name === "TokenExpiredError") {
