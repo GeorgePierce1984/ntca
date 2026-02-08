@@ -114,7 +114,7 @@ export default async function handler(req, res) {
               subscriptionId: null,
               subscriptionStatus: "cancelled",
               currentPeriodEnd: null,
-              cancelAtPeriodEnd: null,
+              cancelAtPeriodEnd: false,
               subscriptionEndDate: null,
             },
           });
@@ -124,7 +124,7 @@ export default async function handler(req, res) {
             subscriptionStatus: "cancelled",
             currentPeriodStart: null,
             currentPeriodEnd: null,
-            cancelAtPeriodEnd: null,
+            cancelAtPeriodEnd: false,
             subscriptionEndDate: null,
             plan: null,
             billingCycle: null,

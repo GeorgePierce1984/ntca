@@ -210,7 +210,9 @@ const Pricing: React.FC = () => {
                   });
                   if (subRes.ok) {
                     const subData = await subRes.json();
-                    if (subData?.subscriptionId) {
+                    // Only treat as "owned" if it is actually active.
+                    // This avoids loops for legacy/test subscriptions that no longer exist in the current Stripe environment.
+                    if (subData?.subscriptionId && (subData?.subscriptionStatus || "").toLowerCase() === "active") {
                       navigate("/schools/subscription");
                       return;
                     }
