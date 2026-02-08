@@ -388,6 +388,17 @@ model Conversation {
   @@map("conversations")
 }
 
+model NewsletterSubscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  status    String   @default("subscribed") // subscribed | unsubscribed
+  source    String?  // e.g. footer, homepage, etc.
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("newsletter_subscribers")
+}
+
 model Message {
   id             String   @id @default(cuid())
   conversationId String

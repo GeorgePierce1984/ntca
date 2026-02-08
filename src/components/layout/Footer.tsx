@@ -20,6 +20,7 @@ import {
 import { Logo } from "@/components/ui/Logo";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
+import toast from "react-hot-toast";
 
 const footerLinks = {
   forSchools: [
@@ -68,12 +69,32 @@ const badges = [
 
 export const Footer: React.FC = () => {
   const [email, setEmail] = React.useState("");
+  const [subscribing, setSubscribing] = React.useState(false);
 
-  const handleNewsletterSubmit = (e: React.FormEvent) => {
+  const handleNewsletterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle newsletter subscription
-    console.log("Newsletter subscription:", email);
-    setEmail("");
+    if (!email?.trim()) return;
+
+    setSubscribing(true);
+    try {
+      const response = await fetch("/api/newsletter/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, source: "footer" }),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data?.error || "Failed to subscribe");
+      }
+
+      toast.success("Subscribed! Check your email for a welcome message.");
+      setEmail("");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to subscribe");
+    } finally {
+      setSubscribing(false);
+    }
   };
 
   return (
@@ -117,8 +138,9 @@ export const Footer: React.FC = () => {
                   variant="gradient"
                   rightIcon={<Send className="w-4 h-4" />}
                   glow
+                  disabled={subscribing}
                 >
-                  Subscribe
+                  {subscribing ? "Subscribing..." : "Subscribe"}
                 </Button>
               </form>
             </motion.div>
