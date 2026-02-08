@@ -28,9 +28,7 @@ const footerLinks = {
   forTeachers: [
     { label: "Find Jobs", href: "/jobs" },
     { label: "Create Profile", href: "/signup?type=teacher" },
-              { label: "Resources", href: "/teachers/resources" },
-    { label: "Career Guidance", href: "/teachers/career-guidance" },
-    { label: "Salary Guide", href: "/teachers/salary-guide" },
+    { label: "Resources", href: "/teachers/resources" },
   ],
   company: [
     { label: "About Us", href: "/about" },
