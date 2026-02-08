@@ -52,6 +52,8 @@ export default async function handler(req, res) {
         { description: { contains: search, mode: "insensitive" } },
         { city: { contains: search, mode: "insensitive" } },
         { country: { contains: search, mode: "insensitive" } },
+        // Allow searching by school name
+        { school: { name: { contains: search, mode: "insensitive" } } },
       ];
     }
 
