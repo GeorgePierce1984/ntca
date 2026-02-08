@@ -30,15 +30,7 @@ const footerLinks = {
     { label: "Create Profile", href: "/signup?type=teacher" },
     { label: "Resources", href: "/teachers/resources" },
   ],
-  company: [
-    { label: "About Us", href: "/about" },
-    { label: "Success Stories", href: "/success-stories" },
-    { label: "Blog", href: "/blog" },
-    { label: "Contact", href: "/contact" },
-    { label: "Careers", href: "/careers" },
-  ],
   support: [
-    { label: "Help Center", href: "/help" },
     { label: "FAQs", href: "/faqs" },
     { label: "Privacy Policy", href: "/privacy" },
     { label: "Terms of Service", href: "/terms" },
@@ -212,24 +204,6 @@ export const Footer: React.FC = () => {
             </h4>
             <ul className="space-y-3">
               {footerLinks.forTeachers.map((link) => (
-                <li key={link.label}>
-                  <Link
-                    to={link.href}
-                    className="text-neutral-600 dark:text-neutral-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="font-semibold text-neutral-900 dark:text-white mb-4">
-              Company
-            </h4>
-            <ul className="space-y-3">
-              {footerLinks.company.map((link) => (
                 <li key={link.label}>
                   <Link
                     to={link.href}
