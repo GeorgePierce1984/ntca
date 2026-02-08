@@ -99,7 +99,43 @@ export default async function handler(req, res) {
       }
     } catch (stripeError) {
       console.error("Error fetching Stripe subscription:", stripeError);
-      // Continue with database data if Stripe fetch fails
+      // If the subscription doesn't exist in this Stripe environment (common after Test -> Live),
+      // clear the stale subscriptionId so the UI can start a new checkout instead of looping.
+      const isMissingSubscription =
+        stripeError?.code === "resource_missing" &&
+        (stripeError?.param === "id" ||
+          stripeError?.message?.toLowerCase?.().includes("no such subscription"));
+
+      if (isMissingSubscription) {
+        try {
+          await prisma.school.update({
+            where: { id: school.id },
+            data: {
+              subscriptionId: null,
+              subscriptionStatus: "cancelled",
+              currentPeriodEnd: null,
+              cancelAtPeriodEnd: null,
+              subscriptionEndDate: null,
+            },
+          });
+          // Reflect the cleared state in the response
+          return res.status(200).json({
+            subscriptionId: null,
+            subscriptionStatus: "cancelled",
+            currentPeriodStart: null,
+            currentPeriodEnd: null,
+            cancelAtPeriodEnd: null,
+            subscriptionEndDate: null,
+            plan: null,
+            billingCycle: null,
+            daysRemaining: null,
+            healed: true,
+          });
+        } catch (e) {
+          console.error("Failed to clear stale subscriptionId:", e);
+        }
+      }
+      // Continue with database data if Stripe fetch fails for other reasons
     }
 
     // Return combined data
