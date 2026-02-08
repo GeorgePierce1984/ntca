@@ -3,8 +3,6 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Mail,
-  Phone,
-  MapPin,
   Facebook,
   Twitter,
   Linkedin,
@@ -161,27 +159,23 @@ export const Footer: React.FC = () => {
 
             {/* Contact Info */}
             <div className="space-y-3 mb-6">
-              <a
-                href="mailto:hello@ntca.com"
-                className="flex items-center gap-3 text-neutral-600 dark:text-neutral-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
-              >
-                <Mail className="w-4 h-4" />
-                hello@ntca.com
-              </a>
-              <a
-                href="tel:+77001234567"
-                className="flex items-center gap-3 text-neutral-600 dark:text-neutral-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
-              >
-                <Phone className="w-4 h-4" />
-                +7 700 123 4567
-              </a>
-              <div className="flex items-start gap-3 text-neutral-600 dark:text-neutral-400">
-                <MapPin className="w-4 h-4 mt-0.5" />
-                <span>
-                  123 Education Street
-                  <br />
-                  Almaty, Central Asia
-                </span>
+              <div className="text-neutral-600 dark:text-neutral-400 space-y-2">
+                <p>
+                  NTCA (NexTeach Central Asia) is a UK-based international teacher
+                  recruitment platform.
+                </p>
+                <p>
+                  Operated by Aetheleon Ltd (Reg 16480736), United Kingdom.
+                </p>
+                <div className="flex items-center gap-3">
+                  <Mail className="w-4 h-4" />
+                  <a
+                    href="mailto:support@nt-ca.com"
+                    className="hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+                  >
+                    support@nt-ca.com
+                  </a>
+                </div>
               </div>
             </div>
 
