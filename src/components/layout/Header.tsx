@@ -58,18 +58,10 @@ const navigation: NavItem[] = [
     ],
   },
   {
-    label: "AI Services",
-    href: "/ai-services",
-    icon: <Brain className="w-4 h-4" />,
-  },
-  {
     label: "About",
     icon: <Users className="w-4 h-4" />,
     children: [
       { label: "About NTCA", href: "/about" },
-      { label: "Success Stories", href: "/success-stories" },
-      { label: "Blog", href: "/blog" },
-      { label: "Brand Guidelines", href: "/branding" },
       { label: "Pricing", href: "/pricing" },
       { label: "FAQs", href: "/faqs" },
       { label: "Contact", href: "/contact" },
