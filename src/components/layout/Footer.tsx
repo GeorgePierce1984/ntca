@@ -22,10 +22,7 @@ import toast from "react-hot-toast";
 
 const footerLinks = {
   forSchools: [
-    { label: "Post a Job", href: "/schools/post-job" },
-    { label: "Browse Teachers", href: "/schools/browse-teachers" },
-    { label: "Premium Listings", href: "/schools/premium" },
-    { label: "AI Matching", href: "/schools/ai-matching" },
+    { label: "Post a Job", href: "/signup?type=school" },
     { label: "Pricing", href: "/pricing" },
   ],
   forTeachers: [
@@ -152,10 +149,6 @@ export const Footer: React.FC = () => {
           {/* Brand Section */}
           <div className="lg:col-span-2">
             <Logo className="h-10 mb-6" />
-            <p className="text-neutral-600 dark:text-neutral-400 mb-6">
-              Connecting qualified teachers with premium schools across Central Asia
-              through AI-powered matching technology.
-            </p>
 
             {/* Contact Info */}
             <div className="space-y-3 mb-6">
