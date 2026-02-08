@@ -46,8 +46,8 @@ const navigation: NavItem[] = [
     label: "For Schools",
     icon: <Building2 className="w-4 h-4" />,
     children: [
+      { label: "Dashboard", href: "/schools/dashboard" },
       { label: "Post a Job", href: "/schools/post-job" },
-      { label: "Browse Teachers", href: "/schools/browse-teachers" },
     ],
   },
   {
@@ -76,6 +76,13 @@ export const Header: React.FC = () => {
     // On a school account, hide "Create Profile" under "For Teachers"
     if (user?.userType === "SCHOOL" && parent.label === "For Teachers") {
       return children.filter((c) => c.label !== "Create Profile");
+    }
+
+    // Only show "Dashboard" in "For Schools" when logged in as a school
+    if (parent.label === "For Schools") {
+      if (user?.userType !== "SCHOOL") {
+        return children.filter((c) => c.label !== "Dashboard");
+      }
     }
 
     return children;
