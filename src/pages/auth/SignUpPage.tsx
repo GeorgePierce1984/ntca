@@ -104,8 +104,16 @@ export const SignUpPage: React.FC = () => {
   // Check URL params for return from payment
   const urlParams = new URLSearchParams(window.location.search);
   const isReturningFromPayment = urlParams.get("from") === "payment";
-  const [currentStep, setCurrentStep] = useState(1);
-  const [userType, setUserType] = useState<UserType | null>(null);
+  const directTypeParam = !isReturningFromPayment
+    ? (urlParams.get("type") || urlParams.get("userType") || "").toLowerCase()
+    : "";
+  const directUserType: UserType | null =
+    directTypeParam === "school" || directTypeParam === "teacher"
+      ? (directTypeParam as UserType)
+      : null;
+
+  const [currentStep, setCurrentStep] = useState(directUserType ? 2 : 1);
+  const [userType, setUserType] = useState<UserType | null>(directUserType);
   const [selectedPlan, setSelectedPlan] = useState<
     SchoolPlan | TeacherPlan | null
   >(null);
@@ -285,13 +293,7 @@ export const SignUpPage: React.FC = () => {
       setStoredVerificationCode(null);
       setVerificationCodeExpiry(null);
 
-      // Support direct-entry URLs (e.g. from pricing) to match the modal flow:
-      // `/signup?type=school` should skip the type picker and open the school form.
-      const directType = (urlParams.get("type") || urlParams.get("userType") || "").toLowerCase();
-      if (directType === "school" || directType === "teacher") {
-        setUserType(directType as UserType);
-        setCurrentStep(2);
-      }
+      // Direct-entry URLs are handled synchronously via initial state above.
     }
   }, [isReturningFromPayment]);
 

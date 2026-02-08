@@ -31,8 +31,8 @@ const footerLinks = {
     { label: "Pricing", href: "/pricing" },
   ],
   forTeachers: [
-    { label: "Find Jobs", href: "/teachers/jobs" },
-    { label: "Create Profile", href: "/teachers/profile" },
+    { label: "Find Jobs", href: "/jobs" },
+    { label: "Create Profile", href: "/signup?type=teacher" },
               { label: "Resources", href: "/teachers/resources" },
     { label: "Career Guidance", href: "/teachers/career-guidance" },
     { label: "Salary Guide", href: "/teachers/salary-guide" },
