@@ -55,9 +55,6 @@ export const Hero: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [country, setCountry] = useState("");
   const [isSearching, setIsSearching] = useState(false);
-  const [hasSearched, setHasSearched] = useState(false);
-  const [jobResults, setJobResults] = useState<JobPreview[]>([]);
-  const [totalResults, setTotalResults] = useState<number>(0);
   const { ref, inView } = useInView({
     threshold: 0.1,
     triggerOnce: true,
@@ -87,38 +84,19 @@ export const Hero: React.FC = () => {
   };
 
   const handleSearch = async () => {
-    setHasSearched(true);
     setIsSearching(true);
     try {
       const params = new URLSearchParams();
       if (searchQuery) params.append("search", searchQuery);
       if (country) params.append("country", country);
-      params.append("page", "1");
-      params.append("limit", "6");
 
-      const url = `/api/jobs/public${params.toString() ? `?${params.toString()}` : ""}`;
-      const response = await fetch(url);
-      if (!response.ok) {
-        setJobResults([]);
-        setTotalResults(0);
-        return;
-      }
-      const data = await response.json();
-      setJobResults(data.jobs || []);
-      setTotalResults(data.pagination?.totalJobs || (data.jobs || []).length);
+      // Behave like the Jobs page search: navigate to /jobs with the selected filters.
+      navigate(`/jobs${params.toString() ? `?${params.toString()}` : ""}`);
     } catch {
-      setJobResults([]);
-      setTotalResults(0);
+      // no-op
     } finally {
       setIsSearching(false);
     }
-  };
-
-  const handleViewAll = () => {
-    const params = new URLSearchParams();
-    if (searchQuery) params.append("search", searchQuery);
-    if (country) params.append("country", country);
-    navigate(`/jobs${params.toString() ? `?${params.toString()}` : ""}`);
   };
 
   return (
@@ -241,43 +219,6 @@ export const Hero: React.FC = () => {
                     {isSearching ? "Searching..." : "Search"}
                   </Button>
                 </form>
-
-                {/* Results Preview */}
-                {hasSearched && (
-                  <div className="mt-6">
-                    <div className="flex items-center justify-between mb-3">
-                      <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                        {totalResults > 0 ? `${totalResults} jobs found` : "No jobs found"}
-                      </p>
-                      <button
-                        type="button"
-                        onClick={handleViewAll}
-                        className="text-sm font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
-                      >
-                        View all
-                      </button>
-                    </div>
-                    {jobResults.length > 0 && (
-                      <div className="grid md:grid-cols-2 gap-3">
-                        {jobResults.map((job) => (
-                          <button
-                            key={job.id}
-                            type="button"
-                            onClick={() => navigate(`/jobs/${job.id}`)}
-                            className="text-left rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white/60 dark:bg-neutral-900/40 hover:bg-white dark:hover:bg-neutral-900 transition-colors p-4"
-                          >
-                            <div className="font-semibold text-neutral-900 dark:text-white line-clamp-1">
-                              {job.title}
-                            </div>
-                            <div className="text-sm text-neutral-600 dark:text-neutral-400 mt-1 line-clamp-1">
-                              {job.city}, {job.country} • {job.school?.name || "School"}
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
 
                 {/* Popular searches */}
                 <div className="mt-4 flex flex-wrap gap-2 items-center">
