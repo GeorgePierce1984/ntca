@@ -17,6 +17,7 @@ import { Link } from "react-router-dom";
 import { Hero } from "@/components/sections/Hero";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
 
 // Features data
 const features = [
@@ -147,6 +148,7 @@ const ctaForSchools = {
 };
 
 export const HomePage: React.FC = () => {
+  const navigate = useNavigate();
   const { ref: featuresRef, inView: featuresInView } = useInView({
     threshold: 0.1,
     triggerOnce: true,
@@ -269,7 +271,7 @@ export const HomePage: React.FC = () => {
               rightIcon={<ArrowRight className="w-5 h-5" />}
               glow
               onClick={() => {
-                /* Handle get started */
+                navigate("/signup");
               }}
             >
               Get Started Now
@@ -376,7 +378,7 @@ export const HomePage: React.FC = () => {
                   variant="secondary"
                   size="lg"
                   onClick={() => {
-                    /* Handle create profile */
+                    navigate("/signup");
                   }}
                 >
                   Create Free Profile
@@ -386,7 +388,7 @@ export const HomePage: React.FC = () => {
                   size="lg"
                   className="text-white hover:bg-white/20"
                   onClick={() => {
-                    /* Handle browse jobs */
+                    navigate("/jobs");
                   }}
                 >
                   Browse Jobs
@@ -431,19 +433,10 @@ export const HomePage: React.FC = () => {
                     variant="primary"
                     size="lg"
                     onClick={() => {
-                      /* Handle post job */
+                      navigate("/signup");
                     }}
                   >
-                    Post a Job Free
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    size="lg"
-                    onClick={() => {
-                      /* Handle browse teachers */
-                    }}
-                  >
-                    Browse Teachers
+                    Post a Free Job
                   </Button>
                 </div>
               </motion.div>
