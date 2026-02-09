@@ -8,7 +8,10 @@
     "build": "prisma generate && (prisma migrate deploy || echo 'Migration skipped or already applied') && (tsc -b --noEmit || true) && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "fix-db": "node scripts/fix-production-db.js"
+    "fix-db": "node scripts/fix-production-db.js",
+    "seed:demo-teachers": "node scripts/seed-demo-teachers.mjs",
+    "seed:realistic-teachers": "node scripts/seed-realistic-teachers.mjs",
+    "delete:demo-teachers": "node scripts/delete-demo-teachers.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.1.1",
