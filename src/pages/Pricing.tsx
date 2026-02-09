@@ -348,7 +348,7 @@ const Pricing: React.FC = () => {
               </p>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-8">
+            <div className="grid md:grid-cols-1 gap-8">
               {/* Free Teacher Plan */}
               <div className="card p-8">
                 <div className="text-center mb-6">
@@ -396,75 +396,6 @@ const Pricing: React.FC = () => {
                   </button>
                   <p className="text-sm text-neutral-500">
                     No credit card required
-                  </p>
-                </div>
-              </div>
-
-              {/* Premium Teacher Plan */}
-              <div className="card p-8 relative ring-2 ring-blue-500">
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                  <span className="bg-blue-500 text-white px-3 py-1 rounded-full text-sm font-medium">
-                    Most Popular
-                  </span>
-                </div>
-
-                <div className="text-center mb-6">
-                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 mb-4">
-                    <Star className="w-8 h-8" />
-                  </div>
-                  <h3 className="heading-3 mb-2">Premium Teacher Account</h3>
-                  <div className="text-4xl font-bold text-blue-600">$19</div>
-                  <p className="text-neutral-500 mb-6">per month</p>
-                </div>
-
-                <ul className="space-y-3 mb-8">
-                  <li className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                    <span className="text-neutral-600 dark:text-neutral-400">
-                      All Free features
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <Star className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" />
-                    <span className="text-neutral-600 dark:text-neutral-400">
-                      Priority matching with top schools
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <Star className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" />
-                    <span className="text-neutral-600 dark:text-neutral-400">
-                      Advanced job alerts
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <Star className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" />
-                    <span className="text-neutral-600 dark:text-neutral-400">
-                      Resume optimization
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <Star className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" />
-                    <span className="text-neutral-600 dark:text-neutral-400">
-                      Interview coaching
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <Star className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" />
-                    <span className="text-neutral-600 dark:text-neutral-400">
-                      Premium support
-                    </span>
-                  </li>
-                </ul>
-
-                <div className="text-center">
-                  <button
-                    onClick={() => navigate("/signup")}
-                    className="btn-primary w-full mb-4"
-                  >
-                    Get Premium Access
-                  </button>
-                  <p className="text-sm text-neutral-500">
-                    Start with 7-day free trial
                   </p>
                 </div>
               </div>
