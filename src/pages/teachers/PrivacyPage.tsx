@@ -4,13 +4,14 @@ import {
   Shield,
   Eye,
   EyeOff,
-  DollarSign,
   Save,
   Loader2,
-  User,
-  HelpCircle,
   UserX,
   FileDown,
+  Mail,
+  Trash2,
+  AlertTriangle,
+  X,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -21,37 +22,38 @@ interface Teacher {
   id: string;
   firstName: string;
   lastName: string;
-  phone: string;
-  phoneCountryCode: string;
-  city: string;
-  country: string;
-  qualification: string;
-  experienceYears?: number;
-  experience: string;
   searchable: boolean;
-  salaryExpectationVisible?: boolean;
-  [key: string]: any; // Allow other fields
+  [key: string]: any;
+}
+
+interface EmailPreferences {
+  jobAlerts: boolean;
+  platformUpdates: boolean;
+  marketing: boolean;
 }
 
 export const TeacherPrivacyPage: React.FC = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [teacher, setTeacher] = useState<Teacher | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [formData, setFormData] = useState({
-    searchable: true,
-    salaryExpectationVisible: true,
-    anonymiseProfile: false,
-    downloadableProfilePDF: true,
+  const [deleting, setDeleting] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [emailPreferences, setEmailPreferences] = useState<EmailPreferences>({
+    jobAlerts: true,
+    platformUpdates: true,
+    marketing: false,
   });
+  const [savingEmailPrefs, setSavingEmailPrefs] = useState(false);
 
   useEffect(() => {
     if (!user || user.userType !== "TEACHER") {
-      navigate("/signin");
+      navigate("/login");
       return;
     }
     fetchProfile();
+    fetchEmailPreferences();
   }, [user, navigate]);
 
   const fetchProfile = async () => {
@@ -66,10 +68,6 @@ export const TeacherPrivacyPage: React.FC = () => {
 
       const data = await response.json();
       setTeacher(data.teacher);
-      setFormData({
-        searchable: data.teacher.searchable !== undefined ? data.teacher.searchable : true,
-        salaryExpectationVisible: data.teacher.salaryExpectationVisible !== undefined ? data.teacher.salaryExpectationVisible : true,
-      });
     } catch (error) {
       console.error("Error fetching profile:", error);
       toast.error("Failed to load privacy settings");
@@ -78,43 +76,120 @@ export const TeacherPrivacyPage: React.FC = () => {
     }
   };
 
-  const handleSave = async () => {
+  const fetchEmailPreferences = async () => {
+    try {
+      const response = await fetch("/api/teachers/email-preferences", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setEmailPreferences({
+          jobAlerts: data.jobAlerts ?? true,
+          platformUpdates: data.platformUpdates ?? true,
+          marketing: data.marketing ?? false,
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching email preferences:", error);
+    }
+  };
+
+  const handleHideProfile = async () => {
     if (!teacher) return;
-    
+
     setSaving(true);
     try {
-      // Merge privacy settings with existing teacher data
-      const updateData = {
-        ...teacher,
-        searchable: formData.searchable,
-        salaryExpectationVisible: formData.salaryExpectationVisible,
-      };
-
       const response = await fetch("/api/teachers/profile", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("authToken")}`,
         },
-        body: JSON.stringify(updateData),
+        body: JSON.stringify({
+          ...teacher,
+          searchable: false,
+        }),
       });
 
-      if (!response.ok) throw new Error("Failed to update privacy settings");
+      if (!response.ok) throw new Error("Failed to hide profile");
 
       const data = await response.json();
       setTeacher(data.teacher);
-      setFormData({
-        searchable: data.teacher.searchable !== undefined ? data.teacher.searchable : true,
-        salaryExpectationVisible: data.teacher.salaryExpectationVisible !== undefined ? data.teacher.salaryExpectationVisible : true,
-        anonymiseProfile: data.teacher.anonymiseProfile !== undefined ? data.teacher.anonymiseProfile : false,
-        downloadableProfilePDF: data.teacher.downloadableProfilePDF !== undefined ? data.teacher.downloadableProfilePDF : true,
-      });
-      toast.success("Privacy settings updated successfully");
+      toast.success("Profile hidden from schools. You will still receive emails.");
     } catch (error) {
-      console.error("Error updating privacy settings:", error);
-      toast.error("Failed to update privacy settings");
+      console.error("Error hiding profile:", error);
+      toast.error("Failed to hide profile");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    setDeleting(true);
+    try {
+      const response = await fetch("/api/teachers/delete-account", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+        },
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to delete account");
+      }
+
+      const data = await response.json();
+      toast.success(
+        `Account deletion scheduled. Your profile has been hidden immediately. Full deletion will occur in 7 days.`,
+        { duration: 6000 }
+      );
+
+      // Logout and redirect
+      setTimeout(() => {
+        logout();
+        navigate("/");
+      }, 2000);
+    } catch (error: any) {
+      console.error("Error deleting account:", error);
+      toast.error(error.message || "Failed to delete account");
+    } finally {
+      setDeleting(false);
+      setShowDeleteModal(false);
+    }
+  };
+
+  const handleEmailPreferencesChange = async (
+    key: keyof EmailPreferences,
+    value: boolean
+  ) => {
+    const newPrefs = { ...emailPreferences, [key]: value };
+    setEmailPreferences(newPrefs);
+
+    setSavingEmailPrefs(true);
+    try {
+      const response = await fetch("/api/teachers/email-preferences", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+        },
+        body: JSON.stringify(newPrefs),
+      });
+
+      if (!response.ok) throw new Error("Failed to update email preferences");
+
+      toast.success("Email preferences updated");
+    } catch (error) {
+      console.error("Error updating email preferences:", error);
+      toast.error("Failed to update email preferences");
+      // Revert on error
+      setEmailPreferences(emailPreferences);
+    } finally {
+      setSavingEmailPrefs(false);
     }
   };
 
@@ -165,206 +240,247 @@ export const TeacherPrivacyPage: React.FC = () => {
         </div>
 
         {/* Content */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          className="glass rounded-2xl p-8"
-        >
-          <div className="space-y-8">
-            {/* Visibility Setting */}
-            <div className="flex items-center justify-between p-6 bg-neutral-50 dark:bg-neutral-800/50 rounded-xl">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
-                  {formData.searchable ? (
+        <div className="space-y-6">
+          {/* A. Hide Profile from Schools */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="glass rounded-2xl p-8"
+          >
+            <div className="flex items-start justify-between gap-6">
+              <div className="flex items-start gap-4 flex-1">
+                <div className="w-12 h-12 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center flex-shrink-0">
+                  {teacher.searchable ? (
                     <Eye className="w-6 h-6 text-primary-600 dark:text-primary-400" />
                   ) : (
                     <EyeOff className="w-6 h-6 text-neutral-400" />
                   )}
                 </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-neutral-900 dark:text-white">
-                    Visibility
+                <div className="flex-1">
+                  <h3 className="text-xl font-semibold text-neutral-900 dark:text-white mb-2">
+                    Hide my profile
                   </h3>
-                  <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                    {formData.searchable
-                      ? "Your profile is visible to schools"
-                      : "Your profile is hidden from schools"}
+                  <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
+                    {teacher.searchable
+                      ? "Your profile is currently visible to schools. Hide it to remove it from school searches while keeping your account active. You will still receive emails."
+                      : "Your profile is hidden from schools. You will still receive emails."}
                   </p>
+                  {teacher.searchable && (
+                    <Button
+                      onClick={handleHideProfile}
+                      disabled={saving}
+                      variant="secondary"
+                      size="sm"
+                      leftIcon={
+                        saving ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <EyeOff className="w-4 h-4" />
+                        )
+                      }
+                    >
+                      {saving ? "Hiding..." : "Hide my profile"}
+                    </Button>
+                  )}
                 </div>
               </div>
-              <label className="relative inline-flex items-center cursor-pointer">
+            </div>
+          </motion.div>
+
+          {/* B. Download My Data */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.1 }}
+            className="glass rounded-2xl p-8"
+          >
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center flex-shrink-0">
+                <FileDown className="w-6 h-6 text-primary-600 dark:text-primary-400" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-xl font-semibold text-neutral-900 dark:text-white mb-2">
+                  Download my data
+                </h3>
+                <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
+                  Request a copy of all your personal data stored on NTCA.
+                </p>
+                <a
+                  href="mailto:support@nt-ca.com?subject=Data Export Request"
+                  className="inline-flex items-center gap-2 text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium"
+                >
+                  <Mail className="w-4 h-4" />
+                  Email support@nt-ca.com to request your data
+                </a>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* C. Email Preferences */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.2 }}
+            className="glass rounded-2xl p-8"
+          >
+            <div className="flex items-start gap-4 mb-6">
+              <div className="w-12 h-12 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center flex-shrink-0">
+                <Mail className="w-6 h-6 text-primary-600 dark:text-primary-400" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-xl font-semibold text-neutral-900 dark:text-white mb-2">
+                  Email preferences
+                </h3>
+                <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                  Choose which emails you want to receive from NTCA.
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-4 pl-16">
+              <label className="flex items-center gap-3 cursor-pointer group">
                 <input
                   type="checkbox"
-                  checked={formData.searchable}
+                  checked={emailPreferences.jobAlerts}
                   onChange={(e) =>
-                    setFormData({ ...formData, searchable: e.target.checked })
+                    handleEmailPreferencesChange("jobAlerts", e.target.checked)
                   }
-                  className="sr-only peer"
+                  disabled={savingEmailPrefs}
+                  className="w-5 h-5 rounded border-neutral-300 text-primary-600 focus:ring-primary-500 focus:ring-2"
                 />
-                <div className="w-14 h-7 bg-neutral-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-neutral-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all dark:border-neutral-600 peer-checked:bg-primary-600"></div>
-                <span className="ml-3 text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                  {formData.searchable ? "Public" : "Hidden"}
+                <span className="text-neutral-900 dark:text-white font-medium">
+                  Job alerts
+                </span>
+              </label>
+
+              <label className="flex items-center gap-3 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={emailPreferences.platformUpdates}
+                  onChange={(e) =>
+                    handleEmailPreferencesChange(
+                      "platformUpdates",
+                      e.target.checked
+                    )
+                  }
+                  disabled={savingEmailPrefs}
+                  className="w-5 h-5 rounded border-neutral-300 text-primary-600 focus:ring-primary-500 focus:ring-2"
+                />
+                <span className="text-neutral-900 dark:text-white font-medium">
+                  Platform updates
+                </span>
+              </label>
+
+              <label className="flex items-center gap-3 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={emailPreferences.marketing}
+                  onChange={(e) =>
+                    handleEmailPreferencesChange("marketing", e.target.checked)
+                  }
+                  disabled={savingEmailPrefs}
+                  className="w-5 h-5 rounded border-neutral-300 text-primary-600 focus:ring-primary-500 focus:ring-2"
+                />
+                <span className="text-neutral-900 dark:text-white font-medium">
+                  Marketing (optional)
                 </span>
               </label>
             </div>
+          </motion.div>
 
-            {/* Salary Expectations Setting */}
-            <div className="flex items-center justify-between p-6 bg-neutral-50 dark:bg-neutral-800/50 rounded-xl">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
-                  <DollarSign className="w-6 h-6 text-primary-600 dark:text-primary-400" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-neutral-900 dark:text-white">
-                    Salary Expectations
-                  </h3>
-                  <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                    {formData.salaryExpectationVisible
-                      ? "Your salary expectations are visible to schools"
-                      : "Your salary expectations are hidden from schools"}
-                  </p>
-                </div>
+          {/* D. Delete Account */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.3 }}
+            className="glass rounded-2xl p-8 border-2 border-red-200 dark:border-red-900/50"
+          >
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0">
+                <Trash2 className="w-6 h-6 text-red-600 dark:text-red-400" />
               </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={formData.salaryExpectationVisible}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      salaryExpectationVisible: e.target.checked,
-                    })
-                  }
-                  className="sr-only peer"
-                />
-                <div className="w-14 h-7 bg-neutral-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-neutral-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all dark:border-neutral-600 peer-checked:bg-primary-600"></div>
-                <span className="ml-3 text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                  {formData.salaryExpectationVisible ? "Public" : "Hidden"}
-                </span>
-              </label>
-            </div>
-
-            {/* Anonymise Profile Setting */}
-            <div className="flex items-center justify-between p-6 bg-neutral-50 dark:bg-neutral-800/50 rounded-xl">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
-                  <UserX className="w-6 h-6 text-primary-600 dark:text-primary-400" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-lg font-semibold text-neutral-900 dark:text-white">
-                      Anonymise Profile
-                    </h3>
-                    <div className="group relative">
-                      <HelpCircle className="w-4 h-4 text-neutral-400 hover:text-primary-600 cursor-help" />
-                      <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden group-hover:block z-10">
-                        <div className="bg-neutral-900 text-white text-xs rounded-lg px-3 py-2 whitespace-nowrap shadow-lg">
-                          Name Hidden until Application made
-                          <div className="absolute top-full left-1/2 -translate-x-1/2 w-2 h-2 bg-neutral-900 rotate-45"></div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                    {formData.anonymiseProfile
-                      ? "Your name will be hidden until a school makes an application"
-                      : "Your name is visible to schools"}
-                  </p>
-                </div>
+              <div className="flex-1">
+                <h3 className="text-xl font-semibold text-neutral-900 dark:text-white mb-2">
+                  Delete my account permanently
+                </h3>
+                <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
+                  Deleting your account permanently removes your profile, CV and
+                  personal data from NTCA systems. Your profile will be removed
+                  from public view immediately, and full deletion will occur in 7
+                  days. This action cannot be undone.
+                </p>
+                <Button
+                  onClick={() => setShowDeleteModal(true)}
+                  variant="danger"
+                  size="sm"
+                  leftIcon={<Trash2 className="w-4 h-4" />}
+                >
+                  Delete my account permanently
+                </Button>
               </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={formData.anonymiseProfile}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      anonymiseProfile: e.target.checked,
-                    })
-                  }
-                  className="sr-only peer"
-                />
-                <div className="w-14 h-7 bg-neutral-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-neutral-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all dark:border-neutral-600 peer-checked:bg-primary-600"></div>
-                <span className="ml-3 text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                  {formData.anonymiseProfile ? "Yes" : "No"}
-                </span>
-              </label>
             </div>
-
-            {/* Downloadable Profile PDF Setting */}
-            <div className="flex items-center justify-between p-6 bg-neutral-50 dark:bg-neutral-800/50 rounded-xl">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
-                  <FileDown className="w-6 h-6 text-primary-600 dark:text-primary-400" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-neutral-900 dark:text-white">
-                    Downloadable Profile PDF
-                  </h3>
-                  <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                    {formData.downloadableProfilePDF
-                      ? "Schools can download your profile as a PDF"
-                      : "Schools cannot download your profile as a PDF"}
-                  </p>
-                </div>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={formData.downloadableProfilePDF}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      downloadableProfilePDF: e.target.checked,
-                    })
-                  }
-                  className="sr-only peer"
-                />
-                <div className="w-14 h-7 bg-neutral-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-neutral-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all dark:border-neutral-600 peer-checked:bg-primary-600"></div>
-                <span className="ml-3 text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                  {formData.downloadableProfilePDF ? "Yes" : "No"}
-                </span>
-              </label>
-            </div>
-          </div>
-
-          {/* Save Button */}
-          <div className="flex justify-end mt-8 pt-6 border-t border-neutral-200 dark:border-neutral-700">
-            <Button
-              onClick={() => {
-                setFormData({
-                  searchable: teacher.searchable !== undefined ? teacher.searchable : true,
-                  salaryExpectationVisible: teacher.salaryExpectationVisible !== undefined ? teacher.salaryExpectationVisible : true,
-                  anonymiseProfile: teacher.anonymiseProfile !== undefined ? teacher.anonymiseProfile : false,
-                  downloadableProfilePDF: teacher.downloadableProfilePDF !== undefined ? teacher.downloadableProfilePDF : true,
-                });
-              }}
-              variant="secondary"
-              size="sm"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSave}
-              variant="gradient"
-              disabled={saving}
-              size="sm"
-              leftIcon={
-                saving ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Save className="w-4 h-4" />
-                )
-              }
-              className="ml-4"
-            >
-              {saving ? "Saving..." : "Save Changes"}
-            </Button>
-          </div>
-        </motion.div>
+          </motion.div>
+        </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white dark:bg-neutral-800 rounded-2xl p-8 max-w-md w-full shadow-xl"
+          >
+            <div className="flex items-start gap-4 mb-6">
+              <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0">
+                <AlertTriangle className="w-6 h-6 text-red-600 dark:text-red-400" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-xl font-bold text-neutral-900 dark:text-white mb-2">
+                  Delete Account?
+                </h3>
+                <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                  This will immediately hide your profile from schools and
+                  schedule permanent deletion in 7 days. All your data, CV, and
+                  applications will be removed. This action cannot be undone.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex gap-3 justify-end">
+              <Button
+                onClick={() => setShowDeleteModal(false)}
+                variant="secondary"
+                size="sm"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleDeleteAccount}
+                variant="danger"
+                size="sm"
+                disabled={deleting}
+                leftIcon={
+                  deleting ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="w-4 h-4" />
+                  )
+                }
+              >
+                {deleting ? "Deleting..." : "Delete Account"}
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 };
-

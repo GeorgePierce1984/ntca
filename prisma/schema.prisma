@@ -46,6 +46,11 @@ model User {
   emailVerified Boolean @default(false)
   resetToken String? // For password reset and email verification
   resetTokenExpiry DateTime? // Expiry time for reset token
+  deletionScheduledAt DateTime? // Scheduled deletion date (7-day grace period)
+  // Email preferences
+  emailJobAlerts Boolean @default(true)
+  emailPlatformUpdates Boolean @default(true)
+  emailMarketing Boolean @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
