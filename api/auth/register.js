@@ -250,8 +250,10 @@ export default async function handler(req, res) {
     try {
       if (userType.toLowerCase() === "school") {
         await emailHelpers.sendSchoolWelcome(result.profile);
+        await emailHelpers.sendSchoolHowToPostJob(result.profile);
       } else if (userType.toLowerCase() === "teacher") {
         await emailHelpers.sendTeacherWelcome(result.profile);
+        await emailHelpers.sendTeacherProfileTips(result.profile);
       }
     } catch (emailError) {
       // Log error but don't fail registration

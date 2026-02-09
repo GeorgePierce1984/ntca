@@ -354,12 +354,13 @@ async function handleSuccessfulPayment(session) {
     console.log("✅ School ID:", result.profile.id);
     console.log("✅ School name:", result.profile.name);
 
-    // Send welcome email
+    // Send welcome + onboarding emails
     try {
       await emailHelpers.sendSchoolWelcome(result.profile, {
         name: metadata.planName,
         jobLimit: metadata.jobLimit || "Unlimited",
       });
+      await emailHelpers.sendSchoolHowToPostJob(result.profile);
     } catch (emailError) {
       console.error("Failed to send welcome email:", emailError);
     }
@@ -444,6 +445,7 @@ async function handleSubscriptionCreated(subscription) {
           jobLimit:
             subscription.items.data[0]?.price.metadata?.jobLimit || "Unlimited",
           price: `$${(subscription.items.data[0]?.price.unit_amount / 100).toFixed(2)}`,
+          billingInterval: subscription.items.data[0]?.price.recurring?.interval || "month",
           nextBillingDate: new Date(
             subscription.current_period_end * 1000,
           ).toLocaleDateString(),
@@ -509,6 +511,7 @@ async function handleSubscriptionUpdated(subscription) {
           jobLimit:
             subscription.items.data[0].price.metadata?.jobLimit || "Unlimited",
           price: `$${(subscription.items.data[0].price.unit_amount / 100).toFixed(2)}`,
+          billingInterval: subscription.items.data[0]?.price.recurring?.interval || "month",
           nextBillingDate: new Date(
             subscription.current_period_end * 1000,
           ).toLocaleDateString(),
