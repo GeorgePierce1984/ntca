@@ -32,7 +32,7 @@ export const AboutPage: React.FC = () => {
               </div>
               <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed">
                 International teaching is fragmented. Schools struggle to hire confidently. Teachers struggle to find
-                trusted roles without noise, посредники, and uncertainty.
+                trusted roles without noise, middlemen, and uncertainty.
               </p>
               <p className="text-neutral-600 dark:text-neutral-400 mt-4 leading-relaxed">
                 NTCA fixes that by bringing schools and teachers into one trusted, Central Asia–specific network — with
