@@ -842,6 +842,40 @@ export default async function handler(req, res) {
       console.log("interview_requests table already exists");
     }
 
+    // Check if newsletter_subscribers table exists (used for footer newsletter signup)
+    const newsletterSubscribersTableCheck = await prisma.$queryRaw`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables
+        WHERE table_schema = 'public'
+        AND table_name = 'newsletter_subscribers'
+      );
+    `;
+
+    if (!newsletterSubscribersTableCheck[0].exists) {
+      console.log("Creating newsletter_subscribers table...");
+
+      await prisma.$executeRaw`
+        CREATE TABLE "newsletter_subscribers" (
+          "id" TEXT NOT NULL,
+          "email" TEXT NOT NULL,
+          "status" TEXT NOT NULL DEFAULT 'subscribed',
+          "source" TEXT,
+          "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          "updatedAt" TIMESTAMP(3) NOT NULL,
+          CONSTRAINT "newsletter_subscribers_pkey" PRIMARY KEY ("id")
+        );
+      `;
+
+      await prisma.$executeRaw`
+        CREATE UNIQUE INDEX IF NOT EXISTS "newsletter_subscribers_email_key"
+        ON "newsletter_subscribers"("email");
+      `;
+
+      console.log("✓ Created newsletter_subscribers table");
+    } else {
+      console.log("newsletter_subscribers table already exists");
+    }
+
     console.log("Migration completed successfully!");
 
     res.status(200).json({
