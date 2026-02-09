@@ -6,7 +6,6 @@ import {
   EyeOff,
   Save,
   Loader2,
-  UserX,
   FileDown,
   Mail,
   Trash2,
@@ -40,12 +39,20 @@ export const TeacherPrivacyPage: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  
+  // Local state for form data (before saving)
+  const [searchable, setSearchable] = useState(true);
   const [emailPreferences, setEmailPreferences] = useState<EmailPreferences>({
     jobAlerts: true,
     platformUpdates: true,
     marketing: false,
   });
   const [savingEmailPrefs, setSavingEmailPrefs] = useState(false);
+  const [originalEmailPrefs, setOriginalEmailPrefs] = useState<EmailPreferences>({
+    jobAlerts: true,
+    platformUpdates: true,
+    marketing: false,
+  });
 
   useEffect(() => {
     if (!user || user.userType !== "TEACHER") {
@@ -68,6 +75,7 @@ export const TeacherPrivacyPage: React.FC = () => {
 
       const data = await response.json();
       setTeacher(data.teacher);
+      setSearchable(data.teacher.searchable !== undefined ? data.teacher.searchable : true);
     } catch (error) {
       console.error("Error fetching profile:", error);
       toast.error("Failed to load privacy settings");
@@ -86,18 +94,20 @@ export const TeacherPrivacyPage: React.FC = () => {
 
       if (response.ok) {
         const data = await response.json();
-        setEmailPreferences({
+        const prefs = {
           jobAlerts: data.jobAlerts ?? true,
           platformUpdates: data.platformUpdates ?? true,
           marketing: data.marketing ?? false,
-        });
+        };
+        setEmailPreferences(prefs);
+        setOriginalEmailPrefs(prefs);
       }
     } catch (error) {
       console.error("Error fetching email preferences:", error);
     }
   };
 
-  const handleHideProfile = async () => {
+  const handleSaveProfileVisibility = async () => {
     if (!teacher) return;
 
     setSaving(true);
@@ -110,20 +120,52 @@ export const TeacherPrivacyPage: React.FC = () => {
         },
         body: JSON.stringify({
           ...teacher,
-          searchable: false,
+          searchable: searchable,
         }),
       });
 
-      if (!response.ok) throw new Error("Failed to hide profile");
+      if (!response.ok) throw new Error("Failed to update profile visibility");
 
       const data = await response.json();
       setTeacher(data.teacher);
-      toast.success("Profile hidden from schools. You will still receive emails.");
+      toast.success(
+        searchable
+          ? "Profile is now visible to schools"
+          : "Profile hidden from schools. You will still receive emails."
+      );
     } catch (error) {
-      console.error("Error hiding profile:", error);
-      toast.error("Failed to hide profile");
+      console.error("Error updating profile visibility:", error);
+      toast.error("Failed to update profile visibility");
+      // Revert on error
+      setSearchable(teacher.searchable);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSaveEmailPreferences = async () => {
+    setSavingEmailPrefs(true);
+    try {
+      const response = await fetch("/api/teachers/email-preferences", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+        },
+        body: JSON.stringify(emailPreferences),
+      });
+
+      if (!response.ok) throw new Error("Failed to update email preferences");
+
+      setOriginalEmailPrefs(emailPreferences);
+      toast.success("Email preferences updated");
+    } catch (error) {
+      console.error("Error updating email preferences:", error);
+      toast.error("Failed to update email preferences");
+      // Revert on error
+      setEmailPreferences(originalEmailPrefs);
+    } finally {
+      setSavingEmailPrefs(false);
     }
   };
 
@@ -162,36 +204,12 @@ export const TeacherPrivacyPage: React.FC = () => {
     }
   };
 
-  const handleEmailPreferencesChange = async (
-    key: keyof EmailPreferences,
-    value: boolean
-  ) => {
-    const newPrefs = { ...emailPreferences, [key]: value };
-    setEmailPreferences(newPrefs);
+  const hasEmailPrefsChanges =
+    emailPreferences.jobAlerts !== originalEmailPrefs.jobAlerts ||
+    emailPreferences.platformUpdates !== originalEmailPrefs.platformUpdates ||
+    emailPreferences.marketing !== originalEmailPrefs.marketing;
 
-    setSavingEmailPrefs(true);
-    try {
-      const response = await fetch("/api/teachers/email-preferences", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-        },
-        body: JSON.stringify(newPrefs),
-      });
-
-      if (!response.ok) throw new Error("Failed to update email preferences");
-
-      toast.success("Email preferences updated");
-    } catch (error) {
-      console.error("Error updating email preferences:", error);
-      toast.error("Failed to update email preferences");
-      // Revert on error
-      setEmailPreferences(emailPreferences);
-    } finally {
-      setSavingEmailPrefs(false);
-    }
-  };
+  const hasProfileVisibilityChanges = searchable !== (teacher?.searchable ?? true);
 
   if (loading) {
     return (
@@ -241,87 +259,73 @@ export const TeacherPrivacyPage: React.FC = () => {
 
         {/* Content */}
         <div className="space-y-6">
-          {/* A. Hide Profile from Schools */}
+          {/* A. Hide/Show Profile from Schools */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
             className="glass rounded-2xl p-8"
           >
-            <div className="flex items-start justify-between gap-6">
-              <div className="flex items-start gap-4 flex-1">
-                <div className="w-12 h-12 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center flex-shrink-0">
-                  {teacher.searchable ? (
+            <div className="flex items-center justify-between p-6 bg-neutral-50 dark:bg-neutral-800/50 rounded-xl">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
+                  {searchable ? (
                     <Eye className="w-6 h-6 text-primary-600 dark:text-primary-400" />
                   ) : (
                     <EyeOff className="w-6 h-6 text-neutral-400" />
                   )}
                 </div>
-                <div className="flex-1">
-                  <h3 className="text-xl font-semibold text-neutral-900 dark:text-white mb-2">
+                <div>
+                  <h3 className="text-lg font-semibold text-neutral-900 dark:text-white">
                     Hide my profile
                   </h3>
-                  <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
-                    {teacher.searchable
-                      ? "Your profile is currently visible to schools. Hide it to remove it from school searches while keeping your account active. You will still receive emails."
+                  <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                    {searchable
+                      ? "Your profile is visible to schools"
                       : "Your profile is hidden from schools. You will still receive emails."}
                   </p>
-                  {teacher.searchable && (
-                    <Button
-                      onClick={handleHideProfile}
-                      disabled={saving}
-                      variant="secondary"
-                      size="sm"
-                      leftIcon={
-                        saving ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <EyeOff className="w-4 h-4" />
-                        )
-                      }
-                    >
-                      {saving ? "Hiding..." : "Hide my profile"}
-                    </Button>
-                  )}
                 </div>
               </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={searchable}
+                  onChange={(e) => setSearchable(e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-14 h-7 bg-neutral-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-neutral-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all dark:border-neutral-600 peer-checked:bg-primary-600"></div>
+                <span className="ml-3 text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                  {searchable ? "Visible" : "Hidden"}
+                </span>
+              </label>
             </div>
+
+            {hasProfileVisibilityChanges && (
+              <div className="flex justify-end mt-6 pt-6 border-t border-neutral-200 dark:border-neutral-700">
+                <Button
+                  onClick={handleSaveProfileVisibility}
+                  variant="gradient"
+                  disabled={saving}
+                  size="sm"
+                  leftIcon={
+                    saving ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Save className="w-4 h-4" />
+                    )
+                  }
+                >
+                  {saving ? "Saving..." : "Save Changes"}
+                </Button>
+              </div>
+            )}
           </motion.div>
 
-          {/* B. Download My Data */}
+          {/* B. Email Preferences */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.1 }}
-            className="glass rounded-2xl p-8"
-          >
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center flex-shrink-0">
-                <FileDown className="w-6 h-6 text-primary-600 dark:text-primary-400" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-xl font-semibold text-neutral-900 dark:text-white mb-2">
-                  Download my data
-                </h3>
-                <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
-                  Request a copy of all your personal data stored on NTCA.
-                </p>
-                <a
-                  href="mailto:support@nt-ca.com?subject=Data Export Request"
-                  className="inline-flex items-center gap-2 text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium"
-                >
-                  <Mail className="w-4 h-4" />
-                  Email support@nt-ca.com to request your data
-                </a>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* C. Email Preferences */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.2 }}
             className="glass rounded-2xl p-8"
           >
             <div className="flex items-start gap-4 mb-6">
@@ -339,53 +343,114 @@ export const TeacherPrivacyPage: React.FC = () => {
             </div>
 
             <div className="space-y-4 pl-16">
-              <label className="flex items-center gap-3 cursor-pointer group">
-                <input
-                  type="checkbox"
-                  checked={emailPreferences.jobAlerts}
-                  onChange={(e) =>
-                    handleEmailPreferencesChange("jobAlerts", e.target.checked)
-                  }
-                  disabled={savingEmailPrefs}
-                  className="w-5 h-5 rounded border-neutral-300 text-primary-600 focus:ring-primary-500 focus:ring-2"
-                />
+              <div className="flex items-center justify-between p-4 bg-neutral-50 dark:bg-neutral-800/50 rounded-xl">
                 <span className="text-neutral-900 dark:text-white font-medium">
                   Job alerts
                 </span>
-              </label>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={emailPreferences.jobAlerts}
+                    onChange={(e) =>
+                      setEmailPreferences({
+                        ...emailPreferences,
+                        jobAlerts: e.target.checked,
+                      })
+                    }
+                    className="sr-only peer"
+                  />
+                  <div className="w-14 h-7 bg-neutral-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-neutral-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all dark:border-neutral-600 peer-checked:bg-primary-600"></div>
+                </label>
+              </div>
 
-              <label className="flex items-center gap-3 cursor-pointer group">
-                <input
-                  type="checkbox"
-                  checked={emailPreferences.platformUpdates}
-                  onChange={(e) =>
-                    handleEmailPreferencesChange(
-                      "platformUpdates",
-                      e.target.checked
-                    )
-                  }
-                  disabled={savingEmailPrefs}
-                  className="w-5 h-5 rounded border-neutral-300 text-primary-600 focus:ring-primary-500 focus:ring-2"
-                />
+              <div className="flex items-center justify-between p-4 bg-neutral-50 dark:bg-neutral-800/50 rounded-xl">
                 <span className="text-neutral-900 dark:text-white font-medium">
                   Platform updates
                 </span>
-              </label>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={emailPreferences.platformUpdates}
+                    onChange={(e) =>
+                      setEmailPreferences({
+                        ...emailPreferences,
+                        platformUpdates: e.target.checked,
+                      })
+                    }
+                    className="sr-only peer"
+                  />
+                  <div className="w-14 h-7 bg-neutral-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-neutral-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all dark:border-neutral-600 peer-checked:bg-primary-600"></div>
+                </label>
+              </div>
 
-              <label className="flex items-center gap-3 cursor-pointer group">
-                <input
-                  type="checkbox"
-                  checked={emailPreferences.marketing}
-                  onChange={(e) =>
-                    handleEmailPreferencesChange("marketing", e.target.checked)
-                  }
-                  disabled={savingEmailPrefs}
-                  className="w-5 h-5 rounded border-neutral-300 text-primary-600 focus:ring-primary-500 focus:ring-2"
-                />
+              <div className="flex items-center justify-between p-4 bg-neutral-50 dark:bg-neutral-800/50 rounded-xl">
                 <span className="text-neutral-900 dark:text-white font-medium">
                   Marketing (optional)
                 </span>
-              </label>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={emailPreferences.marketing}
+                    onChange={(e) =>
+                      setEmailPreferences({
+                        ...emailPreferences,
+                        marketing: e.target.checked,
+                      })
+                    }
+                    className="sr-only peer"
+                  />
+                  <div className="w-14 h-7 bg-neutral-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-neutral-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all dark:border-neutral-600 peer-checked:bg-primary-600"></div>
+                </label>
+              </div>
+            </div>
+
+            {hasEmailPrefsChanges && (
+              <div className="flex justify-end mt-6 pt-6 border-t border-neutral-200 dark:border-neutral-700">
+                <Button
+                  onClick={handleSaveEmailPreferences}
+                  variant="gradient"
+                  disabled={savingEmailPrefs}
+                  size="sm"
+                  leftIcon={
+                    savingEmailPrefs ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Save className="w-4 h-4" />
+                    )
+                  }
+                >
+                  {savingEmailPrefs ? "Saving..." : "Save Changes"}
+                </Button>
+              </div>
+            )}
+          </motion.div>
+
+          {/* C. Request My Data */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.2 }}
+            className="glass rounded-2xl p-8"
+          >
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center flex-shrink-0">
+                <FileDown className="w-6 h-6 text-primary-600 dark:text-primary-400" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-xl font-semibold text-neutral-900 dark:text-white mb-2">
+                  Request my data
+                </h3>
+                <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
+                  Request a copy of all your personal data stored on NTCA.
+                </p>
+                <a
+                  href="mailto:support@nt-ca.com?subject=Data Export Request"
+                  className="inline-flex items-center gap-2 text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium"
+                >
+                  <Mail className="w-4 h-4" />
+                  Email support@nt-ca.com to request your data
+                </a>
+              </div>
             </div>
           </motion.div>
 
