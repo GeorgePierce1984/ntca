@@ -70,11 +70,23 @@ export const Header: React.FC = () => {
   const location = useLocation();
   const { user, isAuthenticated, logout } = useAuth();
 
+  const getVisibleNavigation = (): NavItem[] => {
+    // When a teacher is logged in, hide the "For Schools" menu entirely.
+    if (user?.userType === "TEACHER") {
+      return navigation.filter((n) => n.label !== "For Schools");
+    }
+    return navigation;
+  };
+
   const getVisibleChildren = (parent: NavItem): NavItem[] => {
     const children = parent.children || [];
 
-    // On a school account, hide "Create Profile" under "For Teachers"
-    if (user?.userType === "SCHOOL" && parent.label === "For Teachers") {
+    // On logged-in accounts, hide "Create Profile" under "For Teachers"
+    // (teachers already have an account; schools shouldn't be prompted to create teacher profiles).
+    if (
+      (user?.userType === "SCHOOL" || user?.userType === "TEACHER") &&
+      parent.label === "For Teachers"
+    ) {
       return children.filter((c) => c.label !== "Create Profile");
     }
 
@@ -185,7 +197,7 @@ export const Header: React.FC = () => {
             {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center gap-8">
               <ul className="flex items-center gap-1" ref={navDropdownRef}>
-                {navigation.map((item) => (
+                {getVisibleNavigation().map((item) => (
                   <li key={item.label} className="relative">
                     {item.children ? (
                       <div className="relative">
@@ -454,7 +466,7 @@ export const Header: React.FC = () => {
                 {/* Mobile Menu Items */}
                 <div className="flex-1 overflow-y-auto py-6">
                   <ul className="space-y-1 px-4">
-                    {navigation.map((item) => (
+                    {getVisibleNavigation().map((item) => (
                       <li key={item.label}>
                         {item.children ? (
                           <div>
