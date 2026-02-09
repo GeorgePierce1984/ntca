@@ -114,6 +114,10 @@ export const AboutPage: React.FC = () => {
               <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed">
                 UK-based platform working with schools across Central Asia, the Middle East and international markets.
               </p>
+              <p className="text-neutral-600 dark:text-neutral-400 mt-4 leading-relaxed">
+                We also have people on the ground in Central Asia — our founder, Simon, lives in Kazakhstan and is an
+                English language teacher himself.
+              </p>
             </div>
 
             {/* Closing line */}
