@@ -876,6 +876,48 @@ export default async function handler(req, res) {
       console.log("newsletter_subscribers table already exists");
     }
 
+    // Add email preferences and deletion scheduling fields to users table
+    const userEmailPrefsCheck = await prisma.$queryRaw`
+      SELECT column_name
+      FROM information_schema.columns
+      WHERE table_name = 'users'
+      AND column_name IN ('deletionScheduledAt', 'emailJobAlerts', 'emailPlatformUpdates', 'emailMarketing')
+    `;
+
+    const existingUserEmailPrefsColumns = userEmailPrefsCheck.map((col) => col.column_name);
+
+    if (!existingUserEmailPrefsColumns.includes("deletionScheduledAt")) {
+      console.log("Adding deletionScheduledAt to users table...");
+      await prisma.$executeRaw`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "deletionScheduledAt" TIMESTAMP(3)`;
+      console.log("✓ Added deletionScheduledAt column to users table");
+    } else {
+      console.log("deletionScheduledAt column already exists");
+    }
+
+    if (!existingUserEmailPrefsColumns.includes("emailJobAlerts")) {
+      console.log("Adding emailJobAlerts to users table...");
+      await prisma.$executeRaw`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "emailJobAlerts" BOOLEAN NOT NULL DEFAULT true`;
+      console.log("✓ Added emailJobAlerts column to users table");
+    } else {
+      console.log("emailJobAlerts column already exists");
+    }
+
+    if (!existingUserEmailPrefsColumns.includes("emailPlatformUpdates")) {
+      console.log("Adding emailPlatformUpdates to users table...");
+      await prisma.$executeRaw`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "emailPlatformUpdates" BOOLEAN NOT NULL DEFAULT true`;
+      console.log("✓ Added emailPlatformUpdates column to users table");
+    } else {
+      console.log("emailPlatformUpdates column already exists");
+    }
+
+    if (!existingUserEmailPrefsColumns.includes("emailMarketing")) {
+      console.log("Adding emailMarketing to users table...");
+      await prisma.$executeRaw`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "emailMarketing" BOOLEAN NOT NULL DEFAULT false`;
+      console.log("✓ Added emailMarketing column to users table");
+    } else {
+      console.log("emailMarketing column already exists");
+    }
+
     console.log("Migration completed successfully!");
 
     res.status(200).json({
