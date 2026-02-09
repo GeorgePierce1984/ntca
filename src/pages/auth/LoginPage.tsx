@@ -250,37 +250,6 @@ export const LoginPage: React.FC = () => {
               {loading ? "Signing in..." : "Sign in"}
             </Button>
 
-            {/* Quick Login Options */}
-            <div className="mt-6">
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-neutral-300 dark:border-neutral-700" />
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white dark:bg-neutral-900 text-neutral-500">
-                    Or continue with
-                  </span>
-                </div>
-              </div>
-
-              <div className="mt-6 grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  className="w-full inline-flex justify-center items-center px-4 py-3 border border-neutral-300 dark:border-neutral-700 rounded-lg shadow-sm bg-white dark:bg-neutral-800 text-sm font-medium text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors"
-                >
-                  <GraduationCap className="w-5 h-5 mr-2" />
-                  Demo Teacher
-                </button>
-                <button
-                  type="button"
-                  className="w-full inline-flex justify-center items-center px-4 py-3 border border-neutral-300 dark:border-neutral-700 rounded-lg shadow-sm bg-white dark:bg-neutral-800 text-sm font-medium text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors"
-                >
-                  <Building2 className="w-5 h-5 mr-2" />
-                  Demo School
-                </button>
-              </div>
-            </div>
-
             {/* Sign up link */}
             <div className="text-center">
               <span className="text-sm text-neutral-600 dark:text-neutral-400">
