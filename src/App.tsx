@@ -56,6 +56,7 @@ import { AiServicesPage } from "@/pages/AiServicesPage";
 import { PrivacyPolicyPage } from "@/pages/legal/PrivacyPolicyPage";
 import { TermsOfServicePage } from "@/pages/legal/TermsOfServicePage";
 import { CookiePolicyPage } from "@/pages/legal/CookiePolicyPage";
+import SitemapPage from "@/pages/SitemapPage";
 
 // Auth pages
 import { LoginPage } from "@/pages/auth/LoginPage";
@@ -173,6 +174,7 @@ function AppContent() {
           <Route path="/schools/signup" element={<SignupRedirectPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/sitemap" element={<SitemapPage />} />
 
           {/* Protected School routes */}
           <Route
