@@ -671,18 +671,10 @@ export const TeacherSignupPage: React.FC = () => {
       </div>
 
       {/* Terms Modal */}
-      {showTermsModal && (
-        <TermsModal
-          onClose={() => setShowTermsModal(false)}
-          onAccept={() => {
-            setTermsAccepted(true);
-            setShowTermsModal(false);
-            if (errors.termsAccepted) {
-              setErrors({ ...errors, termsAccepted: "" });
-            }
-          }}
-        />
-      )}
+      <TermsModal
+        isOpen={showTermsModal}
+        onClose={() => setShowTermsModal(false)}
+      />
     </div>
   );
 };
