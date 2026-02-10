@@ -170,7 +170,92 @@ export default async function handler(req, res) {
           where: { userId: user.id },
         });
 
-        // Delete user (this will cascade delete School/Teacher, Jobs, Applications, etc.)
+        // Explicitly delete Teacher/School records and their related data
+        if (user.teacher) {
+          console.log(`  Deleting teacher profile: ${user.teacher.id}...`);
+          
+          // Delete teacher's applications
+          if (user.teacher.applications?.length > 0) {
+            await tx.application.deleteMany({
+              where: { teacherId: user.teacher.id },
+            });
+          }
+          
+          // Delete teacher's saved jobs
+          if (user.teacher.savedJobs?.length > 0) {
+            await tx.savedJob.deleteMany({
+              where: { teacherId: user.teacher.id },
+            });
+          }
+          
+          // Delete teacher's conversations and messages
+          if (user.teacher.conversations?.length > 0) {
+            for (const conv of user.teacher.conversations) {
+              if (conv.messages?.length > 0) {
+                await tx.message.deleteMany({
+                  where: { conversationId: conv.id },
+                });
+              }
+            }
+            await tx.conversation.deleteMany({
+              where: { teacherId: user.teacher.id },
+            });
+          }
+          
+          // Delete teacher profile
+          await tx.teacher.delete({
+            where: { id: user.teacher.id },
+          });
+        }
+
+        if (user.school) {
+          console.log(`  Deleting school profile: ${user.school.id}...`);
+          
+          // Delete school's jobs and related data
+          if (user.school.jobs?.length > 0) {
+            for (const job of user.school.jobs) {
+              // Delete job applications
+              if (job.applications?.length > 0) {
+                await tx.application.deleteMany({
+                  where: { jobId: job.id },
+                });
+              }
+              
+              // Delete saved jobs
+              if (job.savedJobs?.length > 0) {
+                await tx.savedJob.deleteMany({
+                  where: { jobId: job.id },
+                });
+              }
+              
+              // Delete job
+              await tx.job.delete({
+                where: { id: job.id },
+              });
+            }
+          }
+          
+          // Delete school's conversations and messages
+          if (user.school.conversations?.length > 0) {
+            for (const conv of user.school.conversations) {
+              if (conv.messages?.length > 0) {
+                await tx.message.deleteMany({
+                  where: { conversationId: conv.id },
+                });
+              }
+            }
+            await tx.conversation.deleteMany({
+              where: { schoolId: user.school.id },
+            });
+          }
+          
+          // Delete school profile
+          await tx.school.delete({
+            where: { id: user.school.id },
+          });
+        }
+
+        // Finally, delete the user
         await tx.user.delete({
           where: { id: user.id },
         });
