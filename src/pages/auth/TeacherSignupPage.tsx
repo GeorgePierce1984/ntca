@@ -7,7 +7,6 @@ import {
   ArrowRight,
   Mail,
   User,
-  Phone,
   Lock,
   Eye,
   EyeOff,
@@ -22,7 +21,6 @@ import {
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/Button";
 import { CountrySelector } from "@/components/forms/CountrySelector";
-import { getCountryByName } from "@/data/countries";
 import {
   validatePassword,
   validateEmail,
@@ -36,8 +34,6 @@ interface TeacherForm {
   lastName: string;
   email: string;
   password: string;
-  phone: string;
-  phoneCountryCode: string;
   country: string;
 }
 
@@ -48,7 +44,6 @@ export const TeacherSignupPage: React.FC = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showPassword, setShowPassword] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState<any>(undefined);
-  const [selectedPhoneCountry, setSelectedPhoneCountry] = useState<any>(undefined);
   const [verificationCode, setVerificationCode] = useState("");
   const [verificationCodeSent, setVerificationCodeSent] = useState(false);
   const [emailVerified, setEmailVerified] = useState(false);
@@ -65,8 +60,6 @@ export const TeacherSignupPage: React.FC = () => {
     lastName: "",
     email: "",
     password: "",
-    phone: "",
-    phoneCountryCode: "",
     country: "",
   });
 
@@ -95,11 +88,6 @@ export const TeacherSignupPage: React.FC = () => {
     if (errors.country) {
       setErrors({ ...errors, country: "" });
     }
-  };
-
-  const handlePhoneCountrySelect = (country: any) => {
-    setSelectedPhoneCountry(country);
-    setTeacherForm({ ...teacherForm, phoneCountryCode: country.phoneCode });
   };
 
   const validateForm = () => {
@@ -401,34 +389,6 @@ export const TeacherSignupPage: React.FC = () => {
                 )}
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                  Phone (optional)
-                </label>
-                <div className="flex gap-3">
-                  <div className="min-w-[210px]">
-                    <CountrySelector
-                      selectedCountry={selectedPhoneCountry}
-                      onSelect={handlePhoneCountrySelect}
-                      showPhoneCode={true}
-                      placeholder="Country code..."
-                    />
-                  </div>
-                  <div className="flex-1 relative">
-                    <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 w-5 h-5" />
-                    <input
-                      type="tel"
-                      value={teacherForm.phone}
-                      onChange={(e) =>
-                        setTeacherForm({ ...teacherForm, phone: e.target.value })
-                      }
-                      className="input pl-10 w-full"
-                      placeholder="Phone number"
-                    />
-                  </div>
-                </div>
-              </div>
-
               {/* Terms acceptance */}
               <div className="p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/40">
                 <label className="flex items-start gap-3 text-sm text-neutral-700 dark:text-neutral-200">
@@ -490,24 +450,6 @@ export const TeacherSignupPage: React.FC = () => {
               >
                 {loading ? "Creating account..." : "Create Account"}
               </Button>
-
-              {/* Trust signals */}
-              <div className="pt-6 border-t border-neutral-200 dark:border-neutral-800">
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400">
-                    <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400" />
-                    <span>No fees for teachers</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400">
-                    <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400" />
-                    <span>Direct school contact</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400">
-                    <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400" />
-                    <span>International roles only</span>
-                  </div>
-                </div>
-              </div>
 
               {/* Login link */}
               <div className="text-center">
@@ -680,6 +622,18 @@ export const TeacherSignupPage: React.FC = () => {
                   <Globe className="w-5 h-5" />
                 </div>
                 <span>Opportunities across Central Asia</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+                  <CheckCircle2 className="w-5 h-5" />
+                </div>
+                <span>No fees for teachers</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+                  <CheckCircle2 className="w-5 h-5" />
+                </div>
+                <span>Direct school contact</span>
               </div>
             </motion.div>
           </div>
