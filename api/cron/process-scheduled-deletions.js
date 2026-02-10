@@ -14,10 +14,20 @@
 import { prisma } from "../_utils/prisma.js";
 
 export default async function handler(req, res) {
-  // Optional: Add secret token check for external cron services
+  // Vercel Cron requests include `x-vercel-cron: 1`
+  // If you want to call this from an external cron, set CRON_SECRET and pass `x-cron-secret`.
+  const isVercelCron = req.headers["x-vercel-cron"] === "1";
   const cronSecret = req.headers["x-cron-secret"];
-  if (process.env.CRON_SECRET && cronSecret !== process.env.CRON_SECRET) {
+  const isExternalAuthorized =
+    !!process.env.CRON_SECRET && cronSecret === process.env.CRON_SECRET;
+
+  if (!isVercelCron && process.env.CRON_SECRET && !isExternalAuthorized) {
     return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  if (req.method !== "GET" && req.method !== "POST") {
+    res.setHeader("Allow", ["GET", "POST"]);
+    return res.status(405).json({ error: "Method Not Allowed" });
   }
 
   try {
@@ -98,6 +108,8 @@ export default async function handler(req, res) {
       message: `Processed ${deletedCount} account deletion(s)`,
       deleted: deletedCount,
       totalFound: usersToDelete.length,
+      ranAt: now.toISOString(),
+      auth: isVercelCron ? "vercel-cron" : process.env.CRON_SECRET ? "external-secret" : "open",
     });
   } catch (error) {
     console.error("Error processing scheduled deletions:", error);
