@@ -2139,49 +2139,53 @@ export const SchoolDashboardPage: React.FC = () => {
                     return (
                       <div
                         key={applicant.id}
-                        className="card p-4 cursor-pointer hover:shadow-md transition-all duration-200"
+                        className="card p-4 cursor-pointer hover:shadow-md transition-all duration-200 min-w-0 overflow-hidden"
                         onClick={() => openApplicantModal(applicant)}
                       >
-                        <div className="flex items-start justify-between gap-3 mb-3">
-                          <div className="flex items-start gap-4">
-                            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                        <div className="flex items-start justify-between gap-2 sm:gap-3 mb-3">
+                          <div className="flex items-start gap-2 sm:gap-4 min-w-0 flex-1">
+                            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
                               {applicant.teacher?.firstName?.[0] || applicant.guestFirstName?.[0] || '?'}
                               {applicant.teacher?.lastName?.[0] || applicant.guestLastName?.[0] || ''}
                             </div>
-                            <div className="flex-1">
-                              <h3 className="text-base font-semibold text-neutral-900 dark:text-white leading-tight">
+                            <div className="flex-1 min-w-0">
+                              <h3 className="text-base font-semibold text-neutral-900 dark:text-white leading-tight truncate">
                                 {applicant.teacher ? `${applicant.teacher.firstName} ${applicant.teacher.lastName}` : `${applicant.guestFirstName || 'Guest'} ${applicant.guestLastName || 'User'}`}
                               </h3>
-                              <p className="text-sm text-neutral-600 dark:text-neutral-400 line-clamp-1">
+                              <p className="text-sm text-neutral-600 dark:text-neutral-400 line-clamp-1 truncate">
                                 {job?.title}
                               </p>
 
-                              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-neutral-500">
-                                <span className="flex items-center gap-1">
-                                  <Mail className="w-3.5 h-3.5" />
-                                  <span className="truncate max-w-[220px]">
+                              <div className="mt-2 flex flex-wrap gap-x-3 sm:gap-x-4 gap-y-1 text-xs text-neutral-500">
+                                <span className="flex items-center gap-1 min-w-0">
+                                  <Mail className="w-3.5 h-3.5 flex-shrink-0" />
+                                  <span className="truncate max-w-[140px] sm:max-w-[220px]">
                                     {applicant.teacher?.user?.email || applicant.guestEmail || 'N/A'}
                                   </span>
                                 </span>
                                 <span className="flex items-center gap-1">
-                                  <MapPin className="w-3.5 h-3.5" />
-                                  {applicant.teacher ? `${applicant.teacher.city}, ${applicant.teacher.country}` : 
-                                   (applicant.guestCity && applicant.guestCountry ? `${applicant.guestCity}, ${applicant.guestCountry}` : 'Location not specified')}
+                                  <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
+                                  <span className="truncate max-w-[120px] sm:max-w-none">
+                                    {applicant.teacher ? `${applicant.teacher.city}, ${applicant.teacher.country}` : 
+                                     (applicant.guestCity && applicant.guestCountry ? `${applicant.guestCity}, ${applicant.guestCountry}` : 'Location not specified')}
+                                  </span>
                                 </span>
                                 <span className="flex items-center gap-1">
-                                  <Award className="w-3.5 h-3.5" />
-                                  {applicant.teacher?.qualification || 'Guest Applicant'}
+                                  <Award className="w-3.5 h-3.5 flex-shrink-0" />
+                                  <span className="truncate max-w-[100px] sm:max-w-none">
+                                    {applicant.teacher?.qualification || 'Guest Applicant'}
+                                  </span>
                                 </span>
                               </div>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2 ml-4">
+                          <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0 ml-2">
                             {/* Action Required Indicator */}
                             {(() => {
                               try {
                                 return applicant.interviewRequest?.status === "alternative_suggested" ? (
-                                  <span className="px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-400 rounded-full text-xs font-medium flex items-center gap-1">
-                                    <AlertCircle className="w-3 h-3" /> Action Required
+                                  <span className="px-1.5 sm:px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-400 rounded-full text-xs font-medium flex items-center gap-1 whitespace-nowrap">
+                                    <AlertCircle className="w-3 h-3" /> <span className="hidden sm:inline">Action Required</span>
                                   </span>
                                 ) : null;
                               } catch (e) {
@@ -2190,7 +2194,7 @@ export const SchoolDashboardPage: React.FC = () => {
                               }
                             })()}
                             <span
-                              className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(applicant.status)}`}
+                              className={`px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${getStatusColor(applicant.status)}`}
                             >
                               {applicant.status}
                             </span>
@@ -2198,7 +2202,7 @@ export const SchoolDashboardPage: React.FC = () => {
                         </div>
 
                         {/* Action Buttons */}
-                        <div className="flex items-center gap-2 pt-3 border-t border-neutral-200 dark:border-neutral-800">
+                        <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-neutral-200 dark:border-neutral-800">
                           <Button
                             size="sm"
                             variant="secondary"
@@ -2207,8 +2211,10 @@ export const SchoolDashboardPage: React.FC = () => {
                               e.stopPropagation();
                               openApplicantModal(applicant);
                             }}
+                            className="flex-shrink-0"
                           >
-                            View Details
+                            <span className="hidden sm:inline">View Details</span>
+                            <span className="sm:hidden">View</span>
                           </Button>
                           {applicant.status === "APPLIED" && (
                             <>
@@ -2219,8 +2225,10 @@ export const SchoolDashboardPage: React.FC = () => {
                                   e.stopPropagation();
                                   openApplicantModal(applicant);
                                 }}
+                                className="flex-shrink-0"
                               >
-                                Schedule Interview
+                                <span className="hidden sm:inline">Schedule Interview</span>
+                                <span className="sm:hidden">Interview</span>
                               </Button>
                               <Button
                                 size="sm"
@@ -2232,6 +2240,7 @@ export const SchoolDashboardPage: React.FC = () => {
                                     "declined",
                                   );
                                 }}
+                                className="flex-shrink-0"
                               >
                                 Decline
                               </Button>
@@ -2246,6 +2255,7 @@ export const SchoolDashboardPage: React.FC = () => {
                                   e.stopPropagation();
                                   updateApplicantStatus(applicant.id, "hired");
                                 }}
+                                className="flex-shrink-0"
                               >
                                 Hire
                               </Button>
@@ -2259,6 +2269,7 @@ export const SchoolDashboardPage: React.FC = () => {
                                     "declined",
                                   );
                                 }}
+                                className="flex-shrink-0"
                               >
                                 Decline
                               </Button>
@@ -2272,8 +2283,10 @@ export const SchoolDashboardPage: React.FC = () => {
                                 e.stopPropagation();
                                 openApplicantModal(applicant);
                               }}
+                              className="flex-shrink-0"
                             >
-                              Move to Interview
+                              <span className="hidden sm:inline">Move to Interview</span>
+                              <span className="sm:hidden">Interview</span>
                             </Button>
                           )}
                         </div>
