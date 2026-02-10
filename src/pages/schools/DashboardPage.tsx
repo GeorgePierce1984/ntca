@@ -1774,7 +1774,40 @@ export const SchoolDashboardPage: React.FC = () => {
               >
                 {/* Job Listings */}
                 <div className="grid md:grid-cols-2 gap-4">
-                  {jobs.map((job) => (
+                  {loading ? (
+                    // Loading skeleton matching compact card structure
+                    Array.from({ length: 4 }).map((_, i) => (
+                      <div key={i} className="card p-4">
+                        <div className="flex items-start justify-between gap-3 mb-3">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <div className="h-5 bg-neutral-200 dark:bg-neutral-700 rounded w-3/4 animate-pulse"></div>
+                              <div className="h-5 bg-neutral-200 dark:bg-neutral-700 rounded w-16 animate-pulse"></div>
+                            </div>
+                            <div className="flex flex-wrap gap-x-4 gap-y-1 mb-3">
+                              <div className="h-4 bg-neutral-200 dark:bg-neutral-700 rounded w-24 animate-pulse"></div>
+                              <div className="h-4 bg-neutral-200 dark:bg-neutral-700 rounded w-20 animate-pulse"></div>
+                              <div className="h-4 bg-neutral-200 dark:bg-neutral-700 rounded w-28 animate-pulse"></div>
+                            </div>
+                            {/* Match insights placeholder to prevent layout shift */}
+                            <div className="card p-3 mt-3">
+                              <div className="h-4 bg-neutral-200 dark:bg-neutral-700 rounded w-32 mb-3 animate-pulse"></div>
+                              <div className="flex flex-wrap gap-2 mb-3">
+                                <div className="h-8 bg-neutral-200 dark:bg-neutral-700 rounded w-20 animate-pulse"></div>
+                                <div className="h-8 bg-neutral-200 dark:bg-neutral-700 rounded w-20 animate-pulse"></div>
+                                <div className="h-8 bg-neutral-200 dark:bg-neutral-700 rounded w-20 animate-pulse"></div>
+                              </div>
+                              <div className="flex justify-end gap-2">
+                                <div className="h-8 bg-neutral-200 dark:bg-neutral-700 rounded w-24 animate-pulse"></div>
+                                <div className="h-8 bg-neutral-200 dark:bg-neutral-700 rounded w-28 animate-pulse"></div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    jobs.map((job) => (
                     <div key={job.id} className="card p-4">
                       <div className="flex items-start justify-between gap-3 mb-3">
                         <div className="flex-1">
@@ -1951,7 +1984,7 @@ export const SchoolDashboardPage: React.FC = () => {
                                 </div>
                               </div>
                             ) : loadingMatches[job.id] ? (
-                              <div className="card p-3 mt-3">
+                              <div className="card p-3 mt-3 min-h-[120px] flex items-center justify-center">
                                 <div className="flex items-center gap-2">
                                   <div className="animate-spin rounded-full h-4 w-4 border-2 border-neutral-300 dark:border-neutral-600 border-t-neutral-600 dark:border-t-neutral-400"></div>
                                   <span className="text-sm text-neutral-600 dark:text-neutral-400">
@@ -1960,8 +1993,8 @@ export const SchoolDashboardPage: React.FC = () => {
                                 </div>
                               </div>
                             ) : (
-                              <div className="card p-3 mt-3">
-                                <div className="flex items-center justify-between">
+                              <div className="card p-3 mt-3 min-h-[120px] flex items-center justify-center">
+                                <div className="flex flex-col items-center gap-3 w-full">
                                   <div className="flex items-center gap-2">
                                     <TrendingUp className="w-5 h-5 text-neutral-600 dark:text-neutral-400" />
                                     <span className="text-sm text-neutral-600 dark:text-neutral-400">
@@ -2026,7 +2059,8 @@ export const SchoolDashboardPage: React.FC = () => {
                         )}
                       </div>
                     </div>
-                  ))}
+                  ))
+                  )}
                   {jobs.length === 0 && !loading && (
                     <div className="text-center py-12">
                       <p className="text-neutral-500 mb-4">No job postings yet.</p>
