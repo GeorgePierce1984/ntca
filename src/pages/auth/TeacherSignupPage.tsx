@@ -130,6 +130,7 @@ export const TeacherSignupPage: React.FC = () => {
         body: JSON.stringify({
           ...teacherForm,
           userType: "teacher",
+          termsAccepted: true,
         }),
       });
 
