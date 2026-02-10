@@ -290,6 +290,7 @@ export const SchoolDashboardPage: React.FC = () => {
   const [jobs, setJobs] = useState<JobPosting[]>([]);
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
+  const [jobsLoading, setJobsLoading] = useState(true);
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
   const [subscriptionEndDate, setSubscriptionEndDate] = useState<string | null>(null);
   const [subscriptionLoading, setSubscriptionLoading] = useState(true);
@@ -409,6 +410,7 @@ export const SchoolDashboardPage: React.FC = () => {
 
   // Fetch real data
   const fetchJobs = async () => {
+    setJobsLoading(true);
     try {
       const response = await timedFetch("/api/jobs", {
         label: "school.jobs (GET)",
@@ -424,6 +426,8 @@ export const SchoolDashboardPage: React.FC = () => {
     } catch (error) {
       console.error("Error fetching jobs:", error);
       toast.error("Failed to load jobs");
+    } finally {
+      setJobsLoading(false);
     }
   };
 
@@ -1774,32 +1778,32 @@ export const SchoolDashboardPage: React.FC = () => {
               >
                 {/* Job Listings */}
                 <div className="grid md:grid-cols-2 gap-4">
-                  {loading ? (
+                  {jobsLoading || (jobs.length === 0 && loading) ? (
                     // Loading skeleton matching compact card structure
                     Array.from({ length: 4 }).map((_, i) => (
-                      <div key={i} className="card p-4">
-                        <div className="flex items-start justify-between gap-3 mb-3">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
+                      <div key={i} className="card p-4 min-w-0 overflow-hidden">
+                        <div className="flex items-start justify-between gap-2 sm:gap-3 mb-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 sm:gap-3 mb-2">
                               <div className="h-5 bg-neutral-200 dark:bg-neutral-700 rounded w-3/4 animate-pulse"></div>
-                              <div className="h-5 bg-neutral-200 dark:bg-neutral-700 rounded w-16 animate-pulse"></div>
+                              <div className="h-5 bg-neutral-200 dark:bg-neutral-700 rounded w-12 sm:w-16 animate-pulse flex-shrink-0"></div>
                             </div>
-                            <div className="flex flex-wrap gap-x-4 gap-y-1 mb-3">
-                              <div className="h-4 bg-neutral-200 dark:bg-neutral-700 rounded w-24 animate-pulse"></div>
-                              <div className="h-4 bg-neutral-200 dark:bg-neutral-700 rounded w-20 animate-pulse"></div>
-                              <div className="h-4 bg-neutral-200 dark:bg-neutral-700 rounded w-28 animate-pulse"></div>
+                            <div className="flex flex-wrap gap-x-3 sm:gap-x-4 gap-y-1 mb-3">
+                              <div className="h-4 bg-neutral-200 dark:bg-neutral-700 rounded w-20 sm:w-24 animate-pulse"></div>
+                              <div className="h-4 bg-neutral-200 dark:bg-neutral-700 rounded w-16 sm:w-20 animate-pulse"></div>
+                              <div className="h-4 bg-neutral-200 dark:bg-neutral-700 rounded w-24 sm:w-28 animate-pulse"></div>
                             </div>
                             {/* Match insights placeholder to prevent layout shift */}
-                            <div className="card p-3 mt-3">
-                              <div className="h-4 bg-neutral-200 dark:bg-neutral-700 rounded w-32 mb-3 animate-pulse"></div>
+                            <div className="card p-3 mt-3 min-h-[120px]">
+                              <div className="h-4 bg-neutral-200 dark:bg-neutral-700 rounded w-28 sm:w-32 mb-3 animate-pulse"></div>
                               <div className="flex flex-wrap gap-2 mb-3">
-                                <div className="h-8 bg-neutral-200 dark:bg-neutral-700 rounded w-20 animate-pulse"></div>
-                                <div className="h-8 bg-neutral-200 dark:bg-neutral-700 rounded w-20 animate-pulse"></div>
-                                <div className="h-8 bg-neutral-200 dark:bg-neutral-700 rounded w-20 animate-pulse"></div>
+                                <div className="h-8 bg-neutral-200 dark:bg-neutral-700 rounded w-16 sm:w-20 animate-pulse"></div>
+                                <div className="h-8 bg-neutral-200 dark:bg-neutral-700 rounded w-16 sm:w-20 animate-pulse"></div>
+                                <div className="h-8 bg-neutral-200 dark:bg-neutral-700 rounded w-16 sm:w-20 animate-pulse"></div>
                               </div>
-                              <div className="flex justify-end gap-2">
-                                <div className="h-8 bg-neutral-200 dark:bg-neutral-700 rounded w-24 animate-pulse"></div>
-                                <div className="h-8 bg-neutral-200 dark:bg-neutral-700 rounded w-28 animate-pulse"></div>
+                              <div className="flex flex-wrap justify-end gap-2">
+                                <div className="h-8 bg-neutral-200 dark:bg-neutral-700 rounded w-20 sm:w-24 animate-pulse"></div>
+                                <div className="h-8 bg-neutral-200 dark:bg-neutral-700 rounded w-24 sm:w-28 animate-pulse"></div>
                               </div>
                             </div>
                           </div>
