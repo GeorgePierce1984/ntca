@@ -61,6 +61,7 @@ import SitemapPage from "@/pages/SitemapPage";
 // Auth pages
 import { LoginPage } from "@/pages/auth/LoginPage";
 import { SignUpPage } from "@/pages/auth/SignUpPage";
+import { TeacherSignupPage } from "@/pages/auth/TeacherSignupPage";
 import { ForgotPasswordPage } from "@/pages/auth/ForgotPasswordPage";
 import { ResetPasswordPage } from "@/pages/auth/ResetPasswordPage";
 
@@ -171,6 +172,7 @@ function AppContent() {
           {/* Auth routes */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignUpPage />} />
+          <Route path="/signupteacher" element={<TeacherSignupPage />} />
           <Route path="/schools/signup" element={<SignupRedirectPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
