@@ -87,10 +87,7 @@ export const TeacherSignupPage: React.FC = () => {
   };
 
   const passwordValidation = validatePassword(teacherForm.password);
-  const strengthInfo = {
-    label: getPasswordStrengthLabel(passwordValidation.score),
-    color: getPasswordStrengthBarColor(passwordValidation.score),
-  };
+  const strengthInfo = getPasswordStrengthLabel(passwordValidation.score);
 
   const handleCountrySelect = (country: any) => {
     setSelectedCountry(country);
@@ -379,7 +376,7 @@ export const TeacherSignupPage: React.FC = () => {
                     <div className="w-full bg-neutral-200 dark:bg-neutral-700 rounded-full h-2 mt-1">
                       <div
                         className={`h-2 rounded-full transition-all duration-300 ${getPasswordStrengthBarColor(passwordValidation.score)}`}
-                        style={{ width: `${passwordValidation.score}%` }}
+                        style={{ width: `${Math.min(passwordValidation.score, 100)}%` }}
                       />
                     </div>
                   </div>
