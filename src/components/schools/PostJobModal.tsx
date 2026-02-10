@@ -366,13 +366,18 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({
                     handleJobSubmit(e);
                   }}
                   onKeyDown={(e) => {
-                    // Prevent Enter key from submitting form unless we're on the last tab and submit button is focused
+                    // Allow Enter/newlines in textareas on any tab.
+                    if (
+                      e.key === "Enter" &&
+                      (e.target as HTMLElement).tagName === "TEXTAREA"
+                    ) {
+                      return;
+                    }
+
+                    // Prevent Enter from submitting the form while user is filling earlier tabs.
+                    // (We only want submission from the final tab's button click / explicit submit.)
                     if (e.key === "Enter" && activeTab !== "school") {
                       e.preventDefault();
-                    }
-                    // If Enter is pressed in a textarea, don't submit
-                    if (e.key === "Enter" && (e.target as HTMLElement).tagName === "TEXTAREA") {
-                      return; // Allow default behavior for textareas
                     }
                   }}
                 >
