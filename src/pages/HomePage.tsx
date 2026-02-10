@@ -126,7 +126,7 @@ const testimonials = [
 const ctaForTeachers = {
   title: "Ready to Start Your Teaching Journey?",
   description:
-    "Join thousands of qualified teachers who have found their dream positions through NTCA.",
+    "Join a growing network of international teachers actively seeking roles in Central Asia.",
   benefits: [
     "Access to exclusive job opportunities",
     "AI-powered job matching",
@@ -138,12 +138,12 @@ const ctaForTeachers = {
 const ctaForSchools = {
   title: "Find Your Perfect Teachers Today",
   description:
-    "Connect with pre-verified, CELTA-qualified teachers who are ready to make a difference.",
+    "Connect with pre-verified, CELTA-qualified teachers who are ready to make a difference. Schools typically begin receiving applications within days.",
   benefits: [
-    "Access to global talent pool",
+    "Growing network of international teachers",
     "AI-powered candidate screening",
-    "Premium listing options",
-    "Dedicated support team",
+    "Built to reduce hiring time and agency dependence",
+    "Founding schools get priority access",
   ],
 };
 
@@ -457,10 +457,10 @@ export const HomePage: React.FC = () => {
                       </div>
                       <div>
                         <div className="text-3xl font-bold text-neutral-900 dark:text-white">
-                          2,500+
+                          Growing
                         </div>
                         <div className="text-neutral-600 dark:text-neutral-400">
-                          Active Teachers
+                          Teacher Network
                         </div>
                       </div>
                     </div>
@@ -470,28 +470,34 @@ export const HomePage: React.FC = () => {
                       </div>
                       <div>
                         <div className="text-3xl font-bold text-neutral-900 dark:text-white">
-                          95%
+                          Fast
                         </div>
                         <div className="text-neutral-600 dark:text-neutral-400">
-                          Placement Rate
+                          Application Response
                         </div>
                       </div>
                     </div>
                     <div className="text-center">
                       <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-2">
-                        Join 150+ schools already using NTCA
+                        Founding schools help shape the platform and get first access
                       </p>
-                      <div className="flex justify-center -space-x-2">
-                        {[...Array(5)].map((_, i) => (
-                          <img
-                            key={i}
-                            src={`https://i.pravatar.cc/40?img=${i + 10}`}
-                            alt=""
-                            className="w-10 h-10 rounded-full border-2 border-white dark:border-neutral-800"
-                          />
-                        ))}
-                        <div className="w-10 h-10 rounded-full bg-neutral-200 dark:bg-neutral-700 border-2 border-white dark:border-neutral-800 flex items-center justify-center text-xs font-medium text-neutral-600 dark:text-neutral-400">
-                          +145
+                      <div className="mt-4 pt-4 border-t border-neutral-200 dark:border-neutral-700">
+                        <p className="text-xs text-neutral-500 dark:text-neutral-500 mb-2">
+                          Live Signals
+                        </p>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex items-center justify-between">
+                            <span className="text-neutral-600 dark:text-neutral-400">Teachers joining</span>
+                            <span className="font-semibold text-neutral-900 dark:text-white">Weekly</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-neutral-600 dark:text-neutral-400">Schools onboarding</span>
+                            <span className="font-semibold text-neutral-900 dark:text-white">This term</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-neutral-600 dark:text-neutral-400">Regional focus</span>
+                            <span className="font-semibold text-neutral-900 dark:text-white">Central Asia</span>
+                          </div>
                         </div>
                       </div>
                     </div>

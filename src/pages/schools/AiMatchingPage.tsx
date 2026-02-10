@@ -28,7 +28,7 @@ export const AiMatchingPage: React.FC = () => {
     },
     {
       icon: <Target className="w-6 h-6" />,
-      title: "95% Match Accuracy",
+      title: "Precise Matching",
       description: "Find teachers who meet your exact requirements",
     },
     {
@@ -106,7 +106,7 @@ export const AiMatchingPage: React.FC = () => {
                   step: "2",
                   title: "AI Analysis",
                   description:
-                    "Our AI analyzes thousands of teacher profiles to find perfect matches",
+                    "Our AI analyzes teacher profiles to find perfect matches",
                 },
                 {
                   step: "3",

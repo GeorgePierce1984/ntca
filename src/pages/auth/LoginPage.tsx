@@ -290,8 +290,7 @@ export const LoginPage: React.FC = () => {
               className="text-lg mb-8 text-white/90"
             >
               Connect with top schools and qualified teachers across Central
-              Asia. Join thousands of educators who have found their dream
-              teaching positions through our platform.
+              Asia. Join a growing network of international educators actively seeking roles in the region.
             </motion.p>
             <motion.div
               initial={{ opacity: 0, y: 20 }}

@@ -18,10 +18,10 @@ import { countries } from "@/data/countries";
 import { CENTRAL_ASIA_COUNTRIES } from "@/constants/options";
 
 const stats = [
-  { label: "Teachers Placed", value: "2,500+", icon: GraduationCap },
-  { label: "Partner Schools", value: "150+", icon: Building2 },
-  { label: "Countries", value: "25+", icon: Globe },
-  { label: "Success Rate", value: "95%", icon: Award },
+  { label: "Teachers Joining", value: "Weekly", icon: GraduationCap },
+  { label: "Founding Schools", value: "Growing", icon: Building2 },
+  { label: "Central Asia Focus", value: "Kazakhstan & Beyond", icon: Globe },
+  { label: "Direct Hiring", value: "No Agency Fees", icon: Award },
 ];
 
 const floatingElements = [
@@ -131,7 +131,7 @@ export const Hero: React.FC = () => {
             >
               <Sparkles className="w-4 h-4" />
               <span className="text-sm font-medium">
-                AI-Powered Teaching Opportunities in Central Asia
+                Fast-Growing Regional Hiring Network
               </span>
             </motion.div>
 
@@ -139,18 +139,22 @@ export const Hero: React.FC = () => {
               variants={itemVariants}
               className="heading-1 text-neutral-900 dark:text-white mb-6"
             >
-              Connect Qualified Teachers with{" "}
-              <span className="gradient-text">Premium Schools</span> in Central
-              Asia
+              Hire International Teachers Across{" "}
+              <span className="gradient-text">Central Asia</span>
             </motion.h1>
 
             <motion.p
               variants={itemVariants}
-              className="text-xl text-neutral-600 dark:text-neutral-400 max-w-3xl mx-auto mb-8"
+              className="text-xl text-neutral-600 dark:text-neutral-400 max-w-3xl mx-auto mb-4"
             >
-              Join the leading platform for international teaching
-              opportunities. Our AI matching technology connects exceptional
-              educators with top schools across Central Asia.
+              A growing network of English-speaking teachers actively seeking roles across Kazakhstan, Uzbekistan and beyond.
+            </motion.p>
+
+            <motion.p
+              variants={itemVariants}
+              className="text-sm text-neutral-500 dark:text-neutral-500 max-w-2xl mx-auto mb-8 italic"
+            >
+              Early-stage platform — founding schools receive priority access and pricing.
             </motion.p>
 
             {/* Primary Job Search Button */}

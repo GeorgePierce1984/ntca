@@ -343,7 +343,7 @@ const Pricing: React.FC = () => {
               </div>
               <h2 className="heading-1 mb-6">Join for Free, Forever</h2>
               <p className="text-xl text-neutral-600 dark:text-neutral-400 mb-8">
-                Access thousands of teaching opportunities across Central Asia. No
+                Access teaching opportunities across Central Asia. Join a growing network of schools and teachers. No
                 subscription required.
               </p>
             </div>
