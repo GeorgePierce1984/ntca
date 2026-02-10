@@ -1771,43 +1771,44 @@ export const SchoolDashboardPage: React.FC = () => {
                 className="space-y-6"
               >
                 {/* Job Listings */}
-                <div className="space-y-4">
+                <div className="grid md:grid-cols-2 gap-4">
                   {jobs.map((job) => (
-                    <div key={job.id} className="card p-6">
-                      <div className="flex items-start justify-between mb-4">
+                    <div key={job.id} className="card p-4">
+                      <div className="flex items-start justify-between gap-3 mb-3">
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
-                            <h3 className="heading-3">{job.title}</h3>
+                            <h3 className="text-base font-semibold text-neutral-900 dark:text-white leading-tight">
+                              {job.title}
+                            </h3>
                             <span
-                              className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(getEffectiveStatus(job))}`}
+                              className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(getEffectiveStatus(job))}`}
                             >
                               {getEffectiveStatus(job)}
                             </span>
                           </div>
-                          <div className="grid md:grid-cols-3 gap-4 text-sm text-neutral-600 dark:text-neutral-400 mb-4">
+                          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-neutral-600 dark:text-neutral-400">
                             <span className="flex items-center gap-1">
-                              <MapPin className="w-4 h-4" />
+                              <MapPin className="w-3.5 h-3.5" />
                               {job.city}, {job.country}
                             </span>
                             <span className="flex items-center gap-1">
-                              <DollarSign className="w-4 h-4" />
+                              <DollarSign className="w-3.5 h-3.5" />
                               {job.salary}
                             </span>
                             <span className="flex items-center gap-1">
-                              <Calendar className="w-4 h-4" />
-                              Posted{" "}
-                              {new Date(job.createdAt).toLocaleDateString()}
+                              <Calendar className="w-3.5 h-3.5" />
+                              Posted {new Date(job.createdAt).toLocaleDateString()}
                             </span>
                           </div>
 
                           {/* Teaching requirements */}
                           {(job.teachingLicenseRequired || job.kazakhLanguageRequired || job.localCertificationRequired) && (
-                            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 mb-4">
-                              <h4 className="font-medium text-amber-800 dark:text-amber-200 mb-2 flex items-center gap-1">
-                                <Globe className="w-4 h-4" />
+                            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-2 mt-3">
+                              <h4 className="font-medium text-amber-800 dark:text-amber-200 mb-1 flex items-center gap-1 text-sm">
+                                <Globe className="w-3.5 h-3.5" />
                                 Teaching Requirements
                               </h4>
-                              <div className="grid md:grid-cols-3 gap-2 text-sm">
+                              <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs">
                                 {job.teachingLicenseRequired && (
                                   <span className="flex items-center gap-1 text-green-600">
                                     <CheckCircle className="w-3 h-3" />
@@ -1834,52 +1835,94 @@ export const SchoolDashboardPage: React.FC = () => {
                           {getEffectiveStatus(job) === "ACTIVE" && (
                             <>
                             {jobMatches[job.id] ? (
-                              <div className="card p-4 mb-4">
+                              <div className="card p-3 mt-3">
                                 {/* Headline - Top Left */}
-                                <div className="flex justify-start mb-4">
-                                  <h4 className="font-semibold text-neutral-900 dark:text-neutral-100">
+                                <div className="flex justify-start mb-3">
+                                  <h4 className="font-semibold text-neutral-900 dark:text-neutral-100 text-sm">
                                     Matches Found: {jobMatches[job.id].totalMatches}
                                   </h4>
                                 </div>
 
                                 {/* Match Category Boxes - Bottom Left */}
-                                <div className="flex items-center justify-start gap-3 mb-4">
+                                <div className="flex flex-wrap items-center justify-start gap-2 mb-3">
                                   {/* Strong Matches Box */}
-                                  <div className="flex items-center gap-2 px-4 py-2 rounded-lg border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20">
+                                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20">
                                     <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0" />
-                                    <span className="text-lg font-bold text-green-600 dark:text-green-400">
+                                    <span className="text-base font-bold text-green-600 dark:text-green-400">
                                       {jobMatches[job.id].byStrength.strong}
                                     </span>
-                                    <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                                    <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300">
                                       Strong
                                     </span>
                                   </div>
 
                                   {/* Good Matches Box */}
-                                  <div className="flex items-center gap-2 px-4 py-2 rounded-lg border border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-900/20">
+                                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-900/20">
                                     <CheckCircle className="w-4 h-4 text-yellow-600 dark:text-yellow-400 flex-shrink-0" />
-                                    <span className="text-lg font-bold text-yellow-600 dark:text-yellow-400">
+                                    <span className="text-base font-bold text-yellow-600 dark:text-yellow-400">
                                       {jobMatches[job.id].byStrength.medium}
                                     </span>
-                                    <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                                    <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300">
                                       Good
                                     </span>
                                   </div>
 
                                   {/* Partial Matches Box */}
-                                  <div className="flex items-center gap-2 px-4 py-2 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50">
+                                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50">
                                     <CheckCircle className="w-4 h-4 text-neutral-500 dark:text-neutral-400 flex-shrink-0" />
-                                    <span className="text-lg font-bold text-neutral-600 dark:text-neutral-400">
+                                    <span className="text-base font-bold text-neutral-600 dark:text-neutral-400">
                                       {jobMatches[job.id].byStrength.partial}
                                     </span>
-                                    <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                                    <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300">
                                       Partial
                                     </span>
                                   </div>
                                 </div>
 
-                                {/* View Matches and Applicants Buttons - Bottom Right */}
-                                <div className="flex justify-end gap-2">
+                                {/* Actions (left) + View buttons (right) */}
+                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                                  <div className="flex items-center gap-2">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      leftIcon={<Edit3 className="w-4 h-4" />}
+                                      onClick={() => openEditModal(job)}
+                                      disabled={!canAccessPremiumFeatures(subscriptionStatus, subscriptionLoading)}
+                                      title={!canAccessPremiumFeatures(subscriptionStatus, subscriptionLoading) ? "Editing requires a subscription" : "Edit job posting"}
+                                    >
+                                      Edit
+                                    </Button>
+                                    {getEffectiveStatus(job) === "ACTIVE" && (
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => updateJobStatus(job.id, "PAUSED")}
+                                        title="Pause job posting"
+                                      >
+                                        Pause
+                                      </Button>
+                                    )}
+                                    {getEffectiveStatus(job) === "PAUSED" && (
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => updateJobStatus(job.id, "ACTIVE")}
+                                        title="Activate job posting"
+                                      >
+                                        Activate
+                                      </Button>
+                                    )}
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => updateJobStatus(job.id, "CLOSED")}
+                                      title="Close job posting"
+                                    >
+                                      Close
+                                    </Button>
+                                  </div>
+
+                                  <div className="flex justify-end gap-2">
                                   <Button
                                     variant="secondary"
                                     size="sm"
@@ -1897,10 +1940,11 @@ export const SchoolDashboardPage: React.FC = () => {
                                   >
                                     {job._count.applications} Applicants
                                   </Button>
+                                  </div>
                                 </div>
                               </div>
                             ) : loadingMatches[job.id] ? (
-                              <div className="card p-4 mb-4">
+                              <div className="card p-3 mt-3">
                                 <div className="flex items-center gap-2">
                                   <div className="animate-spin rounded-full h-4 w-4 border-2 border-neutral-300 dark:border-neutral-600 border-t-neutral-600 dark:border-t-neutral-400"></div>
                                   <span className="text-sm text-neutral-600 dark:text-neutral-400">
@@ -1909,7 +1953,7 @@ export const SchoolDashboardPage: React.FC = () => {
                                 </div>
                               </div>
                             ) : (
-                              <div className="card p-4 mb-4">
+                              <div className="card p-3 mt-3">
                                 <div className="flex items-center justify-between">
                                   <div className="flex items-center gap-2">
                                     <TrendingUp className="w-5 h-5 text-neutral-600 dark:text-neutral-400" />
@@ -1930,7 +1974,9 @@ export const SchoolDashboardPage: React.FC = () => {
                             </>
                           )}
                         </div>
+                        {/* If match insights card is visible (active + loaded), actions live there */}
                         <div className="flex items-center gap-2 ml-4">
+                          {!(getEffectiveStatus(job) === "ACTIVE" && jobMatches[job.id]) && (
                           <Button
                             variant="ghost"
                             size="sm"
@@ -1941,6 +1987,7 @@ export const SchoolDashboardPage: React.FC = () => {
                           >
                             Edit
                           </Button>
+                          )}
                           {getEffectiveStatus(job) === "ACTIVE" && (
                             <Button
                               variant="ghost"
