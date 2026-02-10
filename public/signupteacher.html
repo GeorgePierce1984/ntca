@@ -3,6 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- For humans: immediately redirect into the SPA route -->
+    <meta http-equiv="refresh" content="0; url=/signupteacher" />
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
@@ -49,8 +51,14 @@
     <link rel="canonical" href="https://www.nt-ca.com/signupteacher" />
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <!-- Social crawlers will read meta tags above (no JS required). -->
+    <main style="font-family: system-ui, -apple-system, Segoe UI, Arial, sans-serif; padding: 24px;">
+      <h1 style="margin: 0 0 8px; font-size: 18px;">Redirecting…</h1>
+      <p style="margin: 0; color: #555;">
+        If you are not redirected automatically, open
+        <a href="/signupteacher">Teacher Signup</a>.
+      </p>
+    </main>
   </body>
 </html>
 

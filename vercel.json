@@ -19,7 +19,7 @@
       "destination": "/api/sitemap.xml"
     },
     {
-      "source": "/signupteacher",
+      "source": "/share/signupteacher",
       "destination": "/signupteacher.html"
     },
     {
