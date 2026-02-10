@@ -1058,7 +1058,6 @@ const TeacherDashboard: React.FC = () => {
     const requiredFields = [
       "firstName",
       "lastName",
-      "phone",
       "city",
       "country",
       "nationality",
@@ -1704,7 +1703,7 @@ const TeacherDashboard: React.FC = () => {
                         </div>
                         <div>
                           <label className="block text-sm font-medium mb-2">
-                            Phone Number *
+                            Phone Number
                           </label>
                           {isEditingProfile ? (
                             <input

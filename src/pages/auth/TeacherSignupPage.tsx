@@ -7,6 +7,7 @@ import {
   ArrowRight,
   Mail,
   User,
+  MapPin,
   Lock,
   Eye,
   EyeOff,
@@ -35,6 +36,7 @@ interface TeacherForm {
   lastName: string;
   email: string;
   password: string;
+  city: string;
   country: string;
 }
 
@@ -61,6 +63,7 @@ export const TeacherSignupPage: React.FC = () => {
     lastName: "",
     email: "",
     password: "",
+    city: "",
     country: "",
   });
 
@@ -109,6 +112,9 @@ export const TeacherSignupPage: React.FC = () => {
       newErrors.password = "Password is required";
     } else if (passwordValidation.score < 50) {
       newErrors.password = "Password is too weak";
+    }
+    if (!teacherForm.city.trim()) {
+      newErrors.city = "City is required";
     }
     if (!selectedCountry) {
       newErrors.country = "Country is required";
@@ -375,19 +381,42 @@ export const TeacherSignupPage: React.FC = () => {
                 )}
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                  Country *
-                </label>
-                <CountrySelector
-                  selectedCountry={selectedCountry}
-                  onSelect={handleCountrySelect}
-                  placeholder="Search countries..."
-                  className={errors.country ? "border-red-500" : ""}
-                />
-                {errors.country && (
-                  <p className="text-red-500 text-sm mt-1">{errors.country}</p>
-                )}
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                    City *
+                  </label>
+                  <div className="relative">
+                    <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 w-5 h-5" />
+                    <input
+                      type="text"
+                      value={teacherForm.city}
+                      onChange={(e) =>
+                        setTeacherForm({ ...teacherForm, city: e.target.value })
+                      }
+                      className={`input pl-10 w-full ${errors.city ? "border-red-500" : ""}`}
+                      placeholder="City"
+                    />
+                  </div>
+                  {errors.city && (
+                    <p className="text-red-500 text-sm mt-1">{errors.city}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                    Country *
+                  </label>
+                  <CountrySelector
+                    selectedCountry={selectedCountry}
+                    onSelect={handleCountrySelect}
+                    placeholder="Search countries..."
+                    className={errors.country ? "border-red-500" : ""}
+                  />
+                  {errors.country && (
+                    <p className="text-red-500 text-sm mt-1">{errors.country}</p>
+                  )}
+                </div>
               </div>
 
               {/* Terms acceptance */}

@@ -535,7 +535,6 @@ export const TeacherProfilePage: React.FC<{ embedded?: boolean }> = ({
     const requiredFields = [
       "firstName",
       "lastName",
-      "phone",
       "city",
       "country",
       "nationality",
@@ -804,7 +803,7 @@ export const TeacherProfilePage: React.FC<{ embedded?: boolean }> = ({
 
                   <div>
                     <label className="block text-sm font-medium mb-2">
-                      Phone *
+                      Phone
                     </label>
                     <input
                       type="tel"
