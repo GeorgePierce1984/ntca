@@ -137,7 +137,7 @@ export const Hero: React.FC = () => {
 
             <motion.h1
               variants={itemVariants}
-              className="heading-1 text-neutral-900 dark:text-white mb-6"
+              className="heading-1 text-neutral-900 dark:text-white mb-6 mt-[15px]"
             >
               Hire International Teachers Across{" "}
               <span className="gradient-text">Central Asia</span>
