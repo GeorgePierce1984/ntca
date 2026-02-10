@@ -248,7 +248,7 @@ export const TeacherSignupPage: React.FC = () => {
           className="max-w-md w-full space-y-8 py-12"
         >
           {/* Logo and Title */}
-          <div className="text-center">
+          <div className="text-center mt-[40px]">
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
