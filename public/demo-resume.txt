@@ -1,0 +1,22 @@
+NTCA Demo Resume (Seeded)
+========================
+
+This is a demo CV/resume file used for testing school applicant views.
+
+Candidate Summary
+- English language teacher (demo account)
+- TEFL/CELTA-style qualifications (varies per seeded profile)
+- Available for roles across Central Asia
+
+Experience (Example)
+- ESL Teacher — International Language Center (Demo)
+  2022–Present — Taught general English and exam prep, planned lessons, tracked progress.
+
+Education (Example)
+- BA / MA (Demo University)
+
+Notes
+- This document is generated for demonstration purposes only.
+- Contact NTCA support if you need this removed.
+
+
