@@ -368,6 +368,8 @@ export const SchoolDashboardPage: React.FC = () => {
     return applications.filter((app) => {
       if (applicantJobFilter && app.jobId !== applicantJobFilter) return false;
       if (applicantStatusFilter && app.status !== applicantStatusFilter) return false;
+      // Hide declined applicants by default unless the user explicitly filters for Declined
+      if (!applicantStatusFilter && app.status === "DECLINED") return false;
 
       if (!q) return true;
 
