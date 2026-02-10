@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { useSearchParams, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -34,10 +34,6 @@ import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/contexts/AuthContext";
 
 import { ApplicantModal } from "@/components/schools/ApplicantModal";
-import {
-  InterviewScheduleModal,
-  InterviewData,
-} from "@/components/schools/InterviewScheduleModal";
 import { SubscriptionWarningBanner } from "@/components/schools/SubscriptionWarningBanner";
 import { MessagesModal } from "@/components/messages/MessagesModal";
 import { PostJobModal } from "@/components/schools/PostJobModal";
@@ -108,6 +104,7 @@ interface Application {
   interviewNotes?: string;
   rating?: number;
   feedback?: string;
+  notes?: any[];
   createdAt: string;
   updatedAt: string;
   interviewRequest?: {
@@ -214,6 +211,11 @@ export const SchoolDashboardPage: React.FC = () => {
   const [showApplicantModal, setShowApplicantModal] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
 
+  // Applicants tab filters
+  const [applicantSearch, setApplicantSearch] = useState("");
+  const [applicantJobFilter, setApplicantJobFilter] = useState<string>("");
+  const [applicantStatusFilter, setApplicantStatusFilter] = useState<string>("");
+
   // Add refs for post job form and heading
   const postJobFormRef = useRef<HTMLDivElement>(null);
   const postJobHeadingRef = useRef<HTMLHeadingElement>(null);
@@ -293,6 +295,10 @@ export const SchoolDashboardPage: React.FC = () => {
   const [subscriptionLoading, setSubscriptionLoading] = useState(true);
   const [bannerDismissed, setBannerDismissed] = useState(false);
   const [schoolProfile, setSchoolProfile] = useState<{ 
+    name?: string;
+    city?: string;
+    country?: string;
+    timezone?: string;
     description?: string;
     studentAgeRangeMin?: number;
     studentAgeRangeMax?: number;
@@ -356,8 +362,42 @@ export const SchoolDashboardPage: React.FC = () => {
     (app) => app.status === "APPLIED" || app.status === "REVIEWING",
   ).length;
 
-  // Define tabs with badge for Post Job to make it more visible
-  const tabs = [
+  const filteredApplications = useMemo(() => {
+    const q = applicantSearch.trim().toLowerCase();
+
+    return applications.filter((app) => {
+      if (applicantJobFilter && app.jobId !== applicantJobFilter) return false;
+      if (applicantStatusFilter && app.status !== applicantStatusFilter) return false;
+
+      if (!q) return true;
+
+      const jobTitle = jobs.find((j) => j.id === app.jobId)?.title || "";
+      const name = app.teacher
+        ? `${app.teacher.firstName || ""} ${app.teacher.lastName || ""}`.trim()
+        : `${app.guestFirstName || "Guest"} ${app.guestLastName || "User"}`.trim();
+      const email = app.teacher?.user?.email || app.guestEmail || "";
+      const location = app.teacher
+        ? `${app.teacher.city || ""} ${app.teacher.country || ""}`.trim()
+        : `${app.guestCity || ""} ${app.guestCountry || ""}`.trim();
+
+      const haystack = `${name} ${email} ${jobTitle} ${location}`.toLowerCase();
+      return haystack.includes(q);
+    });
+  }, [
+    applications,
+    jobs,
+    applicantSearch,
+    applicantJobFilter,
+    applicantStatusFilter,
+  ]);
+
+  // Define tabs
+  const tabs: Array<{
+    key: "overview" | "jobs" | "applicants" | "messages" | "profile";
+    label: string;
+    icon: any;
+    badge?: string | number;
+  }> = [
     { key: "overview", label: "Overview", icon: Eye },
     { key: "jobs", label: "Job Postings", icon: Briefcase },
     { key: "applicants", label: "Applicants", icon: Users },
@@ -1114,7 +1154,7 @@ export const SchoolDashboardPage: React.FC = () => {
       const lastName = isGuestApplication ? application.guestLastName || 'User' : application.teacher?.lastName || 'User';
       const email = isGuestApplication 
         ? application.guestEmail || 'N/A' 
-        : application.teacher?.user?.email || application.teacher?.email || 'N/A';
+        : application.teacher?.user?.email || 'N/A';
       
       // Safely handle interviewRequest - it might have JSON strings that need parsing
       let safeInterviewRequest = application.interviewRequest;
@@ -1268,27 +1308,7 @@ export const SchoolDashboardPage: React.FC = () => {
     setShowApplicantModal(true);
   };
 
-  const handleScheduleInterview = (interviewData: InterviewData) => {
-    // In a real app, this would make an API call to save the interview
-    console.log("Interview scheduled:", interviewData);
-
-    // Update the applicant status to interview
-    const applicantId = interviewData.applicantId;
-    const note = `Interview scheduled for ${new Date(interviewData.date + " " + interviewData.time).toLocaleString()}`;
-
-    // Update mock data (in real app, this would be handled by the backend)
-    const applicantIndex = applications.findIndex(
-      (a) => a.id === applicantId,
-    );
-    if (applicantIndex !== -1) {
-      applications[applicantIndex].status = "INTERVIEW";
-      applications[applicantIndex].interviewDate =
-        interviewData.date + " " + interviewData.time;
-    }
-
-    setShowInterviewModal(false);
-    setSelectedApplicantForInterview(null);
-  };
+  // Old InterviewScheduleModal flow removed (interview invite is handled inside ApplicantModal)
 
   return (
     <div className="min-h-screen pt-[85px]">
@@ -1992,10 +2012,16 @@ export const SchoolDashboardPage: React.FC = () => {
                           type="text"
                           placeholder="Search applicants..."
                           className="input pl-10"
+                          value={applicantSearch}
+                          onChange={(e) => setApplicantSearch(e.target.value)}
                         />
                       </div>
                     </div>
-                    <select className="input">
+                    <select
+                      className="input"
+                      value={applicantJobFilter}
+                      onChange={(e) => setApplicantJobFilter(e.target.value)}
+                    >
                       <option value="">All Jobs</option>
                       {jobs.map((job) => (
                         <option key={job.id} value={job.id}>
@@ -2003,7 +2029,11 @@ export const SchoolDashboardPage: React.FC = () => {
                         </option>
                       ))}
                     </select>
-                    <select className="input">
+                    <select
+                      className="input"
+                      value={applicantStatusFilter}
+                      onChange={(e) => setApplicantStatusFilter(e.target.value)}
+                    >
                       <option value="">All Status</option>
                       <option value="APPLIED">Applied</option>
                       <option value="REVIEWING">Reviewing</option>
@@ -2015,58 +2045,45 @@ export const SchoolDashboardPage: React.FC = () => {
                 </div>
 
                 {/* Applicants List */}
-                <div className="space-y-4">
-                  {applications.map((applicant) => {
+                <div className="grid md:grid-cols-2 gap-4">
+                  {filteredApplications.map((applicant) => {
                     const job = jobs.find((j) => j.id === applicant.jobId);
                     return (
                       <div
                         key={applicant.id}
-                        className="card p-6 cursor-pointer hover:shadow-lg transition-all duration-200"
+                        className="card p-4 cursor-pointer hover:shadow-md transition-all duration-200"
                         onClick={() => openApplicantModal(applicant)}
                       >
-                        <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-start justify-between gap-3 mb-3">
                           <div className="flex items-start gap-4">
-                            <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-lg">
+                            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
                               {applicant.teacher?.firstName?.[0] || applicant.guestFirstName?.[0] || '?'}
                               {applicant.teacher?.lastName?.[0] || applicant.guestLastName?.[0] || ''}
                             </div>
                             <div className="flex-1">
-                              <h3 className="heading-3 mb-1">
+                              <h3 className="text-base font-semibold text-neutral-900 dark:text-white leading-tight">
                                 {applicant.teacher ? `${applicant.teacher.firstName} ${applicant.teacher.lastName}` : `${applicant.guestFirstName || 'Guest'} ${applicant.guestLastName || 'User'}`}
                               </h3>
-                              <p className="text-neutral-600 dark:text-neutral-400 mb-2">
+                              <p className="text-sm text-neutral-600 dark:text-neutral-400 line-clamp-1">
                                 {job?.title}
                               </p>
-                              <div className="grid md:grid-cols-3 gap-4 text-sm text-neutral-500 mb-3">
+
+                              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-neutral-500">
                                 <span className="flex items-center gap-1">
-                                  <Mail className="w-4 h-4" />
-                                  {applicant.teacher?.email || applicant.guestEmail || 'N/A'}
+                                  <Mail className="w-3.5 h-3.5" />
+                                  <span className="truncate max-w-[220px]">
+                                    {applicant.teacher?.user?.email || applicant.guestEmail || 'N/A'}
+                                  </span>
                                 </span>
                                 <span className="flex items-center gap-1">
-                                  <Phone className="w-4 h-4" />
-                                  {applicant.teacher?.phone || applicant.guestPhone || 'N/A'}
-                                </span>
-                                <span className="flex items-center gap-1">
-                                  <MapPin className="w-4 h-4" />
+                                  <MapPin className="w-3.5 h-3.5" />
                                   {applicant.teacher ? `${applicant.teacher.city}, ${applicant.teacher.country}` : 
                                    (applicant.guestCity && applicant.guestCountry ? `${applicant.guestCity}, ${applicant.guestCountry}` : 'Location not specified')}
                                 </span>
-                              </div>
-                              <div className="flex items-center gap-4 text-sm">
                                 <span className="flex items-center gap-1">
-                                  <Award className="w-4 h-4" />
+                                  <Award className="w-3.5 h-3.5" />
                                   {applicant.teacher?.qualification || 'Guest Applicant'}
                                 </span>
-                                <span className="flex items-center gap-1">
-                                  <BookOpen className="w-4 h-4" />
-                                  {applicant.teacher?.experience || 'Not specified'}
-                                </span>
-                                {applicant.rating && (
-                                  <span className="flex items-center gap-1">
-                                    <span className="text-amber-500">★</span>
-                                    {applicant.rating}/5
-                                  </span>
-                                )}
                               </div>
                             </div>
                           </div>
@@ -2085,7 +2102,7 @@ export const SchoolDashboardPage: React.FC = () => {
                               }
                             })()}
                             <span
-                              className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(applicant.status)}`}
+                              className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(applicant.status)}`}
                             >
                               {applicant.status}
                             </span>
@@ -2093,7 +2110,7 @@ export const SchoolDashboardPage: React.FC = () => {
                         </div>
 
                         {/* Action Buttons */}
-                        <div className="flex items-center gap-2 pt-4 border-t border-neutral-200 dark:border-neutral-800">
+                        <div className="flex items-center gap-2 pt-3 border-t border-neutral-200 dark:border-neutral-800">
                           <Button
                             size="sm"
                             variant="secondary"
@@ -2112,8 +2129,7 @@ export const SchoolDashboardPage: React.FC = () => {
                                 variant="gradient"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  setSelectedApplicantForInterview(applicant);
-                                  setShowInterviewModal(true);
+                                  openApplicantModal(applicant);
                                 }}
                               >
                                 Schedule Interview
@@ -2166,8 +2182,7 @@ export const SchoolDashboardPage: React.FC = () => {
                               variant="gradient"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setSelectedApplicantForInterview(applicant);
-                                setShowInterviewModal(true);
+                                openApplicantModal(applicant);
                               }}
                             >
                               Move to Interview
@@ -2177,9 +2192,13 @@ export const SchoolDashboardPage: React.FC = () => {
                       </div>
                     );
                   })}
-                  {applications.length === 0 && !loading && (
+                  {filteredApplications.length === 0 && !loading && (
                     <div className="text-center py-12">
-                      <p className="text-neutral-500">No applications yet.</p>
+                      <p className="text-neutral-500">
+                        {applications.length === 0
+                          ? "No applications yet."
+                          : "No applicants match your filters."}
+                      </p>
                     </div>
                   )}
                 </div>
