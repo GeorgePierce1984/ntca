@@ -1936,7 +1936,12 @@ export const SchoolDashboardPage: React.FC = () => {
                                     variant="secondary"
                                     size="sm"
                                     leftIcon={<Eye className="w-4 h-4" />}
-                                    onClick={() => setActiveTab("applicants")}
+                                    onClick={() => {
+                                      setApplicantSearch("");
+                                      setApplicantStatusFilter("");
+                                      setApplicantJobFilter(job.id);
+                                      setActiveTab("applicants");
+                                    }}
                                   >
                                     {job._count.applications} Applicants
                                   </Button>
@@ -1975,48 +1980,48 @@ export const SchoolDashboardPage: React.FC = () => {
                           )}
                         </div>
                         {/* If match insights card is visible (active + loaded), actions live there */}
-                        <div className="flex items-center gap-2 ml-4">
-                          {!(getEffectiveStatus(job) === "ACTIVE" && jobMatches[job.id]) && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            leftIcon={<Edit3 className="w-4 h-4" />}
-                            onClick={() => openEditModal(job)}
-                            disabled={!canAccessPremiumFeatures(subscriptionStatus, subscriptionLoading)}
-                            title={!canAccessPremiumFeatures(subscriptionStatus, subscriptionLoading) ? "Editing requires a subscription" : "Edit job posting"}
-                          >
-                            Edit
-                          </Button>
-                          )}
-                          {getEffectiveStatus(job) === "ACTIVE" && (
+                        {!(getEffectiveStatus(job) === "ACTIVE" && jobMatches[job.id]) && (
+                          <div className="flex items-center gap-2 ml-4">
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => updateJobStatus(job.id, "PAUSED")}
-                              title="Pause job posting"
+                              leftIcon={<Edit3 className="w-4 h-4" />}
+                              onClick={() => openEditModal(job)}
+                              disabled={!canAccessPremiumFeatures(subscriptionStatus, subscriptionLoading)}
+                              title={!canAccessPremiumFeatures(subscriptionStatus, subscriptionLoading) ? "Editing requires a subscription" : "Edit job posting"}
                             >
-                              Pause
+                              Edit
                             </Button>
-                          )}
-                          {getEffectiveStatus(job) === "PAUSED" && (
+                            {getEffectiveStatus(job) === "ACTIVE" && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => updateJobStatus(job.id, "PAUSED")}
+                                title="Pause job posting"
+                              >
+                                Pause
+                              </Button>
+                            )}
+                            {getEffectiveStatus(job) === "PAUSED" && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => updateJobStatus(job.id, "ACTIVE")}
+                                title="Activate job posting"
+                              >
+                                Activate
+                              </Button>
+                            )}
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => updateJobStatus(job.id, "ACTIVE")}
-                              title="Activate job posting"
+                              onClick={() => updateJobStatus(job.id, "CLOSED")}
+                              title="Close job posting"
                             >
-                              Activate
+                              Close
                             </Button>
-                          )}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => updateJobStatus(job.id, "CLOSED")}
-                            title="Close job posting"
-                          >
-                            Close
-                          </Button>
-                        </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}
