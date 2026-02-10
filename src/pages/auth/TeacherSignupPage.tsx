@@ -13,7 +13,8 @@ import {
   AlertCircle,
   RefreshCw,
   MailCheck,
-  CheckCircle2,
+  MessageSquare,
+  X,
   Sparkles,
   Shield,
   Globe,
@@ -624,13 +625,13 @@ export const TeacherSignupPage: React.FC = () => {
               </div>
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
-                  <CheckCircle2 className="w-5 h-5" />
+                  <X className="w-5 h-5" />
                 </div>
                 <span>No fees for teachers</span>
               </div>
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
-                  <CheckCircle2 className="w-5 h-5" />
+                  <MessageSquare className="w-5 h-5" />
                 </div>
                 <span>Direct school contact</span>
               </div>
