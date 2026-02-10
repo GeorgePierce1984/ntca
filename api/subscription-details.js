@@ -1,6 +1,7 @@
 import Stripe from "stripe";
 import jwt from "jsonwebtoken";
 import { prisma } from "./_utils/prisma.js";
+import { isDemoPremiumEmail } from "./_utils/demo-premium.js";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: "2023-10-16",
@@ -35,6 +36,7 @@ export default async function handler(req, res) {
         include: {
           user: {
             select: {
+              email: true,
               stripeCustomerId: true,
             },
           },
@@ -58,6 +60,31 @@ export default async function handler(req, res) {
 
     if (!school) {
       return res.status(404).json({ error: "School profile not found" });
+    }
+
+    // Demo premium bypass (no Stripe needed)
+    if (isDemoPremiumEmail(school?.user?.email)) {
+      const now = new Date();
+      const end = new Date(now);
+      end.setFullYear(end.getFullYear() + 5);
+
+      return res.status(200).json({
+        subscriptionId: "demo_premium",
+        subscriptionStatus: "active",
+        currentPeriodStart: now.toISOString(),
+        currentPeriodEnd: end.toISOString(),
+        cancelAtPeriodEnd: false,
+        subscriptionEndDate: end.toISOString(),
+        plan: {
+          name: "Premium (Demo)",
+          jobLimit: "Unlimited",
+          interval: "year",
+          price: "$0.00",
+        },
+        billingCycle: "demo",
+        daysRemaining: Math.ceil((end.getTime() - Date.now()) / (1000 * 60 * 60 * 24)),
+        demo: true,
+      });
     }
 
     // If no subscription ID, return basic info

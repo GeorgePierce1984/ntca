@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import jwt from "jsonwebtoken";
+import { isDemoPremiumEmail } from "../_utils/demo-premium.js";
 
 // Initialize Prisma client with serverless-optimized settings
 const prisma = new PrismaClient({
@@ -305,11 +306,12 @@ export default async function handler(req, res) {
           ),
         },
         subscriptionId: school.subscriptionId,
-        subscriptionStatus: school.subscriptionStatus,
+        subscriptionStatus: isDemoPremiumEmail(school?.user?.email) ? "active" : school.subscriptionStatus,
         currentPeriodEnd: school.currentPeriodEnd,
         cancelAtPeriodEnd: school.cancelAtPeriodEnd,
         subscriptionEndDate: school.subscriptionEndDate,
         stripeCustomerId: user?.stripeCustomerId,
+        demoPremium: isDemoPremiumEmail(school?.user?.email),
       });
 
     } else if (req.method === "PUT") {

@@ -1,6 +1,7 @@
 import Stripe from "stripe";
 import jwt from "jsonwebtoken";
 import { prisma } from "./_utils/prisma.js";
+import { isDemoPremiumEmail } from "./_utils/demo-premium.js";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: "2023-10-16",
@@ -50,6 +51,14 @@ export default async function handler(req, res) {
 
     if (!user) {
       return res.status(404).json({ error: "User not found" });
+    }
+
+    // Demo premium accounts don't have (or need) a Stripe portal
+    if (isDemoPremiumEmail(user.email)) {
+      return res.status(200).json({
+        url: returnUrl || `${baseUrl}/schools/subscription?demo=1`,
+        demo: true,
+      });
     }
 
     // Determine Stripe customer id (ignore spoofed customerId values from the client)
