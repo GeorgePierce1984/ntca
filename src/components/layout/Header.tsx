@@ -524,59 +524,55 @@ export const Header: React.FC = () => {
                 </div>
 
                 {/* Mobile Menu Footer */}
-                <div className="p-6 border-t border-neutral-200 dark:border-neutral-800 space-y-3">
+                <div className="p-6 border-t border-neutral-200 dark:border-neutral-800">
                   {isAuthenticated ? (
                     <>
-                      <div className="p-4 rounded-lg bg-neutral-100 dark:bg-neutral-800">
+                      <div className="p-4 rounded-lg bg-neutral-100 dark:bg-neutral-800 mb-4">
                         <p className="font-medium text-sm">{getDisplayName()}</p>
                         <p className="text-xs text-neutral-600 dark:text-neutral-400 capitalize">
                           {user?.userType.toLowerCase()} Account
                         </p>
                       </div>
-                      <Link
-                        to={
-                          user?.userType === "SCHOOL"
-                            ? "/schools/dashboard"
-                            : "/teachers/dashboard"
-                        }
-                        className="w-full px-4 py-2 text-left hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors"
-                      >
-                        <Button
-                          variant="secondary"
-                          fullWidth
-                          leftIcon={<Settings className="w-4 h-4" />}
-                        >
-                          Dashboard
-                        </Button>
-                      </Link>
-                      <Link
-                        to={
-                          user?.userType === "SCHOOL"
-                            ? "/schools/profile"
-                            : "/teachers/profile"
-                        }
-                        className="w-full px-4 py-2 text-left hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors"
-                      >
-                        <Button
-                          variant="secondary"
-                          fullWidth
-                          leftIcon={<User className="w-4 h-4" />}
-                        >
-                          Profile & Settings
-                        </Button>
-                      </Link>
-                      <Button
-                        onClick={logout}
-                        variant="secondary"
-                        fullWidth
-                        leftIcon={<LogOut className="w-4 h-4" />}
-                        className="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
-                      >
-                        Logout
-                      </Button>
+                      <ul className="space-y-1">
+                        <li>
+                          <Link
+                            to={
+                              user?.userType === "SCHOOL"
+                                ? "/schools/dashboard"
+                                : "/teachers/dashboard"
+                            }
+                            className="flex items-center gap-3 px-4 py-3 rounded-lg font-medium hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                          >
+                            <Settings className="w-4 h-4" />
+                            <span>Dashboard</span>
+                          </Link>
+                        </li>
+                        <li>
+                          <Link
+                            to={
+                              user?.userType === "SCHOOL"
+                                ? "/schools/profile"
+                                : "/teachers/profile"
+                            }
+                            className="flex items-center gap-3 px-4 py-3 rounded-lg font-medium hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                          >
+                            <User className="w-4 h-4" />
+                            <span>Profile & Settings</span>
+                          </Link>
+                        </li>
+                        <li>
+                          <button
+                            onClick={logout}
+                            className="flex items-center gap-3 w-full px-4 py-3 rounded-lg font-medium hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors text-red-600 dark:text-red-400"
+                          >
+                            <LogOut className="w-4 h-4" />
+                            <span>Logout</span>
+                          </button>
+                        </li>
+                      </ul>
                     </>
                   ) : (
-                    <>
+                    <div className="space-y-3">
                       <Link to="/login">
                         <Button
                           variant="secondary"
@@ -596,7 +592,7 @@ export const Header: React.FC = () => {
                           Sign Up
                         </Button>
                       </Link>
-                    </>
+                    </div>
                   )}
                 </div>
               </div>
