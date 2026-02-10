@@ -157,17 +157,17 @@ export const Hero: React.FC = () => {
               Early-stage platform — founding schools receive priority access and pricing.
             </motion.p>
 
-            {/* Primary Job Search Button */}
+            {/* Primary CTA (Schools) */}
             <motion.div variants={itemVariants} className="mb-12">
               <Button
                 variant="gradient"
                 size="lg"
-                onClick={() => navigate("/jobs")}
-                rightIcon={<Search className="w-5 h-5" />}
+                onClick={() => navigate("/signup")}
+                leftIcon={<Building2 className="w-5 h-5" />}
                 glow
                 className="text-lg px-8 py-3"
               >
-                Search Teaching Jobs
+                Post Jobs &amp; Find Teachers
               </Button>
             </motion.div>
 
@@ -257,7 +257,7 @@ export const Hero: React.FC = () => {
               </div>
             </motion.div>
 
-            {/* CTA Button for Schools */}
+            {/* Secondary CTA (Jobs) */}
             <motion.div
               variants={itemVariants}
               className="flex justify-center mt-8"
@@ -265,10 +265,10 @@ export const Hero: React.FC = () => {
               <Button
                 variant="secondary"
                 size="lg"
-                onClick={() => navigate("/signup")}
-                leftIcon={<Building2 className="w-5 h-5" />}
+                onClick={() => navigate("/jobs")}
+                rightIcon={<Search className="w-5 h-5" />}
               >
-                Schools: Post Jobs & Find Teachers
+                Search Teaching Jobs
               </Button>
             </motion.div>
           </div>
