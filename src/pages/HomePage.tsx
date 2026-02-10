@@ -39,7 +39,7 @@ const features = [
   },
   {
     icon: Globe,
-    title: "Central Asia Focus",
+    title: "Central Asia",
     description:
       "Connect with schools and teachers across Central Asia - Kazakhstan, Uzbekistan, Kyrgyzstan, Tajikistan, and more.",
     color: "text-green-600",

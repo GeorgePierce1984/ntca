@@ -20,7 +20,7 @@ import { CENTRAL_ASIA_COUNTRIES } from "@/constants/options";
 const stats = [
   { label: "Teachers Joining", value: "Weekly", icon: GraduationCap },
   { label: "Founding Schools", value: "Growing", icon: Building2 },
-  { label: "Central Asia Focus", value: "Central Asia Focus", icon: Globe },
+  { label: "Central Asia", value: "Central Asia", icon: Globe },
   { label: "Direct Hiring", value: "No Agency Fees", icon: Award },
 ];
 
