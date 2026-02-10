@@ -182,6 +182,9 @@ export const TeacherSignupPage: React.FC = () => {
       setEmailVerified(true);
       toast.success("Email verified successfully");
       setCurrentStep(3);
+      
+      // Automatically proceed to create account after verification
+      await handleSubmit();
     } catch (error: any) {
       setErrors({ ...errors, verification: error.message });
     } finally {
