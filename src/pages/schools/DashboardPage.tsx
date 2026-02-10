@@ -1781,11 +1781,11 @@ export const SchoolDashboardPage: React.FC = () => {
                   {jobsLoading || (jobs.length === 0 && loading) ? (
                     // Loading skeleton matching compact card structure
                     Array.from({ length: 4 }).map((_, i) => (
-                      <div key={i} className="card p-4 min-w-0 overflow-hidden">
+                      <div key={i} className="card p-4 min-w-0 overflow-hidden w-full">
                         <div className="flex items-start justify-between gap-2 sm:gap-3 mb-3">
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 sm:gap-3 mb-2">
-                              <div className="h-5 bg-neutral-200 dark:bg-neutral-700 rounded w-3/4 animate-pulse"></div>
+                            <div className="flex items-center gap-2 sm:gap-3 mb-2 min-w-0">
+                              <div className="h-5 bg-neutral-200 dark:bg-neutral-700 rounded w-3/4 animate-pulse min-w-0"></div>
                               <div className="h-5 bg-neutral-200 dark:bg-neutral-700 rounded w-12 sm:w-16 animate-pulse flex-shrink-0"></div>
                             </div>
                             <div className="flex flex-wrap gap-x-3 sm:gap-x-4 gap-y-1 mb-3">
@@ -1794,7 +1794,7 @@ export const SchoolDashboardPage: React.FC = () => {
                               <div className="h-4 bg-neutral-200 dark:bg-neutral-700 rounded w-24 sm:w-28 animate-pulse"></div>
                             </div>
                             {/* Match insights placeholder to prevent layout shift */}
-                            <div className="card p-3 mt-3 min-h-[120px]">
+                            <div className="card p-3 mt-3 min-h-[120px] min-w-0 overflow-hidden">
                               <div className="h-4 bg-neutral-200 dark:bg-neutral-700 rounded w-28 sm:w-32 mb-3 animate-pulse"></div>
                               <div className="flex flex-wrap gap-2 mb-3">
                                 <div className="h-8 bg-neutral-200 dark:bg-neutral-700 rounded w-16 sm:w-20 animate-pulse"></div>
@@ -1812,58 +1812,64 @@ export const SchoolDashboardPage: React.FC = () => {
                     ))
                   ) : (
                     jobs.map((job) => (
-                    <div key={job.id} className="card p-4">
-                      <div className="flex items-start justify-between gap-3 mb-3">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <h3 className="text-base font-semibold text-neutral-900 dark:text-white leading-tight">
+                    <div key={job.id} className="card p-4 min-w-0 overflow-hidden w-full">
+                      <div className="flex items-start justify-between gap-2 sm:gap-3 mb-3 min-w-0">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 sm:gap-3 mb-2 min-w-0">
+                            <h3 className="text-base font-semibold text-neutral-900 dark:text-white leading-tight truncate flex-1 min-w-0">
                               {job.title}
                             </h3>
                             <span
-                              className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(getEffectiveStatus(job))}`}
+                              className={`px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap flex-shrink-0 ${getStatusColor(getEffectiveStatus(job))}`}
                             >
                               {getEffectiveStatus(job)}
                             </span>
                           </div>
-                          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-neutral-600 dark:text-neutral-400">
-                            <span className="flex items-center gap-1">
-                              <MapPin className="w-3.5 h-3.5" />
-                              {job.city}, {job.country}
+                          <div className="flex flex-wrap gap-x-3 sm:gap-x-4 gap-y-1 text-xs text-neutral-600 dark:text-neutral-400">
+                            <span className="flex items-center gap-1 min-w-0">
+                              <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
+                              <span className="truncate max-w-[120px] sm:max-w-none">
+                                {job.city}, {job.country}
+                              </span>
                             </span>
                             <span className="flex items-center gap-1">
-                              <DollarSign className="w-3.5 h-3.5" />
-                              {job.salary}
+                              <DollarSign className="w-3.5 h-3.5 flex-shrink-0" />
+                              <span className="truncate max-w-[100px] sm:max-w-none">
+                                {job.salary}
+                              </span>
                             </span>
                             <span className="flex items-center gap-1">
-                              <Calendar className="w-3.5 h-3.5" />
-                              Posted {new Date(job.createdAt).toLocaleDateString()}
+                              <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
+                              <span className="truncate max-w-[140px] sm:max-w-none">
+                                Posted {new Date(job.createdAt).toLocaleDateString()}
+                              </span>
                             </span>
                           </div>
 
                           {/* Teaching requirements */}
                           {(job.teachingLicenseRequired || job.kazakhLanguageRequired || job.localCertificationRequired) && (
-                            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-2 mt-3">
+                            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-2 mt-3 min-w-0 overflow-hidden">
                               <h4 className="font-medium text-amber-800 dark:text-amber-200 mb-1 flex items-center gap-1 text-sm">
-                                <Globe className="w-3.5 h-3.5" />
-                                Teaching Requirements
+                                <Globe className="w-3.5 h-3.5 flex-shrink-0" />
+                                <span className="truncate">Teaching Requirements</span>
                               </h4>
-                              <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs">
+                              <div className="flex flex-wrap gap-x-2 sm:gap-x-3 gap-y-1 text-xs min-w-0">
                                 {job.teachingLicenseRequired && (
-                                  <span className="flex items-center gap-1 text-green-600">
-                                    <CheckCircle className="w-3 h-3" />
-                                    Teaching License
+                                  <span className="flex items-center gap-1 text-green-600 flex-shrink-0">
+                                    <CheckCircle className="w-3 h-3 flex-shrink-0" />
+                                    <span className="whitespace-nowrap">Teaching License</span>
                                   </span>
                                 )}
                                 {job.kazakhLanguageRequired && (
-                                  <span className="flex items-center gap-1 text-green-600">
-                                    <CheckCircle className="w-3 h-3" />
-                                    Local Language
+                                  <span className="flex items-center gap-1 text-green-600 flex-shrink-0">
+                                    <CheckCircle className="w-3 h-3 flex-shrink-0" />
+                                    <span className="whitespace-nowrap">Local Language</span>
                                   </span>
                                 )}
                                 {job.localCertificationRequired && (
-                                  <span className="flex items-center gap-1 text-green-600">
-                                    <CheckCircle className="w-3 h-3" />
-                                    Local Certification
+                                  <span className="flex items-center gap-1 text-green-600 flex-shrink-0">
+                                    <CheckCircle className="w-3 h-3 flex-shrink-0" />
+                                    <span className="whitespace-nowrap">Local Certification</span>
                                   </span>
                                 )}
                               </div>
@@ -1874,53 +1880,53 @@ export const SchoolDashboardPage: React.FC = () => {
                           {getEffectiveStatus(job) === "ACTIVE" && (
                             <>
                             {jobMatches[job.id] ? (
-                              <div className="card p-3 mt-3">
+                              <div className="card p-3 mt-3 min-w-0 overflow-hidden">
                                 {/* Headline - Top Left */}
-                                <div className="flex justify-start mb-3">
-                                  <h4 className="font-semibold text-neutral-900 dark:text-neutral-100 text-sm">
+                                <div className="flex justify-start mb-3 min-w-0">
+                                  <h4 className="font-semibold text-neutral-900 dark:text-neutral-100 text-sm truncate">
                                     Matches Found: {jobMatches[job.id].totalMatches}
                                   </h4>
                                 </div>
 
                                 {/* Match Category Boxes - Bottom Left */}
-                                <div className="flex flex-wrap items-center justify-start gap-2 mb-3">
+                                <div className="flex flex-wrap items-center justify-start gap-2 mb-3 min-w-0">
                                   {/* Strong Matches Box */}
-                                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20">
-                                    <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0" />
-                                    <span className="text-base font-bold text-green-600 dark:text-green-400">
+                                  <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-lg border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20 flex-shrink-0">
+                                    <CheckCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-green-600 dark:text-green-400 flex-shrink-0" />
+                                    <span className="text-sm sm:text-base font-bold text-green-600 dark:text-green-400">
                                       {jobMatches[job.id].byStrength.strong}
                                     </span>
-                                    <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300">
+                                    <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300 whitespace-nowrap">
                                       Strong
                                     </span>
                                   </div>
 
                                   {/* Good Matches Box */}
-                                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-900/20">
-                                    <CheckCircle className="w-4 h-4 text-yellow-600 dark:text-yellow-400 flex-shrink-0" />
-                                    <span className="text-base font-bold text-yellow-600 dark:text-yellow-400">
+                                  <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-lg border border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-900/20 flex-shrink-0">
+                                    <CheckCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-yellow-600 dark:text-yellow-400 flex-shrink-0" />
+                                    <span className="text-sm sm:text-base font-bold text-yellow-600 dark:text-yellow-400">
                                       {jobMatches[job.id].byStrength.medium}
                                     </span>
-                                    <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300">
+                                    <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300 whitespace-nowrap">
                                       Good
                                     </span>
                                   </div>
 
                                   {/* Partial Matches Box */}
-                                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50">
-                                    <CheckCircle className="w-4 h-4 text-neutral-500 dark:text-neutral-400 flex-shrink-0" />
-                                    <span className="text-base font-bold text-neutral-600 dark:text-neutral-400">
+                                  <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50 flex-shrink-0">
+                                    <CheckCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-neutral-500 dark:text-neutral-400 flex-shrink-0" />
+                                    <span className="text-sm sm:text-base font-bold text-neutral-600 dark:text-neutral-400">
                                       {jobMatches[job.id].byStrength.partial}
                                     </span>
-                                    <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300">
+                                    <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300 whitespace-nowrap">
                                       Partial
                                     </span>
                                   </div>
                                 </div>
 
                                 {/* Actions (left) + View buttons (right) */}
-                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                                  <div className="flex items-center gap-2">
+                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 min-w-0">
+                                  <div className="flex flex-wrap items-center gap-1 sm:gap-2 min-w-0">
                                     <Button
                                       variant="ghost"
                                       size="sm"
@@ -1928,6 +1934,7 @@ export const SchoolDashboardPage: React.FC = () => {
                                       onClick={() => openEditModal(job)}
                                       disabled={!canAccessPremiumFeatures(subscriptionStatus, subscriptionLoading)}
                                       title={!canAccessPremiumFeatures(subscriptionStatus, subscriptionLoading) ? "Editing requires a subscription" : "Edit job posting"}
+                                      className="flex-shrink-0"
                                     >
                                       Edit
                                     </Button>
@@ -1937,6 +1944,7 @@ export const SchoolDashboardPage: React.FC = () => {
                                         size="sm"
                                         onClick={() => updateJobStatus(job.id, "PAUSED")}
                                         title="Pause job posting"
+                                        className="flex-shrink-0"
                                       >
                                         Pause
                                       </Button>
@@ -1947,6 +1955,7 @@ export const SchoolDashboardPage: React.FC = () => {
                                         size="sm"
                                         onClick={() => updateJobStatus(job.id, "ACTIVE")}
                                         title="Activate job posting"
+                                        className="flex-shrink-0"
                                       >
                                         Activate
                                       </Button>
@@ -1956,20 +1965,22 @@ export const SchoolDashboardPage: React.FC = () => {
                                       size="sm"
                                       onClick={() => updateJobStatus(job.id, "CLOSED")}
                                       title="Close job posting"
+                                      className="flex-shrink-0"
                                     >
                                       Close
                                     </Button>
                                   </div>
 
-                                  <div className="flex justify-end gap-2">
+                                  <div className="flex flex-wrap justify-end gap-2 min-w-0">
                                   <Button
                                     variant="secondary"
                                     size="sm"
                                     onClick={() => navigate(`/schools/browse-teachers?jobId=${job.id}`)}
                                     disabled={jobMatches[job.id].totalMatches === 0}
-                                    className={jobMatches[job.id].totalMatches === 0 ? "opacity-50 cursor-not-allowed" : ""}
+                                    className={`flex-shrink-0 ${jobMatches[job.id].totalMatches === 0 ? "opacity-50 cursor-not-allowed" : ""}`}
                                   >
-                                    View Matches
+                                    <span className="hidden sm:inline">View Matches</span>
+                                    <span className="sm:hidden">Matches</span>
                                   </Button>
                                   <Button
                                     variant="secondary"
@@ -1981,27 +1992,29 @@ export const SchoolDashboardPage: React.FC = () => {
                                       setApplicantJobFilter(job.id);
                                       setActiveTab("applicants");
                                     }}
+                                    className="flex-shrink-0"
                                   >
-                                    {job._count.applications} Applicants
+                                    <span className="hidden sm:inline">{job._count.applications} Applicants</span>
+                                    <span className="sm:hidden">{job._count.applications}</span>
                                   </Button>
                                   </div>
                                 </div>
                               </div>
                             ) : loadingMatches[job.id] ? (
-                              <div className="card p-3 mt-3 min-h-[120px] flex items-center justify-center">
-                                <div className="flex items-center gap-2">
-                                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-neutral-300 dark:border-neutral-600 border-t-neutral-600 dark:border-t-neutral-400"></div>
-                                  <span className="text-sm text-neutral-600 dark:text-neutral-400">
+                              <div className="card p-3 mt-3 min-h-[120px] flex items-center justify-center min-w-0 overflow-hidden">
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-neutral-300 dark:border-neutral-600 border-t-neutral-600 dark:border-t-neutral-400 flex-shrink-0"></div>
+                                  <span className="text-sm text-neutral-600 dark:text-neutral-400 truncate">
                                     Calculating matches...
                                   </span>
                                 </div>
                               </div>
                             ) : (
-                              <div className="card p-3 mt-3 min-h-[120px] flex items-center justify-center">
-                                <div className="flex flex-col items-center gap-3 w-full">
-                                  <div className="flex items-center gap-2">
-                                    <TrendingUp className="w-5 h-5 text-neutral-600 dark:text-neutral-400" />
-                                    <span className="text-sm text-neutral-600 dark:text-neutral-400">
+                              <div className="card p-3 mt-3 min-h-[120px] flex items-center justify-center min-w-0 overflow-hidden">
+                                <div className="flex flex-col items-center gap-3 w-full min-w-0">
+                                  <div className="flex items-center gap-2 min-w-0">
+                                    <TrendingUp className="w-5 h-5 text-neutral-600 dark:text-neutral-400 flex-shrink-0" />
+                                    <span className="text-sm text-neutral-600 dark:text-neutral-400 truncate">
                                       Match insights loading...
                                     </span>
                                   </div>
@@ -2009,6 +2022,7 @@ export const SchoolDashboardPage: React.FC = () => {
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => fetchJobMatches(job.id)}
+                                    className="flex-shrink-0"
                                   >
                                     Load Matches
                                   </Button>
@@ -2020,7 +2034,7 @@ export const SchoolDashboardPage: React.FC = () => {
                         </div>
                         {/* If match insights card is visible (active + loaded), actions live there */}
                         {!(getEffectiveStatus(job) === "ACTIVE" && jobMatches[job.id]) && (
-                          <div className="flex items-center gap-2 ml-4">
+                          <div className="flex flex-wrap items-center gap-1 sm:gap-2 flex-shrink-0 ml-2 sm:ml-4">
                             <Button
                               variant="ghost"
                               size="sm"
@@ -2028,6 +2042,7 @@ export const SchoolDashboardPage: React.FC = () => {
                               onClick={() => openEditModal(job)}
                               disabled={!canAccessPremiumFeatures(subscriptionStatus, subscriptionLoading)}
                               title={!canAccessPremiumFeatures(subscriptionStatus, subscriptionLoading) ? "Editing requires a subscription" : "Edit job posting"}
+                              className="flex-shrink-0"
                             >
                               Edit
                             </Button>
@@ -2037,6 +2052,7 @@ export const SchoolDashboardPage: React.FC = () => {
                                 size="sm"
                                 onClick={() => updateJobStatus(job.id, "PAUSED")}
                                 title="Pause job posting"
+                                className="flex-shrink-0"
                               >
                                 Pause
                               </Button>
@@ -2047,6 +2063,7 @@ export const SchoolDashboardPage: React.FC = () => {
                                 size="sm"
                                 onClick={() => updateJobStatus(job.id, "ACTIVE")}
                                 title="Activate job posting"
+                                className="flex-shrink-0"
                               >
                                 Activate
                               </Button>
@@ -2056,6 +2073,7 @@ export const SchoolDashboardPage: React.FC = () => {
                               size="sm"
                               onClick={() => updateJobStatus(job.id, "CLOSED")}
                               title="Close job posting"
+                              className="flex-shrink-0"
                             >
                               Close
                             </Button>
