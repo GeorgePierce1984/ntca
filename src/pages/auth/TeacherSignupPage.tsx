@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { motion } from "framer-motion";
@@ -39,7 +39,7 @@ interface TeacherForm {
 
 export const TeacherSignupPage: React.FC = () => {
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, login } = useAuth();
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showPassword, setShowPassword] = useState(false);
@@ -120,6 +120,40 @@ export const TeacherSignupPage: React.FC = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  const registerAndLoginTeacher = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...teacherForm,
+          userType: "teacher",
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Registration failed");
+
+      // Store token for safety, but rely on login() to hydrate AuthContext
+      if (data.token) {
+        localStorage.setItem("authToken", data.token);
+      }
+
+      // This updates AuthContext.user and navigates to the correct dashboard.
+      const ok = await login(teacherForm.email, teacherForm.password);
+      if (!ok) {
+        // Fallback: hard navigation forces AuthProvider to re-validate token on mount.
+        window.location.href = "/teachers/dashboard";
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Registration failed");
+      setCurrentStep(1);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSendVerificationCode = async () => {
     setSendingCode(true);
     try {
@@ -167,46 +201,13 @@ export const TeacherSignupPage: React.FC = () => {
       setEmailVerified(true);
       toast.success("Email verified successfully");
       setCurrentStep(3);
-      
-      // Automatically proceed to create account after verification
-      await handleSubmit();
+
+      // Create the account and land on the dashboard with an authenticated session.
+      await registerAndLoginTeacher();
     } catch (error: any) {
       setErrors({ ...errors, verification: error.message });
     } finally {
       setVerifyingCode(false);
-    }
-  };
-
-  const handleSubmit = async () => {
-    if (!validateForm()) return;
-
-    if (!emailVerified) {
-      await handleSendVerificationCode();
-      setCurrentStep(2);
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const response = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...teacherForm,
-          userType: "teacher",
-        }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Registration failed");
-
-      localStorage.setItem("authToken", data.token);
-      toast.success("Account created successfully!");
-      navigate("/teachers/dashboard");
-    } catch (error: any) {
-      toast.error(error.message || "Registration failed");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -217,8 +218,6 @@ export const TeacherSignupPage: React.FC = () => {
       setCurrentStep(2);
     } else if (currentStep === 2) {
       await handleVerifyCode();
-    } else if (currentStep === 3) {
-      await handleSubmit();
     }
   };
 
