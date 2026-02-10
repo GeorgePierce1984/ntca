@@ -39,6 +39,7 @@ export const TeacherPrivacyPage: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletionScheduledAt, setDeletionScheduledAt] = useState<string | null>(null);
   
   // Local state for form data (before saving)
   const [searchable, setSearchable] = useState(true);
@@ -76,6 +77,7 @@ export const TeacherPrivacyPage: React.FC = () => {
       const data = await response.json();
       setTeacher(data.teacher);
       setSearchable(data.teacher.searchable !== undefined ? data.teacher.searchable : true);
+      setDeletionScheduledAt(data.account?.deletionScheduledAt ?? null);
     } catch (error) {
       console.error("Error fetching profile:", error);
       toast.error("Failed to load privacy settings");
@@ -210,6 +212,8 @@ export const TeacherPrivacyPage: React.FC = () => {
     emailPreferences.marketing !== originalEmailPrefs.marketing;
 
   const hasProfileVisibilityChanges = searchable !== (teacher?.searchable ?? true);
+  const isDeletionScheduled =
+    !!deletionScheduledAt && !Number.isNaN(Date.parse(deletionScheduledAt));
 
   if (loading) {
     return (
@@ -259,6 +263,38 @@ export const TeacherPrivacyPage: React.FC = () => {
 
         {/* Content */}
         <div className="space-y-6">
+          {/* Deletion scheduled banner */}
+          {isDeletionScheduled && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.25 }}
+              className="card p-6 border-2 border-red-200 dark:border-red-900/50"
+            >
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="w-6 h-6 text-red-600 dark:text-red-400 mt-0.5" />
+                <div className="flex-1">
+                  <p className="font-semibold text-neutral-900 dark:text-white">
+                    Your account is scheduled for deletion
+                  </p>
+                  <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
+                    Scheduled deletion date:{" "}
+                    <span className="font-medium text-neutral-900 dark:text-white">
+                      {new Date(deletionScheduledAt as string).toLocaleDateString()}
+                    </span>
+                    . Your profile is removed from school search immediately.
+                  </p>
+                  <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-2">
+                    If this was a mistake, please email{" "}
+                    <a className="text-primary-600 dark:text-primary-400 hover:underline" href="mailto:support@nt-ca.com">
+                      support@nt-ca.com
+                    </a>.
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
           {/* A. Hide/Show Profile from Schools */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -455,37 +491,39 @@ export const TeacherPrivacyPage: React.FC = () => {
           </motion.div>
 
           {/* D. Delete Account */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.3 }}
-            className="glass rounded-2xl p-8 border-2 border-red-200 dark:border-red-900/50"
-          >
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0">
-                <Trash2 className="w-6 h-6 text-red-600 dark:text-red-400" />
+          {!isDeletionScheduled && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.3 }}
+              className="glass rounded-2xl p-8 border-2 border-red-200 dark:border-red-900/50"
+            >
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0">
+                  <Trash2 className="w-6 h-6 text-red-600 dark:text-red-400" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-xl font-semibold text-neutral-900 dark:text-white mb-2">
+                    Delete my account permanently
+                  </h3>
+                  <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
+                    Deleting your account permanently removes your profile, CV and
+                    personal data from NTCA systems. Your profile will be removed
+                    from public view immediately, and full deletion will occur in 7
+                    days. This action cannot be undone.
+                  </p>
+                  <Button
+                    onClick={() => setShowDeleteModal(true)}
+                    variant="danger"
+                    size="sm"
+                    leftIcon={<Trash2 className="w-4 h-4" />}
+                  >
+                    Delete my account permanently
+                  </Button>
+                </div>
               </div>
-              <div className="flex-1">
-                <h3 className="text-xl font-semibold text-neutral-900 dark:text-white mb-2">
-                  Delete my account permanently
-                </h3>
-                <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
-                  Deleting your account permanently removes your profile, CV and
-                  personal data from NTCA systems. Your profile will be removed
-                  from public view immediately, and full deletion will occur in 7
-                  days. This action cannot be undone.
-                </p>
-                <Button
-                  onClick={() => setShowDeleteModal(true)}
-                  variant="danger"
-                  size="sm"
-                  leftIcon={<Trash2 className="w-4 h-4" />}
-                >
-                  Delete my account permanently
-                </Button>
-              </div>
-            </div>
-          </motion.div>
+            </motion.div>
+          )}
         </div>
       </div>
 

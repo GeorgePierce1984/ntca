@@ -234,7 +234,16 @@ export default async function handler(req, res) {
         // If it's already an object/array, Prisma returns it as-is for Json fields
       }
 
-      return res.status(200).json({ teacher });
+      return res.status(200).json({
+        teacher,
+        account: {
+          deletionScheduledAt: user?.deletionScheduledAt
+            ? (user.deletionScheduledAt instanceof Date
+                ? user.deletionScheduledAt.toISOString()
+                : user.deletionScheduledAt)
+            : null,
+        },
+      });
 
     } else if (req.method === 'PUT') {
       // Update teacher profile
