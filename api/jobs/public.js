@@ -43,10 +43,15 @@ export default async function handler(req, res) {
       deadline: {
         gte: startOfToday,
       },
-      // Only show jobs from active, non-flagged schools that aren't scheduled for deletion
+      // Only show jobs from non-flagged schools that aren't scheduled for deletion
+      // Allow schools with no subscription (first free post) OR active subscriptions
+      // Block cancelled/past_due subscriptions
       school: {
         flagged: false, // Exclude flagged schools
-        subscriptionStatus: "active", // Only show jobs from schools with active subscriptions
+        OR: [
+          { subscriptionStatus: null }, // Schools without subscription (first free post allowed)
+          { subscriptionStatus: "active" }, // Schools with active subscriptions
+        ],
         user: {
           deletionScheduledAt: null, // Exclude schools scheduled for deletion
         },
@@ -65,7 +70,10 @@ export default async function handler(req, res) {
           school: { 
             name: { contains: search, mode: "insensitive" },
             flagged: false,
-            subscriptionStatus: "active",
+            OR: [
+              { subscriptionStatus: null },
+              { subscriptionStatus: "active" },
+            ],
             user: {
               deletionScheduledAt: null,
             },
@@ -232,7 +240,10 @@ export default async function handler(req, res) {
       } else {
         where.school = {
           flagged: false,
-          subscriptionStatus: "active",
+          OR: [
+            { subscriptionStatus: null },
+            { subscriptionStatus: "active" },
+          ],
           user: {
             deletionScheduledAt: null,
           },
