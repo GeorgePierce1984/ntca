@@ -2982,14 +2982,30 @@ const TeacherDashboard: React.FC = () => {
                     <Loader className="w-8 h-8 animate-spin text-primary-600" />
                   </div>
                 ) : jobs.length === 0 ? (
-                  <div className="text-center py-12">
-                    <Briefcase className="w-16 h-16 text-neutral-400 mx-auto mb-4" />
-                    <p className="text-xl text-neutral-600 dark:text-neutral-400 mb-4">
-                      No jobs found matching your criteria
-                    </p>
-                    <Button onClick={clearFilters}>
-                      Clear Filters
-                    </Button>
+                  <div className="text-center py-12 max-w-2xl mx-auto">
+                    <Briefcase className="w-16 h-16 text-neutral-400 mx-auto mb-6" />
+                    {!hasActiveFilters(appliedFilters, searchTerm) ? (
+                      <div className="space-y-4">
+                        <p className="text-xl font-semibold text-neutral-900 dark:text-white mb-2">
+                          NTCA is currently onboarding founding language schools across Central Asia.
+                        </p>
+                        <p className="text-neutral-600 dark:text-neutral-400 mb-2">
+                          Verified teaching roles will appear here as partner schools complete onboarding.
+                        </p>
+                        <p className="text-neutral-600 dark:text-neutral-400">
+                          Teachers joining now receive first visibility when roles go live.
+                        </p>
+                      </div>
+                    ) : (
+                      <>
+                        <p className="text-xl text-neutral-600 dark:text-neutral-400 mb-4">
+                          No jobs found matching your criteria
+                        </p>
+                        <Button onClick={clearFilters}>
+                          Clear Filters
+                        </Button>
+                      </>
+                    )}
                   </div>
                 ) : (
                   jobs.map((job) => {
