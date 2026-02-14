@@ -43,6 +43,14 @@ export default async function handler(req, res) {
       deadline: {
         gte: startOfToday,
       },
+      // Only show jobs from active, non-flagged schools that aren't scheduled for deletion
+      school: {
+        flagged: false, // Exclude flagged schools
+        subscriptionStatus: "active", // Only show jobs from schools with active subscriptions
+        user: {
+          deletionScheduledAt: null, // Exclude schools scheduled for deletion
+        },
+      },
     };
 
     // Text search in title and description
@@ -52,8 +60,17 @@ export default async function handler(req, res) {
         { description: { contains: search, mode: "insensitive" } },
         { city: { contains: search, mode: "insensitive" } },
         { country: { contains: search, mode: "insensitive" } },
-        // Allow searching by school name
-        { school: { name: { contains: search, mode: "insensitive" } } },
+        // Allow searching by school name (preserve school status filters)
+        { 
+          school: { 
+            name: { contains: search, mode: "insensitive" },
+            flagged: false,
+            subscriptionStatus: "active",
+            user: {
+              deletionScheduledAt: null,
+            },
+          } 
+        },
       ];
     }
 
@@ -213,7 +230,14 @@ export default async function handler(req, res) {
           ...schoolTypeConditions,
         };
       } else {
-        where.school = schoolTypeConditions;
+        where.school = {
+          flagged: false,
+          subscriptionStatus: "active",
+          user: {
+            deletionScheduledAt: null,
+          },
+          ...schoolTypeConditions,
+        };
       }
     }
 
@@ -328,6 +352,11 @@ export default async function handler(req, res) {
               verified: true,
               description: true,
               schoolType: true, // Added for school type filter
+              user: {
+                select: {
+                  deletionScheduledAt: true,
+                },
+              },
             },
           },
           _count: {
