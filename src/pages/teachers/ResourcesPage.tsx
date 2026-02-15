@@ -198,6 +198,23 @@ export const ResourcesPage: React.FC = () => {
             );
           })}
         </div>
+        
+        {/* Keith image - positioned on right side, below Exam Prep, before footer */}
+        <div className="mt-8 flex justify-end">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="relative"
+          >
+            <img
+              src="/keith.png"
+              alt="Keith"
+              className="max-w-full h-auto object-contain"
+              style={{ maxHeight: '400px', maxWidth: '400px' }}
+            />
+          </motion.div>
+        </div>
       </div>
     </PageTemplate>
   );
