@@ -9,6 +9,12 @@ export const config = {
 
 export default async function middleware(request) {
   const url = new URL(request.url);
+  
+  // Only process /resources path
+  if (url.pathname !== '/resources') {
+    return;
+  }
+
   const userAgent = request.headers.get('user-agent') || '';
 
   // List of social media crawler user agents
@@ -38,8 +44,8 @@ export default async function middleware(request) {
     userAgent.toLowerCase().includes(pattern.toLowerCase())
   );
 
-  // If it's a crawler and requesting /resources, serve the static HTML
-  if (isCrawler && url.pathname === '/resources') {
+  // If it's a crawler, serve the static HTML
+  if (isCrawler) {
     // Read the static HTML file from the file system
     // In Vercel Edge, we need to fetch it from the origin
     const origin = request.headers.get('x-forwarded-host') || url.host;
@@ -63,9 +69,7 @@ export default async function middleware(request) {
     }
   }
 
-  // For regular users, continue to the React app
-  return new Response(null, {
-    status: 200,
-  });
+  // For regular users, return undefined to let the request pass through
+  return undefined;
 }
 
