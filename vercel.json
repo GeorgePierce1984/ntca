@@ -23,6 +23,10 @@
       "destination": "/signupteacher.html"
     },
     {
+      "source": "/share/resources",
+      "destination": "/resources.html"
+    },
+    {
       "source": "/api/(.*)",
       "destination": "/api/$1"
     },

@@ -3,6 +3,7 @@
  * Generates OpenGraph/Twitter preview images into /public:
  * - og-image.png (site-wide)
  * - og-teacher.png (teacher signup)
+ * - og-resources.png (resources page - games themed)
  *
  * Requires: sharp (devDependency)
  */
@@ -19,9 +20,9 @@ mkdirSync(publicDir, { recursive: true });
 const W = 1200;
 const H = 630;
 
-function baseSvg({ headline, subline }) {
-  // Inline “logo” (rounded square + cap) to avoid external fetches.
-  const logo = `
+function baseSvg({ headline, subline, includeGames = false }) {
+  // Inline "logo" (rounded square + cap) to avoid external fetches.
+const logo = `
     <g transform="translate(80, 110)">
       <defs>
         <linearGradient id="ntcaOgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -36,7 +37,38 @@ function baseSvg({ headline, subline }) {
         <rect x="-2" y="6" width="4" height="28" />
       </g>
     </g>
-  `;
+`;
+
+  // Games-themed decorative elements
+  const gamesElements = includeGames ? `
+    <!-- Game controller icon -->
+    <g transform="translate(900, 200)">
+      <circle cx="0" cy="0" r="45" fill="#ffffff" opacity="0.15"/>
+      <rect x="-25" y="-15" width="50" height="30" rx="8" fill="#ffffff" opacity="0.2"/>
+      <circle cx="-15" cy="0" r="6" fill="#ffffff" opacity="0.4"/>
+      <circle cx="15" cy="0" r="6" fill="#ffffff" opacity="0.4"/>
+      <rect x="-8" y="-8" width="16" height="6" rx="3" fill="#ffffff" opacity="0.3"/>
+    </g>
+    <!-- Dice icon -->
+    <g transform="translate(1000, 350)">
+      <rect x="-20" y="-20" width="40" height="40" rx="6" fill="#ffffff" fill-opacity="0.15" stroke="#ffffff" stroke-width="2" stroke-opacity="0.3"/>
+      <circle cx="-10" cy="-10" r="3" fill="#ffffff" opacity="0.5"/>
+      <circle cx="10" cy="10" r="3" fill="#ffffff" opacity="0.5"/>
+      <circle cx="-10" cy="10" r="3" fill="#ffffff" opacity="0.5"/>
+      <circle cx="10" cy="-10" r="3" fill="#ffffff" opacity="0.5"/>
+      <circle cx="0" cy="0" r="3" fill="#ffffff" opacity="0.5"/>
+    </g>
+    <!-- Puzzle piece icon -->
+    <g transform="translate(1050, 200)">
+      <path d="M-20 -20 L20 -20 L20 0 L10 0 L10 20 L-10 20 L-10 0 L-20 0 Z" 
+            fill="#ffffff" opacity="0.12" stroke="#ffffff" stroke-width="2" stroke-opacity="0.25"/>
+    </g>
+    <!-- Star icon -->
+    <g transform="translate(950, 450)">
+      <path d="M0 -18 L5 -5 L18 -5 L8 2 L12 15 L0 8 L-12 15 L-8 2 L-18 -5 L-5 -5 Z" 
+            fill="#ffffff" opacity="0.2"/>
+    </g>
+  ` : '';
 
   // Large soft glow behind logo
   const glow = `
@@ -62,6 +94,7 @@ function baseSvg({ headline, subline }) {
 
     ${glow}
     ${logo}
+    ${gamesElements}
 
     <g filter="url(#shadow)">
       <rect x="260" y="120" width="860" height="390" rx="32" fill="#0b1220" opacity="0.55"/>
@@ -117,11 +150,19 @@ async function main() {
     subline: "Schools across Central Asia are hiring for 2026 and beyond",
   });
 
+  const resourcesSvg = baseSvg({
+    headline: "Teaching Resources & Games",
+    subline: "Classroom games, lesson tools, and teaching aids for educators",
+    includeGames: true,
+  });
+
   await renderPng(siteSvg, join(publicDir, "og-image.png"));
   await renderPng(teacherSvg, join(publicDir, "og-teacher.png"));
+  await renderPng(resourcesSvg, join(publicDir, "og-resources.png"));
 
   console.log("✅ Wrote /public/og-image.png");
   console.log("✅ Wrote /public/og-teacher.png");
+  console.log("✅ Wrote /public/og-resources.png");
 }
 
 main().catch((err) => {
