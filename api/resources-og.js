@@ -46,7 +46,10 @@ export default async function handler(req, res) {
     try {
       // Read the static HTML file
       const htmlPath = join(process.cwd(), 'public', 'resources.html');
-      const html = readFileSync(htmlPath, 'utf-8');
+      let html = readFileSync(htmlPath, 'utf-8');
+      
+      // Remove the meta refresh tag for crawlers (they don't need to redirect)
+      html = html.replace(/<meta http-equiv="refresh"[^>]*>/i, '');
 
       // Set headers
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
@@ -55,12 +58,11 @@ export default async function handler(req, res) {
       return res.status(200).send(html);
     } catch (error) {
       console.error('Error serving resources.html:', error);
-      // Fall through to return 404 for crawlers if file not found
+      return res.status(500).send('Internal Server Error');
     }
   }
 
-  // For regular users, redirect to the React app
-  res.writeHead(302, { Location: '/resources' });
-  res.end();
+  // For regular users (non-crawlers), return 404 since this API route is only for crawlers
+  return res.status(404).send('Not Found');
 }
 

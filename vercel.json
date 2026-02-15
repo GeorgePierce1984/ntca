@@ -27,10 +27,6 @@
       "destination": "/resources.html"
     },
     {
-      "source": "/resources",
-      "destination": "/api/resources-og"
-    },
-    {
       "source": "/api/(.*)",
       "destination": "/api/$1"
     },
