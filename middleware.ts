@@ -64,7 +64,8 @@ export default async function middleware(request: Request) {
     }
   }
 
-  // For regular users, continue to the React app (don't return anything to pass through)
-  return new Response(null, { status: 200 });
+  // For regular users, continue to the React app
+  // Return undefined to let the request pass through to normal routing
+  return undefined;
 }
 
