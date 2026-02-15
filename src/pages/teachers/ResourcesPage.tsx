@@ -76,6 +76,10 @@ export const ResourcesPage: React.FC = () => {
     updateMetaTag("og:image:width", "1200");
     updateMetaTag("og:image:height", "630");
     updateMetaTag("og:image:alt", "Teaching Resources & Games - NTCA");
+    
+    // Facebook App ID (optional but recommended by Facebook Debugger)
+    // Note: Replace with your actual Facebook App ID if you have one
+    updateMetaTag("fb:app_id", "YOUR_FACEBOOK_APP_ID");
 
     // Twitter tags
     updateMetaTag("twitter:card", "summary_large_image");

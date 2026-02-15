@@ -10,7 +10,9 @@ import { join } from "path";
 
 const rootDir = new URL("..", import.meta.url).pathname;
 const publicDir = join(rootDir, "public");
-const inputPath = join(publicDir, "og-resources.png");
+// Try to use source file if it exists, otherwise use the current og-resources.png
+const inputPath = join(publicDir, "og-resources-source.png");
+const fallbackPath = join(publicDir, "og-resources.png");
 const outputPathPng = join(publicDir, "og-resources.png");
 const outputPathJpg = join(publicDir, "og-resources.jpg");
 
@@ -22,13 +24,23 @@ async function optimizeImage() {
   try {
     console.log(`📐 Optimizing og-resources.png for social media...`);
     
-    const imageBuffer = readFileSync(inputPath);
+    // Use source file if available, otherwise fallback to existing
+    let imagePath = inputPath;
+    try {
+      readFileSync(inputPath);
+    } catch {
+      imagePath = fallbackPath;
+      console.log(`⚠️  Source file not found, using existing og-resources.png`);
+    }
+    
+    const imageBuffer = readFileSync(imagePath);
     
     // Create optimized PNG (for Facebook, Twitter)
+    // Use 'cover' with 'top' position to ensure logo at top is preserved
     const pngBuffer = await sharp(imageBuffer)
       .resize(WIDTH, HEIGHT, {
-        fit: 'contain',
-        background: { r: 0, g: 0, b: 0, alpha: 0 }
+        fit: 'cover',
+        position: 'top' // Preserve top content (logo)
       })
       .png({ 
         quality: 90,
@@ -38,10 +50,11 @@ async function optimizeImage() {
       .toBuffer();
     
     // Create optimized JPEG (for WhatsApp - prefers JPEG)
+    // Use 'cover' with 'top' position to ensure logo at top is preserved
     const jpgBuffer = await sharp(imageBuffer)
       .resize(WIDTH, HEIGHT, {
-        fit: 'contain',
-        background: { r: 255, g: 255, b: 255, alpha: 1 } // White background for JPEG
+        fit: 'cover',
+        position: 'top' // Preserve top content (logo)
       })
       .jpeg({ 
         quality: 90,
