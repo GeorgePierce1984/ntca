@@ -205,18 +205,19 @@ export const ResourcesPage: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3 }}
-          className="hidden xl:block absolute"
+          className="hidden xl:block absolute pointer-events-none"
           style={{
-            // Position below Exam Prep (3rd card, row 1, col 3)
-            // Center horizontally to Exam Prep box
-            // Start vertically where AI Tools box starts (row 2, col 1)
-            left: '66.666%', // Start of 3rd column (Exam Prep)
-            top: 'calc(100% / 3 * 2)', // Where row 2 starts (AI Tools position)
-            transform: 'translateX(-50%)', // Center to Exam Prep box
+            // Position centered on Exam Prep box (3rd column center)
+            // Grid: 3 columns, Exam Prep is column 3
+            // Center of column 3 = 66.666% + (33.333% / 2) = 83.333%
+            left: '83.333%', // Center of 3rd column (Exam Prep)
+            // Start vertically where AI Tools box starts (row 2)
+            // Calculate based on first card height + gap
+            top: 'calc((100% / 5) * 2)', // Approximate position where row 2 starts
+            transform: 'translateX(-50%)', // Center horizontally on Exam Prep
             maxHeight: '400px',
             maxWidth: '400px',
-            zIndex: 10,
-            pointerEvents: 'none'
+            zIndex: 10
           }}
         >
           <img
