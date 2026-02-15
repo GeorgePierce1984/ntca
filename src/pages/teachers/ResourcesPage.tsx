@@ -37,25 +37,31 @@ export const ResourcesPage: React.FC = () => {
     // Update document title
     document.title = "Teaching Resources & Games | NTCA";
 
-    // Create or update meta tags
+    // Create or update meta tags (force update existing ones)
     const updateMetaTag = (property: string, content: string) => {
-      let element = document.querySelector(`meta[property="${property}"]`) as HTMLMetaElement;
-      if (!element) {
-        element = document.createElement("meta");
-        element.setAttribute("property", property);
-        document.head.appendChild(element);
+      // Remove existing meta tag if it exists
+      const existing = document.querySelector(`meta[property="${property}"]`);
+      if (existing) {
+        existing.remove();
       }
+      // Create new meta tag
+      const element = document.createElement("meta");
+      element.setAttribute("property", property);
       element.setAttribute("content", content);
+      document.head.appendChild(element);
     };
 
     const updateNameMetaTag = (name: string, content: string) => {
-      let element = document.querySelector(`meta[name="${name}"]`) as HTMLMetaElement;
-      if (!element) {
-        element = document.createElement("meta");
-        element.setAttribute("name", name);
-        document.head.appendChild(element);
+      // Remove existing meta tag if it exists
+      const existing = document.querySelector(`meta[name="${name}"]`);
+      if (existing) {
+        existing.remove();
       }
+      // Create new meta tag
+      const element = document.createElement("meta");
+      element.setAttribute("name", name);
       element.setAttribute("content", content);
+      document.head.appendChild(element);
     };
 
     // OpenGraph tags
@@ -64,7 +70,7 @@ export const ResourcesPage: React.FC = () => {
     updateMetaTag("og:site_name", "NTCA");
     updateMetaTag("og:title", "Teaching Resources & Games");
     updateMetaTag("og:description", "Classroom games, lesson tools, exam prep resources, and teaching aids for educators. Free resources for teachers across Central Asia.");
-    updateMetaTag("og:image", "https://www.nt-ca.com/og-resources.png");
+    updateMetaTag("og:image", "https://www.nt-ca.com/og-image.png");
     updateMetaTag("og:image:width", "1200");
     updateMetaTag("og:image:height", "630");
     updateMetaTag("og:image:alt", "Teaching Resources & Games - NTCA");
@@ -74,7 +80,7 @@ export const ResourcesPage: React.FC = () => {
     updateMetaTag("twitter:url", "https://www.nt-ca.com/resources");
     updateMetaTag("twitter:title", "Teaching Resources & Games");
     updateMetaTag("twitter:description", "Classroom games, lesson tools, exam prep resources, and teaching aids for educators. Free resources for teachers across Central Asia.");
-    updateMetaTag("twitter:image", "https://www.nt-ca.com/og-resources.png");
+    updateMetaTag("twitter:image", "https://www.nt-ca.com/og-image.png");
 
     // Standard meta tags
     updateNameMetaTag("description", "Classroom games, lesson tools, exam prep resources, and teaching aids for educators. Free resources for teachers across Central Asia.");
