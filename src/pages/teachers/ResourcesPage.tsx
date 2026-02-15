@@ -162,7 +162,7 @@ export const ResourcesPage: React.FC = () => {
       headerSectionClassName="pt-10 pb-6 md:pt-12 md:pb-8 bg-gradient-to-br from-primary-50 to-white dark:from-neutral-900 dark:to-neutral-950"
       minHeightClassName="min-h-0"
     >
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-12">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-12 relative">
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {cards.map((card) => {
             const Icon = card.icon;
@@ -198,20 +198,41 @@ export const ResourcesPage: React.FC = () => {
             );
           })}
         </div>
-      </div>
-      
-      {/* Keith image - absolutely positioned on right side, above page structure */}
-      <div className="relative">
+        
+        {/* Keith image - Desktop: below Exam Prep box, centered, starting at AI Tools position */}
+        {/* Mobile: in normal flow below cards */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3 }}
-          className="absolute right-0 -top-[100px] z-10 pointer-events-none"
-          style={{ 
-            maxHeight: '400px', 
+          className="hidden xl:block absolute"
+          style={{
+            // Position below Exam Prep (3rd card, row 1, col 3)
+            // Center horizontally to Exam Prep box
+            // Start vertically where AI Tools box starts (row 2, col 1)
+            left: '66.666%', // Start of 3rd column (Exam Prep)
+            top: 'calc(100% / 3 * 2)', // Where row 2 starts (AI Tools position)
+            transform: 'translateX(-50%)', // Center to Exam Prep box
+            maxHeight: '400px',
             maxWidth: '400px',
-            marginRight: 'clamp(1rem, 4vw, 4rem)'
+            zIndex: 10,
+            pointerEvents: 'none'
           }}
+        >
+          <img
+            src="/keith.png"
+            alt="Keith"
+            className="max-w-full h-auto object-contain"
+            style={{ maxHeight: '400px', maxWidth: '400px' }}
+          />
+        </motion.div>
+        
+        {/* Mobile: Keith image in normal flow */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+          className="xl:hidden mt-8 flex justify-center"
         >
           <img
             src="/keith.png"
