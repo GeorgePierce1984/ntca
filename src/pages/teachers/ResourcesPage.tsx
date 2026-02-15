@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
@@ -31,6 +31,59 @@ function countLinksForTitles(titles: string[]) {
 export const ResourcesPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Set OpenGraph meta tags for social media previews
+  useEffect(() => {
+    // Update document title
+    document.title = "Teaching Resources & Games | NTCA";
+
+    // Create or update meta tags
+    const updateMetaTag = (property: string, content: string) => {
+      let element = document.querySelector(`meta[property="${property}"]`) as HTMLMetaElement;
+      if (!element) {
+        element = document.createElement("meta");
+        element.setAttribute("property", property);
+        document.head.appendChild(element);
+      }
+      element.setAttribute("content", content);
+    };
+
+    const updateNameMetaTag = (name: string, content: string) => {
+      let element = document.querySelector(`meta[name="${name}"]`) as HTMLMetaElement;
+      if (!element) {
+        element = document.createElement("meta");
+        element.setAttribute("name", name);
+        document.head.appendChild(element);
+      }
+      element.setAttribute("content", content);
+    };
+
+    // OpenGraph tags
+    updateMetaTag("og:type", "website");
+    updateMetaTag("og:url", "https://www.nt-ca.com/resources");
+    updateMetaTag("og:site_name", "NTCA");
+    updateMetaTag("og:title", "Teaching Resources & Games");
+    updateMetaTag("og:description", "Classroom games, lesson tools, exam prep resources, and teaching aids for educators. Free resources for teachers across Central Asia.");
+    updateMetaTag("og:image", "https://www.nt-ca.com/og-resources.png");
+    updateMetaTag("og:image:width", "1200");
+    updateMetaTag("og:image:height", "630");
+    updateMetaTag("og:image:alt", "Teaching Resources & Games - NTCA");
+
+    // Twitter tags
+    updateMetaTag("twitter:card", "summary_large_image");
+    updateMetaTag("twitter:url", "https://www.nt-ca.com/resources");
+    updateMetaTag("twitter:title", "Teaching Resources & Games");
+    updateMetaTag("twitter:description", "Classroom games, lesson tools, exam prep resources, and teaching aids for educators. Free resources for teachers across Central Asia.");
+    updateMetaTag("twitter:image", "https://www.nt-ca.com/og-resources.png");
+
+    // Standard meta tags
+    updateNameMetaTag("description", "Classroom games, lesson tools, exam prep resources, and teaching aids for educators. Free resources for teachers across Central Asia.");
+
+    // Cleanup function to restore defaults when component unmounts
+    return () => {
+      document.title = "NTCA - NexTeach Central Asia | Connect Qualified Teachers with Schools";
+    };
+  }, []);
 
   const basePath = location.pathname.startsWith("/teachers/")
     ? "/teachers/resources"
