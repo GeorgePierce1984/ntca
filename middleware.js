@@ -4,7 +4,9 @@
  */
 
 export const config = {
-  matcher: ['/resources'],
+  // Temporarily disabled to debug white screen
+  // matcher: ['/resources'],
+  matcher: [],
 };
 
 export default async function middleware(request) {
