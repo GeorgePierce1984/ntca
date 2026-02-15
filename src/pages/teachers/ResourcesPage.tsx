@@ -71,8 +71,8 @@ export const ResourcesPage: React.FC = () => {
     updateMetaTag("og:title", "Teaching Resources & Games");
     updateMetaTag("og:description", "Classroom games, lesson tools, exam prep resources, and teaching aids for educators. Free resources for teachers across Central Asia.");
     updateMetaTag("og:image", "https://www.nt-ca.com/og-resources.png?v=owl-2024");
-    updateMetaTag("og:image:width", "1536");
-    updateMetaTag("og:image:height", "1024");
+    updateMetaTag("og:image:width", "1200");
+    updateMetaTag("og:image:height", "630");
     updateMetaTag("og:image:alt", "Teaching Resources & Games - NTCA");
 
     // Twitter tags
