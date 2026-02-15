@@ -18,6 +18,8 @@ export default async function middleware(request: Request) {
     'Twitterbot',
     'LinkedInBot',
     'WhatsApp',
+    'whatsapp', // lowercase variant
+    'WhatsAppBot',
     'TelegramBot',
     'Slackbot',
     'SkypeUriPreview',

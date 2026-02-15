@@ -70,7 +70,9 @@ export const ResourcesPage: React.FC = () => {
     updateMetaTag("og:site_name", "NTCA");
     updateMetaTag("og:title", "Teaching Resources & Games");
     updateMetaTag("og:description", "Classroom games, lesson tools, exam prep resources, and teaching aids for educators. Free resources for teachers across Central Asia.");
-    updateMetaTag("og:image", "https://www.nt-ca.com/og-resources.png?v=owl-2024");
+    updateMetaTag("og:image", "https://www.nt-ca.com/og-resources.jpg?v=owl-2024");
+    updateMetaTag("og:image:secure_url", "https://www.nt-ca.com/og-resources.jpg?v=owl-2024");
+    updateMetaTag("og:image:type", "image/jpeg");
     updateMetaTag("og:image:width", "1200");
     updateMetaTag("og:image:height", "630");
     updateMetaTag("og:image:alt", "Teaching Resources & Games - NTCA");
@@ -80,7 +82,7 @@ export const ResourcesPage: React.FC = () => {
     updateMetaTag("twitter:url", "https://www.nt-ca.com/resources");
     updateMetaTag("twitter:title", "Teaching Resources & Games");
     updateMetaTag("twitter:description", "Classroom games, lesson tools, exam prep resources, and teaching aids for educators. Free resources for teachers across Central Asia.");
-    updateMetaTag("twitter:image", "https://www.nt-ca.com/og-resources.png?v=owl-2024");
+    updateMetaTag("twitter:image", "https://www.nt-ca.com/og-resources.jpg?v=owl-2024");
 
     // Standard meta tags
     updateNameMetaTag("description", "Classroom games, lesson tools, exam prep resources, and teaching aids for educators. Free resources for teachers across Central Asia.");
