@@ -26,7 +26,7 @@ async function resizeImage() {
     const resizedBuffer = await sharp(imageBuffer)
       .resize(WIDTH, HEIGHT, {
         fit: 'cover', // Fill the frame, may crop edges
-        position: 'center' // Center the image when cropping
+        position: 'top' // Preserve top content (logo) when cropping
       })
       .png({ quality: 90 })
       .toBuffer();
