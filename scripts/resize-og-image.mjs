@@ -34,11 +34,35 @@ async function resizeImage() {
     
     const imageBuffer = readFileSync(imagePath);
     
+    // Get original image dimensions
+    const originalMetadata = await sharp(imageBuffer).metadata();
+    console.log(`📏 Original image: ${originalMetadata.width}x${originalMetadata.height}`);
+    
+    // Calculate if we need to crop from top or use contain
+    // If original is taller than target ratio, use 'cover' with 'top' position
+    // Otherwise, use 'contain' to preserve entire image
+    const originalRatio = originalMetadata.width / originalMetadata.height;
+    const targetRatio = WIDTH / HEIGHT;
+    
+    let resizeOptions;
+    if (originalRatio < targetRatio) {
+      // Original is taller/narrower - use cover with top position to preserve logo
+      console.log(`📐 Using 'cover' with 'top' position to preserve logo`);
+      resizeOptions = {
+        fit: 'cover',
+        position: 'top'
+      };
+    } else {
+      // Original is wider/shorter - use contain to show full image
+      console.log(`📐 Using 'contain' to show full image`);
+      resizeOptions = {
+        fit: 'contain',
+        background: { r: 255, g: 255, b: 255, alpha: 1 } // White background
+      };
+    }
+    
     const resizedBuffer = await sharp(imageBuffer)
-      .resize(WIDTH, HEIGHT, {
-        fit: 'cover', // Fill the frame, may crop edges
-        position: 'top' // Preserve top content (logo) when cropping
-      })
+      .resize(WIDTH, HEIGHT, resizeOptions)
       .png({ quality: 90 })
       .toBuffer();
     
