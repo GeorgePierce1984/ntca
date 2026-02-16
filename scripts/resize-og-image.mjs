@@ -10,7 +10,9 @@ import { join } from "path";
 
 const rootDir = new URL("..", import.meta.url).pathname;
 const publicDir = join(rootDir, "public");
-const inputPath = join(publicDir, "og-image.png");
+// Use source file if available, otherwise use existing
+const inputPath = join(publicDir, "og-image-source.png");
+const fallbackPath = join(publicDir, "og-image.png");
 const outputPath = join(publicDir, "og-image.png");
 
 // Facebook's recommended OG image size
@@ -21,7 +23,16 @@ async function resizeImage() {
   try {
     console.log(`📐 Resizing og-image.png to ${WIDTH}x${HEIGHT} (Facebook recommended size)...`);
     
-    const imageBuffer = readFileSync(inputPath);
+    // Use source file if available, otherwise fallback to existing
+    let imagePath = inputPath;
+    try {
+      readFileSync(inputPath);
+    } catch {
+      imagePath = fallbackPath;
+      console.log(`⚠️  Source file not found, using existing og-image.png`);
+    }
+    
+    const imageBuffer = readFileSync(imagePath);
     
     const resizedBuffer = await sharp(imageBuffer)
       .resize(WIDTH, HEIGHT, {
