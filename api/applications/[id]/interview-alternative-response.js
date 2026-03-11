@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import jwt from "jsonwebtoken";
+import { emailHelpers } from "../../../lib/email/email-service.js";
 
 const prisma = new PrismaClient();
 
@@ -36,6 +37,7 @@ export default async function handler(req, res) {
         where: { id },
         include: {
           interviewRequest: true,
+          teacher: true,
           job: {
             include: {
               school: true,
@@ -85,7 +87,19 @@ export default async function handler(req, res) {
           data: { interviewDate: interviewDateTime },
         });
 
-        // TODO: Send email notification to teacher
+        if (application.teacher) {
+          try {
+            await emailHelpers.notifyTeacherOfStatusUpdate(
+              application.teacher,
+              application.job,
+              school,
+              "INTERVIEW",
+              "The school accepted your suggested interview time. Please review your dashboard for the confirmed interview details.",
+            );
+          } catch (emailError) {
+            console.error("Failed to send interview update email:", emailError);
+          }
+        }
 
         return res.status(200).json({
           message: "Alternative time accepted successfully",
@@ -100,7 +114,19 @@ export default async function handler(req, res) {
           },
         });
 
-        // TODO: Send email notification to teacher
+        if (application.teacher) {
+          try {
+            await emailHelpers.notifyTeacherOfStatusUpdate(
+              application.teacher,
+              application.job,
+              school,
+              "INTERVIEW",
+              "The school declined your suggested alternative time. Please review your dashboard to choose from the original interview slots.",
+            );
+          } catch (emailError) {
+            console.error("Failed to send interview update email:", emailError);
+          }
+        }
 
         return res.status(200).json({
           message: "Alternative time declined. Teacher will be notified to select from original time slots.",

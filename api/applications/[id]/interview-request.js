@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import jwt from "jsonwebtoken";
+import { emailHelpers } from "../../../lib/email/email-service.js";
 
 const prisma = new PrismaClient();
 
@@ -34,7 +35,10 @@ export default async function handler(req, res) {
       // Verify application belongs to this school
       const application = await prisma.application.findUnique({
         where: { id },
-        include: { job: true },
+        include: {
+          job: true,
+          teacher: true,
+        },
       });
 
       if (!application) {
@@ -106,6 +110,21 @@ export default async function handler(req, res) {
           userAgent: req.headers["user-agent"],
         },
       });
+
+      if (application.teacher) {
+        try {
+          await emailHelpers.notifyTeacherOfStatusUpdate(
+            application.teacher,
+            application.job,
+            school,
+            "INTERVIEW",
+            message ||
+              "The school has invited you to interview. Please review your dashboard for the available interview details.",
+          );
+        } catch (emailError) {
+          console.error("Failed to send interview request email:", emailError);
+        }
+      }
 
       return res.status(201).json({
         message: "Interview request created successfully",

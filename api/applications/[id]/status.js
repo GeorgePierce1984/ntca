@@ -112,7 +112,9 @@ export default async function handler(req, res) {
         details: {
           applicationId: id,
           newStatus: status,
-          teacherName: `${application.teacher.firstName} ${application.teacher.lastName}`,
+          teacherName: application.teacher
+            ? `${application.teacher.firstName} ${application.teacher.lastName}`
+            : `${application.guestFirstName || ""} ${application.guestLastName || ""}`.trim() || "Guest applicant",
           jobTitle: application.job.title,
           note,
         },
@@ -123,7 +125,7 @@ export default async function handler(req, res) {
     });
 
     // Send notification email to teacher if status changed
-    if (status) {
+    if (status && application.teacher) {
       try {
         await emailHelpers.notifyTeacherOfStatusUpdate(
           application.teacher,
