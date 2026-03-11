@@ -71,6 +71,26 @@ interface School {
   };
   profileComplete: boolean;
   completionPercentage: number;
+  housingProvided?: boolean;
+  flightReimbursement?: boolean;
+  visaWorkPermitSupport?: boolean;
+  contractCompletionBonus?: boolean;
+  paidHolidays?: boolean;
+  overtimePay?: boolean;
+  paidAnnualLeave?: boolean;
+  nationalHolidays?: boolean;
+  sickLeave?: boolean;
+  healthInsurance?: boolean;
+  relocationSupport?: boolean;
+  teachingMaterialsProvided?: boolean;
+  curriculumGuidance?: boolean;
+  teacherTraining?: boolean;
+  promotionOpportunities?: boolean;
+  contractRenewalOptions?: boolean;
+}
+
+interface SchoolEmailPreferences {
+  newApplicantAlerts: boolean;
 }
 
 // Use the same constants as signup form for consistency
@@ -105,6 +125,11 @@ export const SchoolProfilePage: React.FC<{ embedded?: boolean }> = ({
   const [selectedJobForEdit, setSelectedJobForEdit] = useState<any | null>(null);
   const [showChoosePlanModal, setShowChoosePlanModal] = useState(false);
   const [jobs, setJobs] = useState<any[]>([]);
+  const [emailPreferences, setEmailPreferences] = useState<SchoolEmailPreferences>({
+    newApplicantAlerts: true,
+  });
+  const [loadingEmailPreferences, setLoadingEmailPreferences] = useState(true);
+  const [savingEmailPreferences, setSavingEmailPreferences] = useState(false);
 
   // In the embedded (dashboard tab) view, we want a fluid "always editable" experience.
   const isEditing = embedded ? true : editMode;
@@ -179,6 +204,7 @@ export const SchoolProfilePage: React.FC<{ embedded?: boolean }> = ({
     }
     fetchProfile();
     fetchSubscriptionStatus();
+    fetchEmailPreferences();
   }, [user, navigate]);
 
   // Fetch subscription status
@@ -219,6 +245,73 @@ export const SchoolProfilePage: React.FC<{ embedded?: boolean }> = ({
       }
     } catch (error) {
       console.error("Error fetching jobs:", error);
+    }
+  };
+
+  const fetchEmailPreferences = async () => {
+    try {
+      const token = localStorage.getItem("authToken");
+      if (!token) return;
+
+      const response = await fetch("/api/schools/email-preferences", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch email preferences");
+      }
+
+      const data = await response.json();
+      setEmailPreferences({
+        newApplicantAlerts: data.newApplicantAlerts ?? true,
+      });
+    } catch (error) {
+      console.error("Error fetching school email preferences:", error);
+    } finally {
+      setLoadingEmailPreferences(false);
+    }
+  };
+
+  const handleApplicantAlertToggle = async (enabled: boolean) => {
+    const previousValue = emailPreferences.newApplicantAlerts;
+
+    setEmailPreferences({
+      newApplicantAlerts: enabled,
+    });
+    setSavingEmailPreferences(true);
+
+    try {
+      const token = localStorage.getItem("authToken");
+      const response = await fetch("/api/schools/email-preferences", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          newApplicantAlerts: enabled,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update email preferences");
+      }
+
+      toast.success(
+        enabled
+          ? "Applicant alert emails turned on"
+          : "Applicant alert emails turned off",
+      );
+    } catch (error) {
+      console.error("Error updating school email preferences:", error);
+      setEmailPreferences({
+        newApplicantAlerts: previousValue,
+      });
+      toast.error("Failed to update applicant alert setting");
+    } finally {
+      setSavingEmailPreferences(false);
     }
   };
 
@@ -481,7 +574,7 @@ export const SchoolProfilePage: React.FC<{ embedded?: boolean }> = ({
       setSchool(data.school);
       
       // Parse benefits if they exist
-      let parsedBenefits = {};
+      let parsedBenefits: Partial<School> = {};
       if (data.school.benefits) {
         try {
           parsedBenefits = JSON.parse(data.school.benefits);
@@ -1754,6 +1847,38 @@ export const SchoolProfilePage: React.FC<{ embedded?: boolean }> = ({
                       Complete your profile to post jobs
                     </p>
                   )}
+                </div>
+
+                <div className="mt-6 pt-6 border-t border-neutral-200 dark:border-neutral-700">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="font-medium text-neutral-900 dark:text-white">
+                        Applicant alert emails
+                      </p>
+                      <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
+                        Email me when a new applicant arrives, limited to the first 5 applicants per job.
+                      </p>
+                    </div>
+                    {loadingEmailPreferences ? (
+                      <Loader2 className="w-5 h-5 animate-spin text-neutral-400 mt-1" />
+                    ) : (
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={emailPreferences.newApplicantAlerts}
+                          onChange={(e) =>
+                            handleApplicantAlertToggle(e.target.checked)
+                          }
+                          className="sr-only peer"
+                          disabled={savingEmailPreferences}
+                        />
+                        <div className="w-14 h-7 bg-neutral-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-neutral-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all dark:border-neutral-600 peer-checked:bg-primary-600 peer-disabled:opacity-60"></div>
+                      </label>
+                    )}
+                  </div>
+                  <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-3">
+                    Schools are prompted to review applicants in their dashboard.
+                  </p>
                 </div>
               </div>
             )}

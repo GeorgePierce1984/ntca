@@ -195,9 +195,26 @@ export const SchoolDashboardPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
   
+  const normalizeDashboardTab = (
+    tabParam: string | null,
+  ): "overview" | "jobs" | "applicants" | "profile" => {
+    switch (tabParam) {
+      case "jobs":
+        return "jobs";
+      case "applicants":
+      case "applications":
+        return "applicants";
+      case "profile":
+        return "profile";
+      case "overview":
+      default:
+        return "overview";
+    }
+  };
+
   // Initialize activeTab from URL parameter if present
   const getInitialTab = (): "overview" | "jobs" | "applicants" | "profile" => {
-    return 'overview';
+    return normalizeDashboardTab(searchParams.get("tab"));
   };
   
   const [activeTab, setActiveTab] = useState<
@@ -649,6 +666,13 @@ export const SchoolDashboardPage: React.FC = () => {
       window.history.replaceState({}, '', '/schools/dashboard');
     }
   }, []);
+
+  useEffect(() => {
+    const tabParam = searchParams.get("tab");
+    if (!tabParam || tabParam === "post-job") return;
+
+    setActiveTab(normalizeDashboardTab(tabParam));
+  }, [searchParams]);
 
   useEffect(() => {
     // Check for justActivated flag immediately on mount
