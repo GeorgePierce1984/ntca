@@ -1852,11 +1852,14 @@ export const SchoolProfilePage: React.FC<{ embedded?: boolean }> = ({
                 <div className="mt-6 pt-6 border-t border-neutral-200 dark:border-neutral-700">
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <p className="font-medium text-neutral-900 dark:text-white">
-                        Applicant alert emails
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium text-neutral-900 dark:text-white">
+                          New applicant email alerts
+                        </p>
+                        <InfoIcon content="Schools are prompted to review applicants in their dashboard. Alerts are limited to the first 5 applicants per job to avoid excessive emails as applicant volume grows." />
+                      </div>
                       <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
-                        Email me when a new applicant arrives, limited to the first 5 applicants per job.
+                        Email me when a new applicant applies for a job.
                       </p>
                     </div>
                     {loadingEmailPreferences ? (
@@ -1876,9 +1879,6 @@ export const SchoolProfilePage: React.FC<{ embedded?: boolean }> = ({
                       </label>
                     )}
                   </div>
-                  <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-3">
-                    Schools are prompted to review applicants in their dashboard.
-                  </p>
                 </div>
               </div>
             )}
