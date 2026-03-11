@@ -1854,9 +1854,11 @@ export const SchoolProfilePage: React.FC<{ embedded?: boolean }> = ({
                     <div>
                       <div className="flex items-center gap-2 mb-2">
                         <label className="block text-sm font-medium">
-                          New applicant email alerts
+                          New Applicant Email Alerts
                         </label>
-                        <InfoIcon content="Schools are prompted to review applicants in their dashboard. Alerts are limited to the first 5 applicants per job to avoid excessive emails as applicant volume grows." />
+                        <div className="shrink-0 scale-110">
+                          <InfoIcon content="Schools are prompted to review applicants in their dashboard. Alerts are limited to the first 5 applicants per job to avoid excessive emails as applicant volume grows." />
+                        </div>
                       </div>
                     </div>
                     {loadingEmailPreferences ? (
