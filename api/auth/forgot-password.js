@@ -28,9 +28,20 @@ async function handlePasswordResetRequest(req, res) {
     // Find user by email
     const user = await prisma.user.findUnique({
       where: { email },
-      include: {
-        school: true,
-        teacher: true,
+      select: {
+        id: true,
+        email: true,
+        userType: true,
+        school: {
+          select: {
+            contactName: true,
+          },
+        },
+        teacher: {
+          select: {
+            firstName: true,
+          },
+        },
       },
     });
 
@@ -114,6 +125,10 @@ async function handlePasswordReset(req, res) {
         resetTokenExpiry: {
           gt: new Date(), // Token must not be expired
         },
+      },
+      select: {
+        id: true,
+        email: true,
       },
     });
 

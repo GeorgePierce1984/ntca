@@ -31,6 +31,16 @@ export default async function handler(req, res) {
         newApplicantAlerts: user.emailSchoolApplicantAlerts ?? true,
       });
     } catch (error) {
+      if (
+        error.code === "P2022" ||
+        error.message?.includes("does not exist")
+      ) {
+        return res.status(200).json({
+          newApplicantAlerts: true,
+          migrationPending: true,
+        });
+      }
+
       console.error("Error fetching school email preferences:", error);
       return res.status(500).json({
         error: "Failed to fetch email preferences",
@@ -55,15 +65,31 @@ export default async function handler(req, res) {
         });
       }
 
-      const user = await prisma.user.update({
-        where: { id: decoded.userId },
-        data: {
-          emailSchoolApplicantAlerts: newApplicantAlerts,
-        },
-        select: {
-          emailSchoolApplicantAlerts: true,
-        },
-      });
+      let user;
+      try {
+        user = await prisma.user.update({
+          where: { id: decoded.userId },
+          data: {
+            emailSchoolApplicantAlerts: newApplicantAlerts,
+          },
+          select: {
+            emailSchoolApplicantAlerts: true,
+          },
+        });
+      } catch (error) {
+        if (
+          error.code === "P2022" ||
+          error.message?.includes("does not exist")
+        ) {
+          return res.status(503).json({
+            error: "Email preferences unavailable",
+            message:
+              "This setting will be available after the database migration completes.",
+          });
+        }
+
+        throw error;
+      }
 
       await prisma.activityLog.create({
         data: {

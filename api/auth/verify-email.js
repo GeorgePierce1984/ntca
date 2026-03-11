@@ -18,6 +18,11 @@ export default async function handler(req, res) {
     // Find user by email
     const user = await prisma.user.findUnique({
       where: { email },
+      select: {
+        id: true,
+        resetToken: true,
+        resetTokenExpiry: true,
+      },
     });
 
     if (!user) {
