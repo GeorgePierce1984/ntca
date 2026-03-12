@@ -296,8 +296,15 @@ const JobDetail: React.FC = () => {
 
   const handleApply = async () => {
     // Redirect to login/registration if not logged in
-    if (!user || user.userType !== "TEACHER") {
-      navigate("/signin?redirect=" + encodeURIComponent(window.location.pathname));
+    if (!user) {
+      navigate(
+        `/signup?type=teacher&redirect=${encodeURIComponent(window.location.pathname)}`,
+      );
+      return;
+    }
+
+    if (user.userType !== "TEACHER") {
+      toast.error("Only teacher accounts can apply for jobs");
       return;
     }
 
@@ -516,6 +523,9 @@ const JobDetail: React.FC = () => {
       if (guestForm.city) formData.append("city", guestForm.city);
       if (guestForm.country) formData.append("country", guestForm.country);
       if (guestForm.coverLetter) formData.append("coverLetter", guestForm.coverLetter);
+      if (!guestForm.cv) {
+        throw new Error("CV/Resume is required");
+      }
       formData.append("cv", guestForm.cv);
 
       const response = await fetch("/api/applications/guest", {

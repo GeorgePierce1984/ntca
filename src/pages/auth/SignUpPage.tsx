@@ -111,6 +111,7 @@ export const SignUpPage: React.FC = () => {
     directTypeParam === "school" || directTypeParam === "teacher"
       ? (directTypeParam as UserType)
       : null;
+  const redirectParam = urlParams.get("redirect");
 
   const [currentStep, setCurrentStep] = useState(directUserType ? 2 : 1);
   const [userType, setUserType] = useState<UserType | null>(directUserType);
@@ -791,18 +792,12 @@ export const SignUpPage: React.FC = () => {
           const intendedAction = sessionStorage.getItem("intendedAction");
           sessionStorage.removeItem("intendedAction");
 
-          if (userType === "school") {
-            // Set flag to show profile completion modal on first dashboard load
-            sessionStorage.setItem("justActivated", "true");
-            if (intendedAction === "post-job") {
-              navigate("/schools/dashboard?tab=post-job");
-            } else if (intendedAction === "browse") {
-              navigate("/schools/browse-teachers");
-            } else {
-              navigate("/schools/dashboard");
-            }
+          if (intendedAction === "post-job") {
+            navigate("/schools/dashboard?tab=post-job");
+          } else if (intendedAction === "browse") {
+            navigate("/schools/browse-teachers");
           } else {
-            navigate("/teachers/dashboard");
+            navigate(redirectParam || "/teachers/dashboard");
           }
         } else {
           // Handle specific error cases
