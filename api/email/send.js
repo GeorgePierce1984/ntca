@@ -3,6 +3,12 @@ import { PrismaClient } from '@prisma/client';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const prisma = new PrismaClient();
+const SITE_URL = (
+  process.env.APP_URL ||
+  process.env.SITE_URL ||
+  process.env.NEXT_PUBLIC_APP_URL ||
+  'https://www.nt-ca.com'
+).trim().replace(/\/$/, '');
 
 // Email templates
 const emailTemplates = {
@@ -22,7 +28,7 @@ const emailTemplates = {
             <li>Set up job alerts for your preferences</li>
           </ul>
         </div>
-        <a href="${process.env.NEXT_PUBLIC_APP_URL}/teachers/dashboard"
+        <a href="${SITE_URL}/teachers/dashboard"
            style="background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
           Complete Your Profile
         </a>
@@ -50,7 +56,7 @@ const emailTemplates = {
             <li>Priority support</li>
           </ul>
         </div>
-        <a href="${process.env.NEXT_PUBLIC_APP_URL}/schools/dashboard"
+        <a href="${SITE_URL}/schools/dashboard"
            style="background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
           Post Your First Job
         </a>
@@ -82,7 +88,7 @@ const emailTemplates = {
             <p style="font-style: italic;">"${data.coverLetter.substring(0, 200)}..."</p>
           </div>
         ` : ''}
-        <a href="${process.env.NEXT_PUBLIC_APP_URL}/schools/dashboard?tab=applications"
+        <a href="${SITE_URL}/schools/dashboard?tab=applications"
            style="background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
           Review Application
         </a>
@@ -120,7 +126,7 @@ const emailTemplates = {
             <p>You've been hired! Welcome to your new teaching position.</p>
           </div>
         ` : ''}
-        <a href="${process.env.NEXT_PUBLIC_APP_URL}/teachers/dashboard?tab=applications"
+        <a href="${SITE_URL}/teachers/dashboard?tab=applications"
            style="background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
           View Application
         </a>
@@ -140,7 +146,7 @@ const emailTemplates = {
         <p>Hi ${data.name},</p>
         <p>You requested to reset your password for your NTCA account.</p>
         <p>Click the button below to reset your password. This link will expire in 1 hour.</p>
-        <a href="${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${data.token}"
+        <a href="${SITE_URL}/reset-password?token=${data.token}"
            style="background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; margin: 20px 0;">
           Reset Password
         </a>
@@ -168,13 +174,13 @@ const emailTemplates = {
           <p><strong>Type:</strong> ${data.jobType}</p>
           <p><strong>Deadline:</strong> ${new Date(data.deadline).toLocaleDateString()}</p>
         </div>
-        <a href="${process.env.NEXT_PUBLIC_APP_URL}/teachers/jobs/${data.jobId}"
+        <a href="${SITE_URL}/teachers/jobs/${data.jobId}"
            style="background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
           View Job & Apply
         </a>
         <p style="margin-top: 20px; font-size: 12px; color: #6b7280;">
           You're receiving this because you have job alerts enabled.
-          <a href="${process.env.NEXT_PUBLIC_APP_URL}/teachers/dashboard?tab=alerts">Manage your alerts</a>
+          <a href="${SITE_URL}/teachers/dashboard?tab=alerts">Manage your alerts</a>
         </p>
       </div>
     `

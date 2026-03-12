@@ -2,6 +2,12 @@ import { PrismaClient } from "@prisma/client";
 import jwt from "jsonwebtoken";
 
 const prisma = new PrismaClient();
+const SITE_URL = (
+  process.env.APP_URL ||
+  process.env.SITE_URL ||
+  process.env.NEXT_PUBLIC_APP_URL ||
+  "https://www.nt-ca.com"
+).trim().replace(/\/$/, "");
 
 // Middleware to verify JWT token
 function verifyToken(req) {
@@ -130,7 +136,7 @@ export default async function handler(req, res) {
                     <li><strong>Location:</strong> ${job.location}</li>
                   </ul>
                   <p>If you haven't heard back from the school, you may want to follow up directly or explore other opportunities on our platform.</p>
-                  <p><a href="${process.env.NEXT_PUBLIC_APP_URL}/jobs" style="background-color: #3B82F6; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Browse More Jobs</a></p>
+                  <p><a href="${SITE_URL}/jobs" style="background-color: #3B82F6; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Browse More Jobs</a></p>
                 `,
               }),
             });
