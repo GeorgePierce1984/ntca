@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { motion } from "framer-motion";
 import {
@@ -42,7 +42,9 @@ interface TeacherForm {
 
 export const TeacherSignupPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, isAuthenticated, login } = useAuth();
+  const redirectParam = new URLSearchParams(location.search).get("redirect");
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showPassword, setShowPassword] = useState(false);
@@ -73,10 +75,10 @@ export const TeacherSignupPage: React.FC = () => {
       const redirectPath =
         user.userType === "SCHOOL"
           ? "/schools/dashboard"
-          : "/teachers/dashboard";
+          : redirectParam || "/teachers/dashboard";
       navigate(redirectPath, { replace: true });
     }
-  }, [isAuthenticated, user, navigate]);
+  }, [isAuthenticated, user, navigate, redirectParam]);
 
   // Simple gradient animation style
   const gradientStyle = {
@@ -152,7 +154,7 @@ export const TeacherSignupPage: React.FC = () => {
       const ok = await login(teacherForm.email, teacherForm.password);
       if (!ok) {
         // Fallback: hard navigation forces AuthProvider to re-validate token on mount.
-        window.location.href = "/teachers/dashboard";
+        window.location.href = redirectParam || "/teachers/dashboard";
       }
     } catch (error: any) {
       toast.error(error.message || "Registration failed");

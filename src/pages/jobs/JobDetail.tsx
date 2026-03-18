@@ -298,7 +298,7 @@ const JobDetail: React.FC = () => {
     // Redirect to login/registration if not logged in
     if (!user) {
       navigate(
-        `/signup?type=teacher&redirect=${encodeURIComponent(window.location.pathname)}`,
+        `/signupteacher?redirect=${encodeURIComponent(window.location.pathname)}`,
       );
       return;
     }
