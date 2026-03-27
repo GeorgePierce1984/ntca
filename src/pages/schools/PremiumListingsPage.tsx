@@ -13,10 +13,12 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/contexts/AuthContext";
+import { canAccessSubscriptionPages } from "@/utils/subscription";
 
 export const PremiumListingsPage: React.FC = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
+  const showSubscriptionTools = canAccessSubscriptionPages(user);
 
   const features = [
     {
@@ -55,7 +57,7 @@ export const PremiumListingsPage: React.FC = () => {
     if (!isAuthenticated) {
       navigate("/login", { state: { from: "/schools/premium" } });
     } else if (user?.userType === "SCHOOL") {
-      navigate("/pricing");
+      navigate("/schools/dashboard");
     } else {
       navigate("/schools/signup");
     }
@@ -121,15 +123,17 @@ export const PremiumListingsPage: React.FC = () => {
                 >
                   Upgrade to Premium
                 </Button>
-                <Button
-                  onClick={() => navigate("/pricing")}
-                  size="lg"
-                  variant="ghost"
-                  className="text-white border-white hover:bg-white/10"
-                  leftIcon={<ArrowRight className="w-5 h-5" />}
-                >
-                  View Pricing
-                </Button>
+                {showSubscriptionTools && (
+                  <Button
+                    onClick={() => navigate("/pricing")}
+                    size="lg"
+                    variant="ghost"
+                    className="text-white border-white hover:bg-white/10"
+                    leftIcon={<ArrowRight className="w-5 h-5" />}
+                  >
+                    View Pricing
+                  </Button>
+                )}
               </div>
             </div>
           </motion.div>

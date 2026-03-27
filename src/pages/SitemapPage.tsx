@@ -10,7 +10,6 @@ const sections: { title: string; links: LinkItem[] }[] = [
     links: [
       { label: "Home", href: "/" },
       { label: "Jobs", href: "/jobs" },
-      { label: "Pricing", href: "/pricing" },
       { label: "FAQs", href: "/faqs" },
       { label: "Contact", href: "/contact" },
       { label: "About", href: "/about" },

@@ -16,6 +16,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/Button";
 import toast from "react-hot-toast";
+import { canAccessSubscriptionPages } from "@/utils/subscription";
 
 interface Subscription {
   subscriptionId?: string;
@@ -38,6 +39,7 @@ interface Subscription {
 export const SubscriptionPage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const canViewSubscriptionTools = canAccessSubscriptionPages(user);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
   const [portalLoading, setPortalLoading] = useState(false);
@@ -47,8 +49,12 @@ export const SubscriptionPage: React.FC = () => {
       navigate("/login");
       return;
     }
+    if (!canViewSubscriptionTools) {
+      navigate("/schools/dashboard", { replace: true });
+      return;
+    }
     fetchSubscription();
-  }, [user, navigate]);
+  }, [canViewSubscriptionTools, user, navigate]);
 
   const fetchSubscription = async () => {
     try {
@@ -194,6 +200,10 @@ export const SubscriptionPage: React.FC = () => {
         </div>
       </div>
     );
+  }
+
+  if (!canViewSubscriptionTools) {
+    return null;
   }
 
   return (

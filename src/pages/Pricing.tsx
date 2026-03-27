@@ -1,9 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Check,
   Building2,
   GraduationCap,
-  Star,
   Zap,
   Users,
   Mail,
@@ -16,27 +15,9 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { getSchoolPlansWithPriceIds } from "@/data/schoolPricingPlans";
 import toast from "react-hot-toast";
+import { canAccessSubscriptionPages } from "@/utils/subscription";
 
 const plans = getSchoolPlansWithPriceIds();
-
-const teacherFeatures = [
-  {
-    icon: <Check className="w-5 h-5" />,
-    text: "Create detailed teacher profile",
-  },
-  {
-    icon: <Check className="w-5 h-5" />,
-    text: "Browse unlimited job listings",
-  },
-  { icon: <Check className="w-5 h-5" />, text: "Apply to positions directly" },
-  { icon: <Check className="w-5 h-5" />, text: "Get job alerts via email" },
-  { icon: <Check className="w-5 h-5" />, text: "Access CELTA resources" },
-  { icon: <Check className="w-5 h-5" />, text: "Career guidance materials" },
-  {
-    icon: <Star className="w-5 h-5 text-amber-500" />,
-    text: "Premium: Priority matching with top schools",
-  },
-];
 
 const Pricing: React.FC = () => {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">(
@@ -46,6 +27,7 @@ const Pricing: React.FC = () => {
   const [checkoutLoadingPlan, setCheckoutLoadingPlan] = useState<string | null>(null);
   const navigate = useNavigate();
   const { user } = useAuth();
+  const canViewPricing = canAccessSubscriptionPages(user);
   
   // Determine which pricing to show based on user type
   const isSchool = user?.userType === "SCHOOL";
@@ -76,6 +58,26 @@ const Pricing: React.FC = () => {
       support: "Dedicated account manager + instant support",
     },
   };
+
+  useEffect(() => {
+    if (canViewPricing) return;
+
+    if (user?.userType === "SCHOOL") {
+      navigate("/schools/dashboard", { replace: true });
+      return;
+    }
+
+    if (user?.userType === "TEACHER") {
+      navigate("/teachers/dashboard", { replace: true });
+      return;
+    }
+
+    navigate("/", { replace: true });
+  }, [canViewPricing, navigate, user]);
+
+  if (!canViewPricing) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen pt-20">

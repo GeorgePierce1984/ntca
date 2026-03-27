@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import { prisma } from "../_utils/prisma.js";
 import Stripe from "stripe";
 import { isDemoPremiumEmail } from "../_utils/demo-premium.js";
+import { shouldEnforceSubscriptionsForSchool } from "../_utils/subscription-access.js";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
   apiVersion: "2023-10-16",
@@ -152,6 +153,8 @@ export default async function handler(req, res) {
         });
       });
       const isDemoPremium = isDemoPremiumEmail(userForDemo?.email);
+      const enforceSubscriptions =
+        shouldEnforceSubscriptionsForSchool(school) && !isDemoPremium;
 
       // --- Subscription gating & job posting limits ---
       // Intended rules:
@@ -163,7 +166,7 @@ export default async function handler(req, res) {
       // We enforce this server-side using ActivityLog entries so deletion cannot bypass limits.
       const subscriptionStatus = (school.subscriptionStatus || "").toLowerCase();
 
-      if (!isDemoPremium) {
+      if (enforceSubscriptions) {
       // If they have a subscription record but it's not in good standing, block (must renew)
       if (
         school.subscriptionId &&

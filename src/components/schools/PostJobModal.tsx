@@ -12,8 +12,9 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { countries, type Country, getCountryByName } from "@/data/countries";
+import { type Country, getCountryByName } from "@/data/countries";
 import { CountrySelector } from "@/components/forms/CountrySelector";
+import { areSubscriptionsEnabled } from "@/utils/subscription";
 
 interface JobForm {
   title: string;
@@ -275,7 +276,9 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({
               </div>
 
               {/* Subscription Warning */}
-              {(subscriptionStatus?.toLowerCase() === "cancelled" || subscriptionStatus?.toLowerCase() === "past_due") && (
+              {areSubscriptionsEnabled() &&
+                (subscriptionStatus?.toLowerCase() === "cancelled" ||
+                  subscriptionStatus?.toLowerCase() === "past_due") && (
                 <div className="flex-shrink-0 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700 px-6 py-4">
                   <div className={`p-4 rounded-lg border ${
                     subscriptionStatus?.toLowerCase() === "cancelled"
@@ -1440,7 +1443,11 @@ export const PostJobModal: React.FC<PostJobModalProps> = ({
                     type="button"
                     variant="gradient" 
                     size="lg"
-                    disabled={subscriptionStatus?.toLowerCase() === "cancelled" || subscriptionStatus?.toLowerCase() === "past_due"}
+                    disabled={
+                      areSubscriptionsEnabled() &&
+                      (subscriptionStatus?.toLowerCase() === "cancelled" ||
+                        subscriptionStatus?.toLowerCase() === "past_due")
+                    }
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();

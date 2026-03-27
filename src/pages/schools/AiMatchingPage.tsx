@@ -7,7 +7,6 @@ import {
   Target,
   Clock,
   Users,
-  CheckCircle,
   ArrowRight,
   Zap,
   Shield,
@@ -15,10 +14,12 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/contexts/AuthContext";
+import { canAccessSubscriptionPages } from "@/utils/subscription";
 
 export const AiMatchingPage: React.FC = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
+  const showSubscriptionTools = canAccessSubscriptionPages(user);
 
   const features = [
     {
@@ -57,7 +58,7 @@ export const AiMatchingPage: React.FC = () => {
     if (!isAuthenticated) {
       navigate("/login", { state: { from: "/schools/ai-matching" } });
     } else if (user?.userType === "SCHOOL") {
-      navigate("/pricing");
+      navigate("/schools/dashboard");
     } else {
       navigate("/schools/signup");
     }
@@ -179,15 +180,17 @@ export const AiMatchingPage: React.FC = () => {
                 >
                   Get Started with AI
                 </Button>
-                <Button
-                  onClick={() => navigate("/pricing")}
-                  size="lg"
-                  variant="ghost"
-                  className="text-white border-white hover:bg-white/10"
-                  leftIcon={<ArrowRight className="w-5 h-5" />}
-                >
-                  View Premium Plans
-                </Button>
+                {showSubscriptionTools && (
+                  <Button
+                    onClick={() => navigate("/pricing")}
+                    size="lg"
+                    variant="ghost"
+                    className="text-white border-white hover:bg-white/10"
+                    leftIcon={<ArrowRight className="w-5 h-5" />}
+                  >
+                    View Premium Plans
+                  </Button>
+                )}
               </div>
             </div>
           </motion.div>

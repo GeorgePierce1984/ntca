@@ -5,13 +5,9 @@ import {
   Menu,
   X,
   ChevronDown,
-  Sparkles,
   GraduationCap,
   Building2,
   Users,
-  Brain,
-  FileText,
-  Phone,
   LogIn,
   UserPlus,
   LogOut,
@@ -24,6 +20,7 @@ import { Logo } from "@/components/ui/Logo";
 import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
+import { canAccessSubscriptionPages } from "@/utils/subscription";
 
 interface NavItem {
   label: string;
@@ -69,6 +66,7 @@ export const Header: React.FC = () => {
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const location = useLocation();
   const { user, isAuthenticated, logout } = useAuth();
+  const showSubscriptionTools = canAccessSubscriptionPages(user);
 
   const getVisibleNavigation = (): NavItem[] => {
     // When a teacher is logged in, hide the "For Schools" menu entirely.
@@ -79,7 +77,11 @@ export const Header: React.FC = () => {
   };
 
   const getVisibleChildren = (parent: NavItem): NavItem[] => {
-    const children = parent.children || [];
+    let children = parent.children || [];
+
+    if (!showSubscriptionTools) {
+      children = children.filter((c) => c.href !== "/pricing");
+    }
 
     // On logged-in accounts, hide "Create Profile" under "For Teachers"
     // (teachers already have an account; schools shouldn't be prompted to create teacher profiles).
@@ -352,7 +354,7 @@ export const Header: React.FC = () => {
                                 </Link>
                               </li>
                             )}
-                            {user?.userType === "SCHOOL" && (
+                            {user?.userType === "SCHOOL" && showSubscriptionTools && (
                               <li>
                                 <Link
                                   to="/schools/subscription"

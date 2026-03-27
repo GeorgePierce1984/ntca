@@ -3,6 +3,7 @@ import { AlertCircle, X, CreditCard, ExternalLink } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/Button";
 import { motion, AnimatePresence } from "framer-motion";
+import { areSubscriptionsEnabled } from "@/utils/subscription";
 
 interface SubscriptionWarningBannerProps {
   subscriptionStatus?: string;
@@ -22,6 +23,7 @@ export const SubscriptionWarningBanner: React.FC<
   const navigate = useNavigate();
 
   if (dismissed) return null;
+  if (!areSubscriptionsEnabled()) return null;
 
   const status = subscriptionStatus?.toLowerCase();
 
@@ -31,7 +33,6 @@ export const SubscriptionWarningBanner: React.FC<
   }
 
   const isCancelled = status === "cancelled";
-  const isPastDue = status === "past_due";
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return "N/A";

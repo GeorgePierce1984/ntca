@@ -1,4 +1,5 @@
 import { prisma } from "../_utils/prisma.js";
+import { areSubscriptionsEnabled } from "../_utils/subscription-access.js";
 
 export default async function handler(req, res) {
   if (req.method !== "GET") {
@@ -37,26 +38,28 @@ export default async function handler(req, res) {
     const startOfToday = new Date();
     startOfToday.setHours(0, 0, 0, 0);
 
+    const enforceSubscriptions = areSubscriptionsEnabled();
+
     // Build search filters - always start with base conditions
     const where = {
       status: "ACTIVE",
       deadline: {
         gte: startOfToday,
       },
-      // Only show jobs from non-flagged schools that aren't scheduled for deletion
-      // Allow schools with no subscription (first free post) OR active subscriptions
-      // Block cancelled/past_due subscriptions
       school: {
         flagged: false, // Exclude flagged schools
-        OR: [
-          { subscriptionStatus: null }, // Schools without subscription (first free post allowed)
-          { subscriptionStatus: "active" }, // Schools with active subscriptions
-        ],
         user: {
           deletionScheduledAt: null, // Exclude schools scheduled for deletion
         },
       },
     };
+
+    if (enforceSubscriptions) {
+      where.school.OR = [
+        { subscriptionStatus: null },
+        { subscriptionStatus: "active" },
+      ];
+    }
 
     // Text search in title and description
     if (search) {
@@ -70,16 +73,19 @@ export default async function handler(req, res) {
           school: { 
             name: { contains: search, mode: "insensitive" },
             flagged: false,
-            OR: [
-              { subscriptionStatus: null },
-              { subscriptionStatus: "active" },
-            ],
             user: {
               deletionScheduledAt: null,
             },
           } 
         },
       ];
+
+      if (enforceSubscriptions) {
+        where.OR[4].school.OR = [
+          { subscriptionStatus: null },
+          { subscriptionStatus: "active" },
+        ];
+      }
     }
 
     // Country filter (multi-select)
@@ -240,15 +246,17 @@ export default async function handler(req, res) {
       } else {
         where.school = {
           flagged: false,
-          OR: [
-            { subscriptionStatus: null },
-            { subscriptionStatus: "active" },
-          ],
           user: {
             deletionScheduledAt: null,
           },
           ...schoolTypeConditions,
         };
+        if (enforceSubscriptions) {
+          where.school.OR = [
+            { subscriptionStatus: null },
+            { subscriptionStatus: "active" },
+          ];
+        }
       }
     }
 

@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, HelpCircle, Shield, CreditCard, Globe } from "lucide-react";
-import { Link } from "react-router-dom";
 import { PageTemplate } from "@/components/PageTemplate";
 
 type FAQItem = {
@@ -29,17 +28,11 @@ export const FAQsPage: React.FC = () => {
       icon: <HelpCircle className="w-5 h-5" />,
     },
     {
-      q: "How does pricing work?",
+      q: "Do schools need a paid subscription right now?",
       a: (
         <div className="space-y-2">
           <p>
-            Pricing depends on your account type (teacher vs school) and the plan you choose. For the latest plan details and features,
-            please see the Pricing page.
-          </p>
-          <p>
-            <Link to="/pricing" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">
-              View Pricing
-            </Link>
+            No. The platform is currently open, so schools can post jobs, review applicants, browse teachers, and use messaging without an active paid subscription.
           </p>
         </div>
       ),

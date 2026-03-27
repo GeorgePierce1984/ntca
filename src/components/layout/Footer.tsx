@@ -9,7 +9,6 @@ import {
   Instagram,
   Youtube,
   Send,
-  ExternalLink,
   Globe,
   Award,
   Shield,
@@ -17,8 +16,9 @@ import {
 } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
 import { Button } from "@/components/ui/Button";
-import { cn } from "@/lib/utils";
 import toast from "react-hot-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { canAccessSubscriptionPages } from "@/utils/subscription";
 
 const footerLinks = {
   forSchools: [
@@ -55,6 +55,11 @@ const badges = [
 export const Footer: React.FC = () => {
   const [email, setEmail] = React.useState("");
   const [subscribing, setSubscribing] = React.useState(false);
+  const { user } = useAuth();
+  const showSubscriptionTools = canAccessSubscriptionPages(user);
+  const schoolLinks = showSubscriptionTools
+    ? footerLinks.forSchools
+    : footerLinks.forSchools.filter((link) => link.href !== "/pricing");
 
   const handleNewsletterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -185,7 +190,7 @@ export const Footer: React.FC = () => {
               For Schools
             </h4>
             <ul className="space-y-3">
-              {footerLinks.forSchools.map((link) => (
+              {schoolLinks.map((link) => (
                 <li key={link.label}>
                   <Link
                     to={link.href}
