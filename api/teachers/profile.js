@@ -305,11 +305,15 @@ export default async function handler(req, res) {
 
       // Calculate profile completeness
       const requiredFields = [
-        firstName, lastName, phone, city, country, qualification, experience, bio
+        firstName,
+        lastName,
+        city,
+        country,
+        nationality,
+        experienceYears,
+        experience,
       ];
-      const optionalButImportantFields = [
-        resumeUrl, certifications, subjects, languageSkills, availability
-      ];
+      const optionalButImportantFields = [resumeUrl, photoUrl, education];
 
       // Helper function to check if a field has a value
       const hasValue = (field) => {
@@ -320,10 +324,14 @@ export default async function handler(req, res) {
         return Boolean(field);
       };
 
-      const requiredComplete = requiredFields.every(field => hasValue(field));
-      const optionalComplete = optionalButImportantFields.filter(field => hasValue(field)).length;
+      const requiredComplete = requiredFields.every((field) => hasValue(field));
+      const optionalComplete = optionalButImportantFields.filter((field) =>
+        hasValue(field),
+      ).length;
 
-      const profileComplete = requiredComplete && optionalComplete >= 3;
+      const profileComplete =
+        requiredComplete &&
+        optionalComplete === optionalButImportantFields.length;
 
       // Build base update data
       const baseUpdateData = {

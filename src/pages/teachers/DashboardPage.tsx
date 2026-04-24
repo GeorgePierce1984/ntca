@@ -1061,7 +1061,6 @@ const TeacherDashboard: React.FC = () => {
       "city",
       "country",
       "nationality",
-      "qualification",
       "experienceYears",
       "experience",
     ];
@@ -1069,19 +1068,24 @@ const TeacherDashboard: React.FC = () => {
     const optionalFields = [
       "resumeUrl",
       "photoUrl",
-      "certifications",
-      "subjects",
-      "languageSkills",
       "education",
     ];
 
-    const requiredComplete = requiredFields.filter(
-      (field) => teacher[field as keyof Teacher],
+    const hasValue = (value: Teacher[keyof Teacher]) => {
+      if (!value) return false;
+      if (Array.isArray(value)) return value.length > 0;
+      if (typeof value === "object") return Object.keys(value).length > 0;
+      if (typeof value === "string") return value.trim().length > 0;
+      return true;
+    };
+
+    const requiredComplete = requiredFields.filter((field) =>
+      hasValue(teacher[field as keyof Teacher]),
     ).length;
 
     const optionalComplete = optionalFields.filter((field) => {
       const value = teacher[field as keyof Teacher];
-      return value && (Array.isArray(value) ? value.length > 0 : true);
+      return hasValue(value);
     }).length;
 
     const totalFields = requiredFields.length + optionalFields.length;

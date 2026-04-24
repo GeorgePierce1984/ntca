@@ -550,7 +550,6 @@ export const TeacherProfilePage: React.FC<{ embedded?: boolean }> = ({
       "city",
       "country",
       "nationality",
-      "qualification",
       "experienceYears",
       "experience",
     ];
@@ -558,9 +557,6 @@ export const TeacherProfilePage: React.FC<{ embedded?: boolean }> = ({
     const optionalFields = [
       "resumeUrl",
       "photoUrl",
-      "certifications",
-      "subjects",
-      "languageSkills",
       "education",
     ];
 
