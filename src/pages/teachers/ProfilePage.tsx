@@ -113,6 +113,16 @@ interface Teacher {
   updatedAt: string;
 }
 
+const normalizeDateInputValue = (value?: string) => {
+  if (!value) return "";
+  return value.includes("T") ? value.split("T")[0] : value;
+};
+
+const normalizeTeacherProfile = (teacher: Teacher): Teacher => ({
+  ...teacher,
+  dateOfBirth: normalizeDateInputValue(teacher.dateOfBirth),
+});
+
 const qualificationOptions = [
   "Teaching Certificate",
   "Bachelor's Degree",
@@ -186,8 +196,9 @@ export const TeacherProfilePage: React.FC<{ embedded?: boolean }> = ({
       if (!response.ok) throw new Error("Failed to fetch profile");
 
       const data = await response.json();
-      setTeacher(data.teacher);
-      setFormData(data.teacher);
+      const normalizedTeacher = normalizeTeacherProfile(data.teacher);
+      setTeacher(normalizedTeacher);
+      setFormData(normalizedTeacher);
     } catch (error) {
       console.error("Error fetching profile:", error);
       toast.error("Failed to load profile");
@@ -211,8 +222,9 @@ export const TeacherProfilePage: React.FC<{ embedded?: boolean }> = ({
       if (!response.ok) throw new Error("Failed to update profile");
 
       const data = await response.json();
-      setTeacher(data.teacher);
-      setFormData(data.teacher); // Update form data with saved data
+      const normalizedTeacher = normalizeTeacherProfile(data.teacher);
+      setTeacher(normalizedTeacher);
+      setFormData(normalizedTeacher); // Update form data with saved data
       toast.success("Profile updated successfully");
     } catch (error) {
       console.error("Error updating profile:", error);
@@ -552,13 +564,21 @@ export const TeacherProfilePage: React.FC<{ embedded?: boolean }> = ({
       "education",
     ];
 
-    const requiredComplete = requiredFields.filter(
-      (field) => teacher[field as keyof Teacher],
+    const hasValue = (value: Teacher[keyof Teacher]) => {
+      if (!value) return false;
+      if (Array.isArray(value)) return value.length > 0;
+      if (typeof value === "object") return Object.keys(value).length > 0;
+      if (typeof value === "string") return value.trim().length > 0;
+      return true;
+    };
+
+    const requiredComplete = requiredFields.filter((field) =>
+      hasValue(teacher[field as keyof Teacher]),
     ).length;
 
     const optionalComplete = optionalFields.filter((field) => {
       const value = teacher[field as keyof Teacher];
-      return value && (Array.isArray(value) ? value.length > 0 : true);
+      return hasValue(value);
     }).length;
 
     const totalFields = requiredFields.length + optionalFields.length;
