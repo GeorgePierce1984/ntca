@@ -596,7 +596,7 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
     <>
       <AnimatePresence>
         {isOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 sm:items-center">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -613,10 +613,11 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="relative bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden"
+              className="relative my-auto flex w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-neutral-900 max-h-[calc(100vh-2rem)]"
             >
               {/* Header */}
-              <div className="flex items-center justify-between p-6 border-b border-neutral-200 dark:border-neutral-800">
+              <div className="shrink-0 border-b border-neutral-200 p-6 dark:border-neutral-800">
+                <div className="flex items-start justify-between gap-4">
                 <div className="flex items-center gap-4">
                   {applicant.photoUrl ? (
                     <img
@@ -661,11 +662,12 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
                     <X className="w-6 h-6" />
                   </button>
                 </div>
+                </div>
               </div>
 
               {/* Navigation Tabs */}
-              <div className="border-b border-neutral-200 dark:border-neutral-800">
-                <nav className="flex px-6">
+              <div className="shrink-0 border-b border-neutral-200 dark:border-neutral-800">
+                <nav className="flex overflow-x-auto px-6">
                   {[
                     { key: "overview", label: "Overview", icon: User },
                     { key: "documents", label: "Documents", icon: FileText },
@@ -697,7 +699,7 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
               </div>
 
               {/* Content */}
-              <div className="p-6 max-h-[60vh] overflow-y-auto">
+              <div className="min-h-0 flex-1 overflow-y-auto p-6">
                 {activeTab === "overview" && (
                   <div className="space-y-6">
                     {/* Key Information */}
@@ -1528,9 +1530,9 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
               </div>
 
               {/* Actions Footer */}
-              <div className="border-t border-neutral-200 dark:border-neutral-800 p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
+              <div className="shrink-0 border-t border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                  <div className="flex flex-wrap items-center gap-3">
                     {applicant.status === "applied" && (
                       <>
                         <Button
@@ -1613,7 +1615,7 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
                   {applicant.status === "interview" &&
                     applicant.interviewDate &&
                     !applicant.interviewRequest && (
-                      <div className="mt-4 p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                      <div className="rounded-lg bg-purple-50 p-3 dark:bg-purple-900/20">
                         <p className="text-sm text-purple-700 dark:text-purple-300">
                           Interview scheduled:{" "}
                           {new Date(applicant.interviewDate).toLocaleString()}

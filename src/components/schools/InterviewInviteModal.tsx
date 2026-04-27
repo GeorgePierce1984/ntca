@@ -199,16 +199,16 @@ export const InterviewInviteModal: React.FC<InterviewInviteModalProps> = ({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-4 sm:items-center">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="bg-white dark:bg-neutral-800 rounded-xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col"
+            className="my-auto flex w-full max-w-3xl flex-col overflow-hidden rounded-xl bg-white dark:bg-neutral-800 max-h-[calc(100vh-2rem)]"
           >
             {/* Header */}
-            <div className="p-6 border-b border-neutral-200 dark:border-neutral-700">
+            <div className="shrink-0 border-b border-neutral-200 p-6 dark:border-neutral-700">
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-2xl font-bold">
@@ -228,7 +228,7 @@ export const InterviewInviteModal: React.FC<InterviewInviteModalProps> = ({
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6">
+            <form onSubmit={handleSubmit} className="min-h-0 flex-1 overflow-y-auto p-6">
               <div className="space-y-6">
                 {/* Duration */}
                 <div>
@@ -462,8 +462,8 @@ export const InterviewInviteModal: React.FC<InterviewInviteModalProps> = ({
             </form>
 
             {/* Footer */}
-            <div className="p-6 border-t border-neutral-200 dark:border-neutral-700">
-              <div className="flex items-center justify-end gap-3">
+            <div className="shrink-0 border-t border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-neutral-800">
+              <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
                 <Button type="button" variant="ghost" onClick={onClose}>
                   Cancel
                 </Button>
