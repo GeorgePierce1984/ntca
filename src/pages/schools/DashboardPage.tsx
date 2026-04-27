@@ -1208,6 +1208,7 @@ export const SchoolDashboardPage: React.FC = () => {
       return {
         id: application.id,
         jobId: application.jobId,
+        teacherId: application.teacherId,
         name: `${firstName} ${lastName}`,
         firstName: firstName,
         lastName: lastName,
@@ -1257,6 +1258,7 @@ export const SchoolDashboardPage: React.FC = () => {
       return {
         id: application.id,
         jobId: application.jobId,
+        teacherId: application.teacherId,
         name: application.teacher ? `${application.teacher.firstName || ''} ${application.teacher.lastName || ''}`.trim() || 'Unknown' : 'Guest User',
         firstName: application.teacher?.firstName || application.guestFirstName || 'Unknown',
         lastName: application.teacher?.lastName || application.guestLastName || 'User',
@@ -1291,6 +1293,8 @@ export const SchoolDashboardPage: React.FC = () => {
 
     try {
       setUpdatingStatus(applicantId);
+      const applicantForMessaging =
+        applications.find((application) => application.id === applicantId) || null;
       
       // Convert lowercase status to uppercase for API
       const apiStatus = newStatus.toUpperCase() as Application["status"];
@@ -1315,10 +1319,28 @@ export const SchoolDashboardPage: React.FC = () => {
         throw new Error(error.error || "Failed to update application status");
       }
 
-      toast.success("Application status updated successfully");
-      
       // Refresh applications list
       await fetchApplications();
+
+      let openedConversation = false;
+      const teacherIdForMessaging =
+        applicantForMessaging?.teacherId || selectedApplicant?.teacherId || null;
+
+      if (newStatus === "hired" && teacherIdForMessaging) {
+        try {
+          await openMessagesConversation(teacherIdForMessaging);
+          openedConversation = true;
+        } catch (conversationError) {
+          console.error("Error opening hired candidate conversation:", conversationError);
+          toast.error("Candidate marked as hired, but the message thread could not be opened automatically.");
+        }
+      }
+
+      toast.success(
+        newStatus === "hired" && openedConversation
+          ? "Candidate marked as hired and message thread opened."
+          : "Application status updated successfully",
+      );
 
       // Don't open the old interview modal - the new InterviewInviteModal handles this
       // If status was updated to interview via the new modal, it's already handled
@@ -1336,6 +1358,44 @@ export const SchoolDashboardPage: React.FC = () => {
   const openApplicantModal = (applicant: Application) => {
     setSelectedApplicant(transformToApplicant(applicant));
     setShowApplicantModal(true);
+  };
+
+  const openMessagesConversation = async (teacherId: string) => {
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      throw new Error("Authentication required");
+    }
+
+    const response = await fetch("/api/messages/conversations", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        teacherId,
+        touch: true,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({
+        error: "Failed to open conversation",
+      }));
+      throw new Error(error.error || "Failed to open conversation");
+    }
+
+    const data = await response.json();
+    if (!data.conversationId) {
+      throw new Error("No conversationId returned");
+    }
+
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.set("conversation", data.conversationId);
+    setSearchParams(nextParams);
+    setShowMessagesModal(true);
+
+    return data.conversationId as string;
   };
 
   // Old InterviewScheduleModal flow removed (interview invite is handled inside ApplicantModal)
@@ -2570,6 +2630,12 @@ export const SchoolDashboardPage: React.FC = () => {
           }
         }}
         subscriptionStatus={subscriptionStatus}
+        onOpenMessages={(conversationId) => {
+          const nextParams = new URLSearchParams(searchParams);
+          nextParams.set("conversation", conversationId);
+          setSearchParams(nextParams);
+          setShowMessagesModal(true);
+        }}
         jobTitle={
           selectedApplicant
             ? jobs.find((j) => j.id === selectedApplicant.jobId)?.title

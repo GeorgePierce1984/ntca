@@ -55,6 +55,7 @@ export function JobApplicationForm({
     handleSubmit,
     formState: { errors },
     setValue,
+    resetField,
     watch,
   } = useForm<ApplicationFormData>({
     resolver: zodResolver(applicationSchema),
@@ -112,7 +113,7 @@ export function JobApplicationForm({
 
   const removeFile = () => {
     setUploadedFile(null);
-    setValue("cv", undefined);
+    resetField("cv");
   };
 
   return (

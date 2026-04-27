@@ -32,7 +32,7 @@ interface Teacher {
   city: string;
   country: string;
   qualification: string;
-  experienceYears: number;
+  experienceYears?: number;
   experience?: string;
   verified: boolean;
   rating?: number;
@@ -263,10 +263,12 @@ export const TeacherDetailModal: React.FC<TeacherDetailModalProps> = ({
                       {teacher.city}, {teacher.country}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <GraduationCap className="w-5 h-5 text-neutral-400" />
-                    <span>{teacher.experienceYears} years experience</span>
-                  </div>
+                  {teacher.experienceYears !== undefined && (
+                    <div className="flex items-center gap-2">
+                      <GraduationCap className="w-5 h-5 text-neutral-400" />
+                      <span>{teacher.experienceYears} years experience</span>
+                    </div>
+                  )}
                   {teacher.availability && (
                     <div className="flex items-center gap-2">
                       <Clock className="w-5 h-5 text-neutral-400" />

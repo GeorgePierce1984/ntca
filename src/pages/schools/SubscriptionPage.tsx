@@ -21,10 +21,10 @@ import { canAccessSubscriptionPages } from "@/utils/subscription";
 interface Subscription {
   subscriptionId?: string;
   subscriptionStatus?: string;
-  currentPeriodStart?: string;
-  currentPeriodEnd?: string;
+  currentPeriodStart?: string | null;
+  currentPeriodEnd?: string | null;
   cancelAtPeriodEnd?: boolean;
-  subscriptionEndDate?: string;
+  subscriptionEndDate?: string | null;
   plan?: {
     name: string;
     amount: number;
@@ -177,7 +177,7 @@ export const SubscriptionPage: React.FC = () => {
     }
   };
 
-  const formatDate = (dateString?: string) => {
+  const formatDate = (dateString?: string | null) => {
     if (!dateString) return "N/A";
     try {
       return new Date(dateString).toLocaleDateString("en-US", {

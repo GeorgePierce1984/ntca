@@ -101,7 +101,7 @@ export const Header: React.FC = () => {
 
     return children;
   };
-  const navDropdownRef = useRef<HTMLDivElement>(null);
+  const navDropdownRef = useRef<HTMLUListElement>(null);
   const userDropdownRef = useRef<HTMLDivElement>(null);
 
   // Get display name: school name for schools, first name for teachers

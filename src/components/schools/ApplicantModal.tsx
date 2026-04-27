@@ -41,6 +41,7 @@ interface ApplicationNote {
 interface Applicant {
   id: string;
   jobId: string;
+  teacherId?: string | null;
   name: string;
   email: string;
   phone: string;
@@ -129,6 +130,7 @@ interface ApplicantModalProps {
     note?: string,
   ) => void;
   onRefresh?: () => void; // Optional callback to refresh applicant data
+  onOpenMessages?: (conversationId: string) => void;
   jobTitle?: string;
   subscriptionStatus?: string | null;
   isUpdating?: boolean;
@@ -146,6 +148,7 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
   onClose,
   onStatusUpdate,
   onRefresh,
+  onOpenMessages,
   jobTitle,
   subscriptionStatus,
   isUpdating = false,
@@ -352,6 +355,53 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
     setInterviewDate("");
   };
 
+  const handleOpenConversation = async () => {
+    if (!applicant?.teacherId) {
+      toast.error("In-app messaging is only available for registered teacher accounts.");
+      return;
+    }
+
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      toast.error("Authentication required");
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/messages/conversations", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          teacherId: applicant.teacherId,
+          touch: true,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({
+          error: "Failed to open conversation",
+        }));
+        throw new Error(error.error || "Failed to open conversation");
+      }
+
+      const data = await response.json();
+      if (!data.conversationId) {
+        throw new Error("No conversationId returned");
+      }
+
+      onClose();
+      onOpenMessages?.(data.conversationId);
+    } catch (error) {
+      console.error("Error opening conversation:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to open conversation",
+      );
+    }
+  };
+
   const handleSendInterviewInvite = async (data: {
     applicationId: string;
     duration: number;
@@ -484,15 +534,14 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
     }> = [];
 
     // 1. Application submitted
-    const appliedDate = applicant.appliedDate || applicant.createdAt;
-    if (appliedDate) {
-      timeline.push({
-        date: appliedDate,
-        action: "Applied",
-        status: "applied",
-        note: "Application submitted" + (applicant.resumeUrl ? " with resume" : ""),
-      });
-    }
+    const appliedDate =
+      applicant.appliedDate || applicant.createdAt || new Date().toISOString();
+    timeline.push({
+      date: appliedDate,
+      action: "Applied",
+      status: "applied",
+      note: "Application submitted" + (applicant.resumeUrl ? " with resume" : ""),
+    });
 
     // 2. Status progression based on current status
     const statusOrder = ["applied", "reviewing", "interview", "hired", "declined"];
@@ -1546,6 +1595,17 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
                         disabled={isUpdating}
                       >
                         {isUpdating ? "Updating..." : "Decline"}
+                      </Button>
+                    )}
+
+                    {applicant.teacherId && applicant.status !== "declined" && (
+                      <Button
+                        variant="secondary"
+                        leftIcon={<MessageSquare className="w-4 h-4" />}
+                        onClick={handleOpenConversation}
+                        disabled={isUpdating}
+                      >
+                        Message Candidate
                       </Button>
                     )}
                   </div>

@@ -104,7 +104,7 @@ export const ForgotPasswordPage: React.FC = () => {
                 Back to Login
               </Button>
               <Button
-                variant="outline"
+                variant="secondary"
                 fullWidth
                 onClick={() => {
                   setEmailSent(false);

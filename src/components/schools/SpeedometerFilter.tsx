@@ -1,5 +1,20 @@
 import React, { useMemo, useState, useCallback, useEffect } from "react";
 
+type SpeedometerState = {
+  threshold: number | null;
+  mode: "filter";
+  behavior: "hard";
+};
+
+interface SpeedometerOptionAProps {
+  initialThreshold?: number | null;
+  snapThresholds?: Array<number | null>;
+  onChange: (state: SpeedometerState) => void;
+  title?: string;
+  subtitle?: string;
+  width?: number;
+}
+
 /**
  * Option A: Tap-to-Snap Speedometer (React)
  *
@@ -17,7 +32,7 @@ export default function SpeedometerOptionA({
   title = "Match Threshold",
   subtitle = "Tap a snap point to filter quickly",
   width = 420,
-}) {
+}: SpeedometerOptionAProps) {
   const [threshold, setThreshold] = useState<number | null>(initialThreshold);
   // Track cumulative rotation to ensure clockwise movement
   const [cumulativeRotation, setCumulativeRotation] = useState(270);

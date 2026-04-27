@@ -860,7 +860,7 @@ export const BrowseTeachersPage: React.FC = () => {
                 </div>
               ) : (
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {Array.isArray(filteredTeachers) && filteredTeachers.length > 0 ? filteredTeachers.map((teacher) => {
+                  {Array.isArray(filteredTeachersByRange) && filteredTeachersByRange.length > 0 ? filteredTeachersByRange.map((teacher) => {
                     return renderTeacherCard(teacher);
                   }) : (
                     <div className="col-span-full text-center py-12">

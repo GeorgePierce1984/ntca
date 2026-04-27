@@ -280,7 +280,7 @@ export default async function handler(req, res) {
 
     if (req.method === "POST") {
       // Create a new conversation or get existing one
-      const { teacherId, schoolId, content } = req.body;
+      const { teacherId, schoolId, content, touch } = req.body;
 
       if (decoded.userType === "SCHOOL") {
         if (!teacherId) {
@@ -333,7 +333,10 @@ export default async function handler(req, res) {
             });
           });
 
-          // Update conversation timestamp
+        }
+
+        if (content || touch) {
+          // Keep the thread visible under the existing 3-day conversation window
           await retryOperation(async () => {
             return await prisma.conversation.update({
               where: { id: conversation.id },
@@ -394,7 +397,10 @@ export default async function handler(req, res) {
             });
           });
 
-          // Update conversation timestamp
+        }
+
+        if (content || touch) {
+          // Keep the thread visible under the existing 3-day conversation window
           await retryOperation(async () => {
             return await prisma.conversation.update({
               where: { id: conversation.id },
