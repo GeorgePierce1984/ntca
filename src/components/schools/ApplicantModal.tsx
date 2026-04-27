@@ -366,13 +366,18 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
         throw new Error("No authentication token found");
       }
 
+      const isRebooking = Boolean(applicant.interviewRequest);
+
       const response = await fetch(`/api/applications/${data.applicationId}/interview-request`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          ...data,
+          replaceExisting: isRebooking,
+        }),
       });
 
       if (!response.ok) {
@@ -381,10 +386,18 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
       }
 
       // Status will be updated to INTERVIEW by the API
-      toast.success("Interview invite sent successfully!");
+      toast.success(
+        isRebooking
+          ? "Interview rebooked successfully!"
+          : "Interview invite sent successfully!",
+      );
       setShowInterviewModal(false);
-      // Refresh the applicant data by calling onStatusUpdate
-      onStatusUpdate(applicant.id, "interview");
+      if (onRefresh) {
+        await onRefresh();
+      } else {
+        // Refresh the applicant data by calling onStatusUpdate
+        onStatusUpdate(applicant.id, "interview");
+      }
     } catch (error) {
       console.error("Error sending interview invite:", error);
       throw error; // Re-throw to let modal handle the error
@@ -1503,6 +1516,16 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
                     {applicant.status === "interview" && (
                       <>
                         <Button
+                          variant="secondary"
+                          leftIcon={<Calendar className="w-4 h-4" />}
+                          onClick={openInterviewModal}
+                          disabled={isUpdating}
+                        >
+                          {applicant.interviewRequest
+                            ? "Rebook Interview"
+                            : "Schedule Interview"}
+                        </Button>
+                        <Button
                           variant="gradient"
                           leftIcon={<CheckCircle className="w-4 h-4" />}
                           onClick={() => handleStatusUpdate("hired")}
@@ -1550,6 +1573,7 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
         <InterviewInviteModal
           isOpen={showInterviewModal}
           onClose={() => setShowInterviewModal(false)}
+          mode={applicant?.interviewRequest ? "rebook" : "schedule"}
           applicant={{
             id: applicant.id,
             name: applicant.name,

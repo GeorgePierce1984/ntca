@@ -17,7 +17,7 @@ export default async function handler(req, res) {
       // Create interview request
       const decoded = verifyToken(req);
       const { id } = req.query;
-      const { duration, locationType, location, message, timeSlots } = req.body;
+      const { duration, locationType, location, message, timeSlots, replaceExisting } = req.body;
 
       // Only schools can create interview requests
       if (decoded.userType !== "SCHOOL") {
@@ -55,7 +55,9 @@ export default async function handler(req, res) {
       });
 
       if (existingRequest) {
-        return res.status(400).json({ error: "Interview request already exists for this application" });
+        if (!replaceExisting) {
+          return res.status(400).json({ error: "Interview request already exists for this application" });
+        }
       }
 
       // Validate time slots
@@ -77,34 +79,57 @@ export default async function handler(req, res) {
         }
       }
 
-      // Create interview request
-      const interviewRequest = await prisma.interviewRequest.create({
-        data: {
-          applicationId: id,
-          duration: parseInt(duration),
-          locationType,
-          location,
-          message: message || null,
-          timeSlots: timeSlots,
-          status: "pending",
-        },
-      });
+      let interviewRequest;
 
-      // Update application status to INTERVIEW
+      if (existingRequest) {
+        interviewRequest = await prisma.interviewRequest.update({
+          where: { id: existingRequest.id },
+          data: {
+            duration: parseInt(duration),
+            locationType,
+            location,
+            message: message || null,
+            timeSlots: timeSlots,
+            status: "pending",
+            selectedSlot: null,
+            alternativeSlot: null,
+          },
+        });
+      } else {
+        interviewRequest = await prisma.interviewRequest.create({
+          data: {
+            applicationId: id,
+            duration: parseInt(duration),
+            locationType,
+            location,
+            message: message || null,
+            timeSlots: timeSlots,
+            status: "pending",
+          },
+        });
+      }
+
+      // Update application status to INTERVIEW and clear any previously confirmed date
       await prisma.application.update({
         where: { id },
-        data: { status: "INTERVIEW" },
+        data: {
+          status: "INTERVIEW",
+          interviewDate: null,
+        },
       });
 
       // Log activity
       await prisma.activityLog.create({
         data: {
           userId: decoded.userId,
-          action: "INTERVIEW_REQUEST_CREATED",
+          action: existingRequest
+            ? "INTERVIEW_REQUEST_REBOOKED"
+            : "INTERVIEW_REQUEST_CREATED",
           details: {
             applicationId: id,
             interviewRequestId: interviewRequest.id,
             jobTitle: application.job.title,
+            replacedExisting: Boolean(existingRequest),
           },
           ipAddress: req.headers["x-forwarded-for"] || req.connection.remoteAddress,
           userAgent: req.headers["user-agent"],
@@ -119,7 +144,9 @@ export default async function handler(req, res) {
             school,
             "INTERVIEW",
             message ||
-              "The school has invited you to interview. Please review your dashboard for the available interview details.",
+              (existingRequest
+                ? "The school has rebooked your interview and sent updated interview options. Please review your dashboard for the new details."
+                : "The school has invited you to interview. Please review your dashboard for the available interview details."),
           );
         } catch (emailError) {
           console.error("Failed to send interview request email:", emailError);
@@ -127,7 +154,9 @@ export default async function handler(req, res) {
       }
 
       return res.status(201).json({
-        message: "Interview request created successfully",
+        message: existingRequest
+          ? "Interview request rebooked successfully"
+          : "Interview request created successfully",
         interviewRequest,
       });
     } else if (req.method === "GET") {

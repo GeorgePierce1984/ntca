@@ -32,6 +32,7 @@ interface InterviewInviteData {
 interface InterviewInviteModalProps {
   isOpen: boolean;
   onClose: () => void;
+  mode?: "schedule" | "rebook";
   applicant: {
     id: string;
     name: string;
@@ -52,6 +53,7 @@ interface InterviewInviteModalProps {
 export const InterviewInviteModal: React.FC<InterviewInviteModalProps> = ({
   isOpen,
   onClose,
+  mode = "schedule",
   applicant,
   school,
   jobTitle,
@@ -209,7 +211,9 @@ export const InterviewInviteModal: React.FC<InterviewInviteModalProps> = ({
             <div className="p-6 border-b border-neutral-200 dark:border-neutral-700">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-2xl font-bold">Invite to Interview</h2>
+                  <h2 className="text-2xl font-bold">
+                    {mode === "rebook" ? "Rebook Interview" : "Invite to Interview"}
+                  </h2>
                   <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
                     {applicant.name} - {jobTitle}
                   </p>
@@ -469,7 +473,13 @@ export const InterviewInviteModal: React.FC<InterviewInviteModalProps> = ({
                   leftIcon={<Send className="w-4 h-4" />}
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? "Sending..." : "Send Invite"}
+                  {isSubmitting
+                    ? mode === "rebook"
+                      ? "Rebooking..."
+                      : "Sending..."
+                    : mode === "rebook"
+                      ? "Send Updated Invite"
+                      : "Send Invite"}
                 </Button>
               </div>
             </div>
