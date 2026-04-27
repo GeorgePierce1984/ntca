@@ -355,6 +355,24 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
     setInterviewDate("");
   };
 
+  const handleRestoreToReview = () => {
+    const shouldRestore = window.confirm(
+      "Restore this declined candidate back to review?",
+    );
+
+    if (!shouldRestore) {
+      return;
+    }
+
+    onStatusUpdate(
+      applicant.id,
+      "reviewing",
+      "Application restored to review after being declined.",
+    );
+    setNewNote("");
+    setInterviewDate("");
+  };
+
   const handleOpenConversation = async () => {
     if (!applicant?.teacherId) {
       toast.error("In-app messaging is only available for registered teacher accounts.");
@@ -1597,6 +1615,17 @@ export const ApplicantModal: React.FC<ApplicantModalProps> = ({
                         disabled={isUpdating}
                       >
                         {isUpdating ? "Updating..." : "Decline"}
+                      </Button>
+                    )}
+
+                    {applicant.status === "declined" && (
+                      <Button
+                        variant="secondary"
+                        leftIcon={<CheckCircle className="w-4 h-4" />}
+                        onClick={handleRestoreToReview}
+                        disabled={isUpdating}
+                      >
+                        {isUpdating ? "Updating..." : "Restore to Review"}
                       </Button>
                     )}
 
